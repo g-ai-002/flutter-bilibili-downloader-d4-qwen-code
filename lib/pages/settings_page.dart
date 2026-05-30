@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/search_provider.dart';
 import '../services/log_service.dart';
+import '../utils/constants.dart';
 import 'login_page.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -129,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             leading: Icon(Icons.info_outline, color: theme.colorScheme.primary),
             title: const Text('版本'),
-            subtitle: const Text('0.1.1'),
+            subtitle: Text(AppConstants.version),
           ),
           ListTile(
             leading: Icon(Icons.description_outlined, color: theme.colorScheme.primary),

@@ -27,7 +27,7 @@
 - [x] GitHub Actions 工作流 (Android + Windows)
 - [x] 文档完善
 
-### v0.1.1 (当前版本 - PATCH)
+### v0.1.1 (PATCH)
 - [x] 修复 intl 版本冲突导致 CI 构建失败
 - [x] 修复 assets 目录和字体文件缺失
 - [x] 补全 Windows runner 文件（由 CI 自动生成）
@@ -38,11 +38,39 @@
 - [x] 更新版本号到 0.1.1
 - [x] CI 构建通过 ✅
 
+### v0.1.2 (当前版本 - PATCH)
+- [x] 统一 API 实例管理，避免创建重复实例
+- [x] 修复画质选择优先级逻辑 Bug
+- [x] 改进 DownloadService 空对象模式，使用 indexWhere 替代 firstWhere
+- [x] 添加 CancelToken 支持，实现下载任务真正取消
+- [x] 移除冗余代码（SearchPage 多余 setState）
+- [x] 改进 LogService 线程安全性和异常处理
+- [x] 移除未使用的 dart:math 导入
+- [x] 修复搜索历史重复项问题
+- [x] 版本号统一管理（settings_page 引用 AppConstants.version）
+- [x] 增加测试覆盖（模型、工具类）
+- [x] 更新版本号到 0.1.2
+
 ---
 
 ## 版本历史
 
-### v0.1.1 (当前版本)
+### v0.1.2 (当前版本)
+- **状态**: 开发中 🔄
+- **目标**: 重构优化存量代码，提升代码质量和健壮性
+- **重构**:
+  - 统一 API 实例管理，搜索和下载服务共享同一 BilibiliApi 实例
+  - 修复画质选择优先级逻辑 Bug（优先级选择后被无条件覆盖）
+  - 改进 DownloadService 空对象模式，使用 indexWhere 替代 firstWhere
+  - 添加 CancelToken 支持，实现下载任务真正取消
+  - 移除冗余代码（SearchPage 多余 setState）
+  - 改进 LogService 线程安全性和异常处理
+  - 移除未使用的 dart:math 导入
+  - 修复搜索历史重复项问题
+  - 版本号统一管理（settings_page 引用 AppConstants.version）
+  - 增加测试覆盖（模型、工具类）
+
+### v0.1.1
 - **状态**: 已发布 ✅
 - **目标**: 修复 CI 构建失败问题，补全缺失文件
 - **修复**:

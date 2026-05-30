@@ -45,7 +45,15 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.1.1 (当前)
+### v0.1.2 (当前)
+- 重构优化存量代码，提升代码质量和健壮性
+- 统一 API 实例管理，搜索和下载服务共享同一 BilibiliApi 实例
+- 修复画质选择优先级逻辑 Bug
+- 添加 CancelToken 支持，实现下载任务真正取消
+- 改进 LogService 线程安全性和异常处理
+- 增加测试覆盖（模型、工具类）
+
+### v0.1.1
 - 修复 intl 版本冲突导致 CI 构建失败
 - 清理未使用的依赖项
 - 补全 Windows runner 文件
