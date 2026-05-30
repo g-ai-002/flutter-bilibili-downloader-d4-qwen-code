@@ -64,7 +64,9 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows
-        run: flutter build windows --release
+        run: |
+          flutter create --platforms=windows .
+          flutter build windows --release
 
       - name: Upload Windows build
         uses: actions/upload-artifact@v4

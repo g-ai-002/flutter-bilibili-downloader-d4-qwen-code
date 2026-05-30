@@ -19,6 +19,7 @@ windows/runner/Debug/
 windows/runner/Release/
 windows/runner/x64/
 windows/flutter/ephemeral/
+windows/flutter/generated_*
 
 # macOS
 macos/Runner/DerivedData/
