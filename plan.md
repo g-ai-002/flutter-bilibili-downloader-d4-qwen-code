@@ -16,23 +16,23 @@
 
 ### 短期目标 (v0.1.0)
 - [x] 项目基础结构搭建
-- [ ] Bilibili API 客户端 (搜索、详情、WBI 签名)
-- [ ] Bilibili 扫码登录
-- [ ] 数据模型定义
-- [ ] 状态管理 (Provider)
-- [ ] 下载服务
-- [ ] 本地存储服务
-- [ ] 日志系统
-- [ ] UI 界面 (首页、搜索、详情、下载管理、设置)
-- [ ] GitHub Actions 工作流 (Android + Windows)
-- [ ] 文档完善
+- [x] Bilibili API 客户端 (搜索、详情、WBI 签名)
+- [x] Bilibili 扫码登录
+- [x] 数据模型定义
+- [x] 状态管理 (Provider)
+- [x] 下载服务
+- [x] 本地存储服务
+- [x] 日志系统
+- [x] UI 界面 (首页、搜索、详情、下载管理、设置)
+- [x] GitHub Actions 工作流 (Android + Windows)
+- [x] 文档完善
 
 ---
 
 ## 版本历史
 
 ### v0.1.0 (当前版本)
-- **状态**: 开发中
+- **状态**: 已发布
 - **目标**: 使用 Flutter 重新实现 Bilibili 视频下载器
 - **功能**:
   - Bilibili 视频搜索
