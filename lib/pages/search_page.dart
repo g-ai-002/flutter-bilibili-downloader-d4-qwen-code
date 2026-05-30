@@ -14,10 +14,13 @@ class SearchPage extends StatefulWidget {
   State<SearchPage> createState() => _SearchPageState();
 }
 
+enum SearchType { video, uploader }
+
 class _SearchPageState extends State<SearchPage> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
   List<String> _searchHistory = [];
+  SearchType _searchType = SearchType.video;
 
   @override
   void initState() {
@@ -41,7 +44,12 @@ class _SearchPageState extends State<SearchPage> {
     await storage.addSearchHistory(keyword);
 
     if (!mounted) return;
-    context.read<SearchProvider>().search(keyword);
+    final provider = context.read<SearchProvider>();
+    if (_searchType == SearchType.video) {
+      provider.search(keyword);
+    } else {
+      provider.searchUploaders(keyword);
+    }
     // 避免重复
     _searchHistory.remove(keyword);
     setState(() => _searchHistory.insert(0, keyword));
@@ -77,6 +85,24 @@ class _SearchPageState extends State<SearchPage> {
           onSubmitted: _search,
         ),
         actions: [
+          // 搜索类型切换
+          Center(
+            child: SegmentedButton<SearchType>(
+              segments: const [
+                ButtonSegment(value: SearchType.video, label: Text('视频', style: TextStyle(fontSize: 12))),
+                ButtonSegment(value: SearchType.uploader, label: Text('UP主', style: TextStyle(fontSize: 12))),
+              ],
+              selected: {_searchType},
+              onSelectionChanged: (selected) {
+                setState(() => _searchType = selected.first);
+              },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.qr_code),
             tooltip: '扫码登录',
@@ -103,6 +129,9 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
             );
+          }
+          if (_searchType == SearchType.uploader && provider.uploaderResults.isNotEmpty) {
+            return _buildUploaderResultsList(provider.uploaderResults);
           }
           if (provider.results.isNotEmpty) {
             return _buildResultsList(provider.results);
@@ -133,6 +162,75 @@ class _SearchPageState extends State<SearchPage> {
               context,
               MaterialPageRoute(
                 builder: (_) => VideoDetailPage(bvid: video.bvid),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildUploaderResultsList(List<BiliUploader> uploaders) {
+    final theme = Theme.of(context);
+    return RefreshIndicator(
+      onRefresh: () async {
+        final provider = context.read<SearchProvider>();
+        await provider.searchUploaders(provider.keyword);
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(8),
+        itemCount: uploaders.length,
+        itemBuilder: (context, index) {
+          final uploader = uploaders[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => context.read<SearchProvider>().loadUploaderVideos(uploader.mid),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: NetworkImage(uploader.face),
+                      child: uploader.face.isEmpty
+                          ? Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            uploader.name,
+                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '粉丝: ${uploader.fans}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (uploader.sign.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              uploader.sign,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                  ],
+                ),
               ),
             ),
           );
