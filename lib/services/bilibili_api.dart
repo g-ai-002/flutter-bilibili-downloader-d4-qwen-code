@@ -39,23 +39,29 @@ class BilibiliApi {
     _cookies = cookies;
   }
 
-  /// 获取 WBI 密钥
+  /// 获取 WBI 密钥（带重试）
   Future<void> _ensureWbiKey() async {
     if (_wbiKeyFetchTime != null &&
         DateTime.now().difference(_wbiKeyFetchTime!).inSeconds < 600) {
       return;
     }
-    try {
-      final resp = await _dio.get('/x/web-interface/nav');
-      final data = resp.data;
-      if (data['code'] == 0) {
-        final wbiImg = data['data']['wbi_img'] ?? {};
-        _wbiImgUrl = wbiImg['img_url'] ?? '';
-        _wbiSubUrl = wbiImg['sub_url'] ?? '';
-        _wbiKeyFetchTime = DateTime.now();
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        final resp = await _dio.get('/x/web-interface/nav');
+        final data = resp.data;
+        if (data['code'] == 0) {
+          final wbiImg = data['data']['wbi_img'] ?? {};
+          _wbiImgUrl = wbiImg['img_url'] ?? '';
+          _wbiSubUrl = wbiImg['sub_url'] ?? '';
+          _wbiKeyFetchTime = DateTime.now();
+          return;
+        }
+      } catch (e) {
+        LogService.error('获取 WBI 密钥失败(第${attempt + 1}次)', e);
+        if (attempt < 2) {
+          await Future.delayed(Duration(seconds: 1 << attempt));
+        }
       }
-    } catch (e) {
-      LogService.error('获取 WBI 密钥失败', e);
     }
   }
 

@@ -71,17 +71,39 @@
 - [x] **修复 Issue #2** - DownloadJob 缺少 cid 字段导致下载进度始终为 0
 - [x] **更新版本号到 0.2.1**
 
-### v0.2.2 (当前版本 - PATCH)
+### v0.2.2
 - [x] **修复 Issue #3** - DASH 下载时视频轨和音频轨分别下载导致进度条回退到 0%
 - [x] **修复下载速度计算** - 音频轨下载时速度计算重置导致速度显示异常
 - [x] **优化 DASH 下载流程** - 合并视频轨和音频轨的进度计算，使用总进度而非单文件进度
 - [x] **更新版本号到 0.2.2**
 
+### v0.2.3 (当前版本 - PATCH)
+- [ ] **修复 StorageService 单例模式** - 避免每次调用 instance 都重新 await SharedPreferences.getInstance()
+- [ ] **修复 SearchPage 搜索历史竞态条件** - 简化搜索历史保存逻辑，避免重复操作
+- [ ] **修复 DownloadService DASH CancelToken 管理** - 确保 DASH 下载中视频轨和音频轨都能被正确取消
+- [ ] **合并 DownloadService._downloadFile 和 _downloadPart** - 消除重复代码
+- [ ] **优化 DownloadService._startDownload 拆分长方法** - 将过长的 _startDownload 拆分为职责明确的小方法
+- [ ] **优化 BilibiliApi WBI 密钥获取重试** - 添加 WBI 密钥获取失败的重试机制
+- [ ] **优化 VideoDetailPage 画质选择时机** - 在详情加载完成后自动选择最佳画质
+- [ ] **更新版本号到 0.2.3**
+
 ---
 
 ## 版本历史
 
-### v0.2.2 (当前版本)
+### v0.2.3 (当前版本)
+- **状态**: 开发中 🚧
+- **目标**: 重构优化存量代码，提升代码质量和健壮性
+- **重构**:
+  - 修复 StorageService 单例模式，避免重复初始化
+  - 修复 SearchPage 搜索历史竞态条件
+  - 修复 DownloadService DASH CancelToken 管理
+  - 合并 DownloadService._downloadFile 和 _downloadPart 消除重复代码
+  - 拆分 DownloadService._startDownload 长方法
+  - 优化 BilibiliApi WBI 密钥获取重试机制
+  - 优化 VideoDetailPage 画质选择时机
+
+### v0.2.2
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #3 - 下载进度回退和速度计算问题
 - **修复**:

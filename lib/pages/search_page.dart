@@ -40,19 +40,21 @@ class _SearchPageState extends State<SearchPage> {
     if (keyword.trim().isEmpty) return;
     _focusNode.unfocus();
 
-    final storage = await StorageService.instance;
-    await storage.addSearchHistory(keyword);
-
-    if (!mounted) return;
     final provider = context.read<SearchProvider>();
     if (_searchType == SearchType.video) {
       provider.search(keyword);
     } else {
       provider.searchUploaders(keyword);
     }
-    // 避免重复
-    _searchHistory.remove(keyword);
-    setState(() => _searchHistory.insert(0, keyword));
+
+    // 更新搜索历史
+    final storage = await StorageService.instance;
+    await storage.addSearchHistory(keyword);
+    if (!mounted) return;
+    setState(() {
+      _searchHistory.remove(keyword);
+      _searchHistory.insert(0, keyword);
+    });
   }
 
   @override

@@ -8,17 +8,22 @@ import 'log_service.dart';
 class StorageService {
   static StorageService? _instance;
   late SharedPreferences _prefs;
+  bool _initialized = false;
 
   StorageService._();
 
   static Future<StorageService> get instance async {
-    _instance ??= StorageService._();
-    await _instance!._init();
+    if (_instance == null) {
+      _instance = StorageService._();
+      await _instance!._init();
+    }
     return _instance!;
   }
 
   Future<void> _init() async {
+    if (_initialized) return;
     _prefs = await SharedPreferences.getInstance();
+    _initialized = true;
   }
 
   // --- 主题 ---

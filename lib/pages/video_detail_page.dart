@@ -27,7 +27,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   /// 根据优先级选择最佳画质
   void _selectBestQuality(BiliVideoDetail detail, SettingsProvider settings) {
-    final preferredQuality = settings.preferredQuality;
     String formatId = '80';
     String quality = '1080P';
 
@@ -48,8 +47,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       }
     }
 
-    _selectedFormatId = formatId;
-    _selectedQuality = quality;
+    if (_selectedFormatId != formatId || _selectedQuality != quality) {
+      _selectedFormatId = formatId;
+      _selectedQuality = quality;
+    }
   }
 
   @override
