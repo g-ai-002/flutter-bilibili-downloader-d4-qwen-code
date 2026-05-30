@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/download_job.dart';
 import '../utils/constants.dart';
 import 'log_service.dart';
 
@@ -93,5 +94,24 @@ class StorageService {
 
   Future<void> saveDownloadHistory(List<Map<String, dynamic>> history) async {
     await _prefs.setString('download_history', jsonEncode(history));
+  }
+
+  /// 保存下载任务列表（持久化）
+  Future<void> saveDownloadJobs(List<DownloadJob> jobs) async {
+    final list = jobs.map((j) => j.toJson()).toList();
+    await _prefs.setString('persisted_download_jobs', jsonEncode(list));
+  }
+
+  /// 加载持久化的下载任务列表
+  Future<List<DownloadJob>> loadDownloadJobs() async {
+    final json = _prefs.getString('persisted_download_jobs');
+    if (json == null) return [];
+    try {
+      final list = jsonDecode(json) as List<dynamic>;
+      return list.map((e) => DownloadJob.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      LogService.error('加载下载历史失败', e);
+      return [];
+    }
   }
 }

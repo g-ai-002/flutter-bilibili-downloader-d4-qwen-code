@@ -8,9 +8,11 @@ import '../services/log_service.dart';
 class DownloadProvider extends ChangeNotifier {
   DownloadService? _service;
   List<DownloadJob> _jobs = [];
+  bool _initialized = false;
 
   DownloadService? get service => _service;
   List<DownloadJob> get jobs => _jobs;
+  bool get initialized => _initialized;
   List<DownloadJob> get activeJobs =>
       _jobs.where((j) => j.status == DownloadStatus.downloading).toList();
   List<DownloadJob> get completedJobs =>
@@ -18,8 +20,24 @@ class DownloadProvider extends ChangeNotifier {
   List<DownloadJob> get failedJobs =>
       _jobs.where((j) => j.status == DownloadStatus.failed).toList();
 
-  void initService(DownloadService service) {
+  /// 初始化并加载持久化的下载任务
+  Future<void> initService(DownloadService service) async {
     _service = service;
+
+    // 加载持久化的下载任务
+    try {
+      final storage = await StorageService.instance;
+      final persisted = await storage.loadDownloadJobs();
+      if (persisted.isNotEmpty) {
+        _jobs = persisted;
+        notifyListeners();
+      }
+    } catch (e) {
+      LogService.error('加载下载历史失败', e);
+    }
+
+    _initialized = true;
+
     service.jobStream.listen((job) {
       final index = _jobs.indexWhere((j) => j.id == job.id);
       if (index >= 0) {
@@ -28,7 +46,19 @@ class DownloadProvider extends ChangeNotifier {
         _jobs.insert(0, job);
       }
       notifyListeners();
+      // 持久化保存
+      _persistJobs();
     });
+  }
+
+  /// 持久化保存下载任务
+  Future<void> _persistJobs() async {
+    try {
+      final storage = await StorageService.instance;
+      await storage.saveDownloadJobs(_jobs);
+    } catch (e) {
+      LogService.error('保存下载历史失败', e);
+    }
   }
 
   /// 添加下载任务

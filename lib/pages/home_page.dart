@@ -42,6 +42,7 @@ class _HomePageState extends State<HomePage> {
     // 初始化搜索和下载服务共享同一 API 实例
     search.initApi(api);
     final downloadService = DownloadService(api);
+    // 异步初始化下载服务（加载持久化数据）
     download.initService(downloadService);
   }
 
