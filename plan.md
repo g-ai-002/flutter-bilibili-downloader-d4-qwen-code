@@ -33,20 +33,26 @@
 - [x] 补全 Windows runner 文件（由 CI 自动生成）
 - [x] 清理未使用的依赖
 - [x] 修复 Android Gradle 构建（改用新版 plugin 声明方式）
+- [x] 修复 Dart 编译错误 (retryCount, surfaceContainerHighest, cookies, 图标)
+- [x] 修复 Android 资源链接失败（移除缺失图标引用）
 - [x] 更新版本号到 0.1.1
+- [x] CI 构建通过 ✅
 
 ---
 
 ## 版本历史
 
 ### v0.1.1 (当前版本)
-- **状态**: 已发布
+- **状态**: 已发布 ✅
 - **目标**: 修复 CI 构建失败问题，补全缺失文件
 - **修复**:
   - 修复 intl 版本冲突 (flutter_localizations 要求 intl 0.18.1)
   - 移除缺失的字体和资源引用
-  - 补全 Windows runner 文件
+  - 补全 Windows runner 文件（由 CI 自动生成）
   - 清理未使用的依赖项
+  - 修复 Android Gradle 构建（新版 plugin 声明方式）
+  - 修复 Dart 编译错误
+  - 修复 Android 资源链接失败
   - 更新版本号到 0.1.1
 
 ### v0.1.0
