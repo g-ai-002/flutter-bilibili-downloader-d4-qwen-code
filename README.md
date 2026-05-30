@@ -45,7 +45,12 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.1 (当前)
+### v0.2.2 (当前)
+- 修复 DASH 下载进度回退问题（Issue #3）
+- 优化 DASH 下载流程，合并视频轨和音频轨的进度计算
+- 修复下载速度计算在音频轨下载时重置的问题
+
+### v0.2.1
 - 修复下载进度始终为 0 的问题（Issue #2）
 - DownloadJob 模型新增 cid 字段，修复播放地址获取失败 Bug
 
@@ -61,13 +66,8 @@ flutter build windows --release
 - 修复视频画质获取接口缺少 WBI 签名
 - 修复 CI Windows 构建流程，确保生成 Windows Release
 
-### v0.1.2
+### v0.1.2 ~ v0.1.0
 - 重构优化存量代码，提升代码质量和健壮性
-- 统一 API 实例管理，搜索和下载服务共享同一 BilibiliApi 实例
-- 修复画质选择优先级逻辑 Bug
-- 添加 CancelToken 支持，实现下载任务真正取消
-
-### v0.1.1 ~ v0.1.0
 - 修复 CI 构建失败问题，补全缺失文件
 - 初始版本：Bilibili 视频搜索、扫码登录、高清下载、下载管理、深色模式、日志系统
 

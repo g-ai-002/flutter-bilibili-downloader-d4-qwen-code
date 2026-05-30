@@ -51,7 +51,8 @@ class DownloadService {
   /// 处理下载队列
   void _processQueue() {
     while (_activeCount < AppConstants.maxConcurrentDownloads) {
-      final pending = _jobs.where((j) => j.status == DownloadStatus.queued).toList();
+      final pending =
+          _jobs.where((j) => j.status == DownloadStatus.queued).toList();
       if (pending.isEmpty) break;
       _startDownload(pending.first);
     }
@@ -90,26 +91,62 @@ class DownloadService {
 
       // 创建下载目录
       final dir = await getApplicationDocumentsDirectory();
-      final downloadDir = Directory('${dir.path}/downloads/${_safeFileName(job.videoName)}');
+      final downloadDir = Directory(
+          '${dir.path}/downloads/${_safeFileName(job.videoName)}');
       if (!await downloadDir.exists()) {
         await downloadDir.create(recursive: true);
       }
 
-      // 下载视频
-      final videoPath = '${downloadDir.path}/${_safeFileName(job.episodeName)}_video.mp4';
-      await _downloadFile(videoUrl, videoPath, job);
+      final isDASH = audioUrl != null && audioUrl.isNotEmpty;
 
-      if (audioUrl != null && audioUrl.isNotEmpty) {
-        final audioPath = '${downloadDir.path}/${_safeFileName(job.episodeName)}_audio.m4a';
-        await _downloadFile(audioUrl, audioPath, job);
+      if (isDASH) {
+        // DASH 格式：分别下载视频轨和音频轨，合并计算总进度
+        final videoPath =
+            '${downloadDir.path}/${_safeFileName(job.episodeName)}_video.mp4';
+        final audioPath =
+            '${downloadDir.path}/${_safeFileName(job.episodeName)}_audio.m4a';
+
+        int videoTotal = 0;
+        int audioTotal = 0;
+        int cumulativeLastBytes = 0;
+        final stopwatch = Stopwatch()..start();
+
+        // 下载视频轨
+        await _downloadPart(videoUrl, videoPath, job, (received, total) {
+          videoTotal = total;
+          final cumulativeTotal = total + audioTotal;
+          final cumulativeReceived = received + audioTotal;
+          _updateProgress(job, cumulativeReceived, cumulativeTotal,
+              cumulativeLastBytes, stopwatch);
+          cumulativeLastBytes = cumulativeReceived;
+        });
+
+        // 下载音频轨
+        await _downloadPart(audioUrl, audioPath, job, (received, total) {
+          audioTotal = total;
+          final cumulativeTotal = videoTotal + total;
+          final cumulativeReceived = videoTotal + received;
+          _updateProgress(job, cumulativeReceived, cumulativeTotal,
+              cumulativeLastBytes, stopwatch);
+          cumulativeLastBytes = cumulativeReceived;
+        });
+
+        job.filePath =
+            '${downloadDir.path}/${_safeFileName(job.episodeName)}.mp4';
+      } else {
+        // 单文件格式
+        final videoPath =
+            '${downloadDir.path}/${_safeFileName(job.episodeName)}.mp4';
+        await _downloadFile(videoUrl, videoPath, job);
+        job.filePath = videoPath;
       }
 
-      job.filePath = '${downloadDir.path}/${_safeFileName(job.episodeName)}.mp4';
       job.status = DownloadStatus.completed;
       job.progress = 100;
       job.finishedAt = DateTime.now();
       // 发送下载完成通知
-      NotificationService.instance.showDownloadComplete(job.videoName, job.episodeName);
+      NotificationService.instance
+          .showDownloadComplete(job.videoName, job.episodeName);
     } catch (e) {
       LogService.error('下载失败: ${job.videoName}', e);
       if (job.retryCount < AppConstants.maxRetries) {
@@ -130,7 +167,25 @@ class DownloadService {
     _processQueue();
   }
 
-  /// 下载单个文件
+  /// 更新下载进度（支持 DASH 合并进度）
+  void _updateProgress(DownloadJob job, int received, int total,
+      int lastBytes, Stopwatch stopwatch) {
+    job.downloadedBytes = received;
+    job.totalBytes = total;
+    if (total > 0) {
+      job.progress = (received * 100 / total).round();
+    }
+    // 计算下载速度（每秒更新）
+    final elapsed = stopwatch.elapsedMilliseconds;
+    if (elapsed >= 1000) {
+      final bytesDiff = received - lastBytes;
+      job.speed = bytesDiff / (elapsed / 1000);
+      stopwatch.reset();
+    }
+    _jobController.add(job);
+  }
+
+  /// 下载单个文件（非 DASH 格式）
   Future<void> _downloadFile(String url, String path, DownloadJob job) async {
     final dio = Dio();
     CancelToken cancelToken = CancelToken();
@@ -155,25 +210,52 @@ class DownloadService {
             cancelToken.cancel();
             return;
           }
-          job.downloadedBytes = received;
-          job.totalBytes = total;
-          if (total > 0) {
-            job.progress = (received * 100 / total).round();
-          }
-          // 计算下载速度（每秒更新）
-          final elapsed = stopwatch.elapsedMilliseconds;
-          if (elapsed >= 1000) {
-            final bytesDiff = received - lastBytes;
-            job.speed = bytesDiff / (elapsed / 1000);
-            lastBytes = received;
-            stopwatch.reset();
-          }
-          _jobController.add(job);
+          _updateProgress(job, received, total, lastBytes, stopwatch);
+          lastBytes = received;
         },
       );
     } catch (e) {
       if (e is DioException && CancelToken.isCancel(e)) {
-        // 取消操作，不视为错误
+        return;
+      }
+      rethrow;
+    } finally {
+      _cancelTokens.remove(job.id);
+    }
+  }
+
+  /// 下载 DASH 格式的单个文件部分，通过回调报告进度
+  Future<void> _downloadPart(
+    String url,
+    String path,
+    DownloadJob job,
+    void Function(int received, int total) onProgress,
+  ) async {
+    final dio = Dio();
+    CancelToken cancelToken = CancelToken();
+    _cancelTokens[job.id] = cancelToken;
+
+    try {
+      await dio.download(
+        url,
+        path,
+        options: Options(
+          headers: {
+            'User-Agent': AppConstants.userAgent,
+            'Referer': 'https://www.bilibili.com/',
+          },
+        ),
+        cancelToken: cancelToken,
+        onReceiveProgress: (received, total) {
+          if (job.status == DownloadStatus.canceled) {
+            cancelToken.cancel();
+            return;
+          }
+          onProgress(received, total);
+        },
+      );
+    } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
         return;
       }
       rethrow;
@@ -187,10 +269,10 @@ class DownloadService {
     final index = _jobs.indexWhere((j) => j.id == jobId);
     if (index < 0) return;
     final job = _jobs[index];
-    if (job.status == DownloadStatus.queued || job.status == DownloadStatus.downloading) {
+    if (job.status == DownloadStatus.queued ||
+        job.status == DownloadStatus.downloading) {
       job.status = DownloadStatus.canceled;
       job.finishedAt = DateTime.now();
-      // 取消正在进行的网络请求
       _cancelTokens[jobId]?.cancel();
       _cancelTokens.remove(jobId);
       _jobController.add(job);
@@ -202,7 +284,8 @@ class DownloadService {
     final index = _jobs.indexWhere((j) => j.id == jobId);
     if (index < 0) return;
     final job = _jobs[index];
-    if (job.status == DownloadStatus.failed || job.status == DownloadStatus.canceled) {
+    if (job.status == DownloadStatus.failed ||
+        job.status == DownloadStatus.canceled) {
       job.status = DownloadStatus.queued;
       job.error = null;
       job.progress = 0;
