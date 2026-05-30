@@ -45,7 +45,13 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.1.2 (当前)
+### v0.1.3 (当前)
+- 修复 Bilibili 搜索 API 缺少 WBI 签名导致搜索失败
+- 修复视频画质获取接口缺少 WBI 签名
+- 修复 CI Windows 构建流程，确保生成 Windows Release
+- 更新版本号到 0.1.3
+
+### v0.1.2
 - 重构优化存量代码，提升代码质量和健壮性
 - 统一 API 实例管理，搜索和下载服务共享同一 BilibiliApi 实例
 - 修复画质选择优先级逻辑 Bug

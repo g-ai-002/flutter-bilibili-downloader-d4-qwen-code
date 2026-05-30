@@ -62,12 +62,17 @@ class BilibiliApi {
   /// 搜索视频
   Future<List<BiliVideo>> search(String keyword, {int page = 1, int pageSize = 20}) async {
     try {
-      final resp = await _dio.get('/x/web-interface/search/type', queryParameters: {
+      await _ensureWbiKey();
+      final params = {
         'search_type': 'video',
         'keyword': keyword,
-        'page': page,
-        'page_size': pageSize,
-      });
+        'page': page.toString(),
+        'page_size': pageSize.toString(),
+      };
+      final signed = _wbiImgUrl != null && _wbiSubUrl != null
+          ? WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!)
+          : params;
+      final resp = await _dio.get('/x/web-interface/search/type', queryParameters: signed);
       final data = resp.data;
       if (data['code'] != 0) return [];
 
@@ -134,10 +139,15 @@ class BilibiliApi {
   /// 获取视频可用画质
   Future<List<BiliVideoFormat>> _getFormats(String bvid, int cid) async {
     try {
-      final resp = await _dio.get('/x/player/wbi/v2', queryParameters: {
+      await _ensureWbiKey();
+      final params = {
         'bvid': bvid,
-        'cid': cid,
-      });
+        'cid': cid.toString(),
+      };
+      final signed = _wbiImgUrl != null && _wbiSubUrl != null
+          ? WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!)
+          : params;
+      final resp = await _dio.get('/x/player/wbi/v2', queryParameters: signed);
       final data = resp.data;
       if (data['code'] != 0) return [];
 
@@ -210,11 +220,16 @@ class BilibiliApi {
   /// 搜索 UP 主
   Future<List<BiliUploader>> searchUploaders(String keyword, {int page = 1}) async {
     try {
-      final resp = await _dio.get('/x/web-interface/search/type', queryParameters: {
+      await _ensureWbiKey();
+      final params = {
         'search_type': 'bili_user',
         'keyword': keyword,
-        'page': page,
-      });
+        'page': page.toString(),
+      };
+      final signed = _wbiImgUrl != null && _wbiSubUrl != null
+          ? WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!)
+          : params;
+      final resp = await _dio.get('/x/web-interface/search/type', queryParameters: signed);
       final data = resp.data;
       if (data['code'] != 0) return [];
 

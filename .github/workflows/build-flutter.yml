@@ -63,24 +63,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate Windows platform files
+        run: flutter create --platforms=windows --project-name bilibili_downloader .
+
       - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Create Windows ZIP
         run: |
-          flutter create --platforms=windows --project-name bilibili_downloader .
-          flutter build windows --release
+          Compress-Archive -Path build/windows/runner/Release/* -DestinationPath bilibili-downloader-windows.zip
 
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
           name: bilibili-downloader-windows
-          path: build/windows/runner/Release/
+          path: bilibili-downloader-windows.zip
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ github.ref_name }}
-          files: |
-            build/windows/runner/Release/
+          files: bilibili-downloader-windows.zip
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
