@@ -32,10 +32,11 @@ class LogService {
     final now = DateTime.now();
     final dateStr =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-    _logFile = File('${logDir.path}/app_$dateStr.log');
-    if (!await _logFile.exists()) {
-      await _logFile.create();
+    final logFile = File('${logDir.path}/app_$dateStr.log');
+    if (!await logFile.exists()) {
+      await logFile.create();
     }
+    _logFile = logFile;
     _initialized = true;
   }
 
