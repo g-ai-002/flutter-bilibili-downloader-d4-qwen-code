@@ -177,50 +177,66 @@ class BilibiliApi {
     }
   }
 
-  /// 获取视频播放 URL
+  /// 获取视频播放 URL（优先单文件格式，DASH 作为回退）
   Future<String?> getPlayUrl(String bvid, int cid, int quality) async {
     try {
       await _ensureWbiKey();
       if (_wbiImgUrl == null || _wbiSubUrl == null) return null;
 
-      final params = {
-        'bvid': bvid,
-        'cid': cid.toString(),
-        'qn': quality.toString(),
-        'fnval': '4048', // DASH + HDR
-        'fnver': '0',
-        'fourk': '1',
-      };
+      // 优先尝试单文件格式（fnval=16: MP4 含音视频）
+      String? result = await _fetchPlayUrl(bvid, cid, quality, '16');
+      if (result != null) return result;
 
-      final signed = WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!);
-      final resp = await _dio.get('/x/player/wbi/playurl', queryParameters: signed);
-      final data = resp.data;
-      if (data['code'] != 0) return null;
-
-      final dash = data['data']['dash'];
-      if (dash != null) {
-        final video = dash['video'] as List<dynamic>? ?? [];
-        final audio = dash['audio'] as List<dynamic>? ?? [];
-        if (video.isNotEmpty && audio.isNotEmpty) {
-          // 返回最佳视频和音频 URL
-          return jsonEncode({
-            'video': video.first['baseUrl'] ?? video.first['base_url'] ?? '',
-            'audio': audio.first['baseUrl'] ?? audio.first['base_url'] ?? '',
-          });
-        }
-      }
-
-      // 返回 DURL
-      final durl = data['data']['durl'] as List<dynamic>? ?? [];
-      if (durl.isNotEmpty) {
-        return durl.first['url'] as String?;
-      }
-
-      return null;
+      // 回退到 DASH 格式
+      result = await _fetchPlayUrl(bvid, cid, quality, '4048');
+      return result;
     } catch (e) {
       LogService.error('获取播放 URL 失败', e);
       return null;
     }
+  }
+
+  /// 请求播放 URL
+  Future<String?> _fetchPlayUrl(
+    String bvid,
+    int cid,
+    int quality,
+    String fnval,
+  ) async {
+    final params = {
+      'bvid': bvid,
+      'cid': cid.toString(),
+      'qn': quality.toString(),
+      'fnval': fnval,
+      'fnver': '0',
+      'fourk': '1',
+    };
+
+    final signed = WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!);
+    final resp = await _dio.get('/x/player/wbi/playurl', queryParameters: signed);
+    final data = resp.data;
+    if (data['code'] != 0) return null;
+
+    // 单文件格式：返回 durl
+    final durl = data['data']['durl'] as List<dynamic>? ?? [];
+    if (durl.isNotEmpty) {
+      return durl.first['url'] as String?;
+    }
+
+    // DASH 格式：返回视频+音频 URL
+    final dash = data['data']['dash'];
+    if (dash != null) {
+      final video = dash['video'] as List<dynamic>? ?? [];
+      final audio = dash['audio'] as List<dynamic>? ?? [];
+      if (video.isNotEmpty && audio.isNotEmpty) {
+        return jsonEncode({
+          'video': video.first['baseUrl'] ?? video.first['base_url'] ?? '',
+          'audio': audio.first['baseUrl'] ?? audio.first['base_url'] ?? '',
+        });
+      }
+    }
+
+    return null;
   }
 
   /// 搜索 UP 主

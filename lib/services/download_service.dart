@@ -155,8 +155,7 @@ class DownloadService {
       cumulativeLastBytes = cumulativeReceived;
     });
 
-    job.filePath =
-        '${downloadDir.path}/${_safeFileName(job.episodeName)}.mp4';
+    job.filePath = videoPath;
   }
 
   /// 下载单文件格式
