@@ -78,21 +78,21 @@
 - [x] **更新版本号到 0.2.2**
 
 ### v0.2.3 (当前版本 - PATCH)
-- [ ] **修复 StorageService 单例模式** - 避免每次调用 instance 都重新 await SharedPreferences.getInstance()
-- [ ] **修复 SearchPage 搜索历史竞态条件** - 简化搜索历史保存逻辑，避免重复操作
-- [ ] **修复 DownloadService DASH CancelToken 管理** - 确保 DASH 下载中视频轨和音频轨都能被正确取消
-- [ ] **合并 DownloadService._downloadFile 和 _downloadPart** - 消除重复代码
-- [ ] **优化 DownloadService._startDownload 拆分长方法** - 将过长的 _startDownload 拆分为职责明确的小方法
-- [ ] **优化 BilibiliApi WBI 密钥获取重试** - 添加 WBI 密钥获取失败的重试机制
-- [ ] **优化 VideoDetailPage 画质选择时机** - 在详情加载完成后自动选择最佳画质
-- [ ] **更新版本号到 0.2.3**
+- [x] **修复 StorageService 单例模式** - 避免每次调用 instance 都重新 await SharedPreferences.getInstance()
+- [x] **修复 SearchPage 搜索历史竞态条件** - 简化搜索历史保存逻辑，避免重复操作
+- [x] **修复 DownloadService DASH CancelToken 管理** - 确保 DASH 下载中视频轨和音频轨都能被正确取消
+- [x] **合并 DownloadService._downloadFile 和 _downloadPart** - 消除重复代码
+- [x] **优化 DownloadService._startDownload 拆分长方法** - 将过长的 _startDownload 拆分为职责明确的小方法
+- [x] **优化 BilibiliApi WBI 密钥获取重试** - 添加 WBI 密钥获取失败的重试机制
+- [x] **优化 VideoDetailPage 画质选择时机** - 在详情加载完成后自动选择最佳画质
+- [x] **更新版本号到 0.2.3**
 
 ---
 
 ## 版本历史
 
 ### v0.2.3 (当前版本)
-- **状态**: 开发中 🚧
+- **状态**: 已发布 ✅
 - **目标**: 重构优化存量代码，提升代码质量和健壮性
 - **重构**:
   - 修复 StorageService 单例模式，避免重复初始化
