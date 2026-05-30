@@ -28,6 +28,7 @@ class DownloadJob {
   final String videoName;
   final String episodeName;
   final String bvid;
+  final int cid;
   final String formatId;
   final String quality;
   DownloadStatus status;
@@ -47,6 +48,7 @@ class DownloadJob {
     required this.videoName,
     required this.episodeName,
     required this.bvid,
+    required this.cid,
     required this.formatId,
     required this.quality,
     this.status = DownloadStatus.queued,
@@ -67,6 +69,7 @@ class DownloadJob {
         'videoName': videoName,
         'episodeName': episodeName,
         'bvid': bvid,
+        'cid': cid,
         'formatId': formatId,
         'quality': quality,
         'status': status.name,
@@ -88,6 +91,7 @@ class DownloadJob {
       videoName: json['videoName'] as String? ?? '',
       episodeName: json['episodeName'] as String? ?? '',
       bvid: json['bvid'] as String? ?? '',
+      cid: json['cid'] as int? ?? 0,
       formatId: json['formatId'] as String? ?? '',
       quality: json['quality'] as String? ?? '',
       status: DownloadStatus.values.firstWhere(

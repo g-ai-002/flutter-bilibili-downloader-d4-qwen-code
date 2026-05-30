@@ -38,6 +38,7 @@ class DownloadService {
       videoName: videoName,
       episodeName: episodeName,
       bvid: bvid,
+      cid: cid,
       formatId: formatId,
       quality: quality,
     );
@@ -67,7 +68,7 @@ class DownloadService {
       // 获取播放 URL
       final playUrl = await _api.getPlayUrl(
         job.bvid,
-        int.tryParse(job.formatId) ?? 80,
+        job.cid,
         int.tryParse(job.formatId) ?? 80,
       );
 

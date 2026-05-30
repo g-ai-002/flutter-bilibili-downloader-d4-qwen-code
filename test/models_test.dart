@@ -119,6 +119,7 @@ void main() {
         videoName: '测试视频',
         episodeName: '第1P',
         bvid: 'BV1GJ411x7',
+        cid: 1001,
         formatId: '80',
         quality: '1080P',
         status: DownloadStatus.downloading,
@@ -132,6 +133,7 @@ void main() {
       expect(restored.videoName, job.videoName);
       expect(restored.episodeName, job.episodeName);
       expect(restored.bvid, job.bvid);
+      expect(restored.cid, job.cid);
       expect(restored.formatId, job.formatId);
       expect(restored.quality, job.quality);
       expect(restored.status, job.status);
@@ -153,6 +155,7 @@ void main() {
       };
       final job = DownloadJob.fromJson(json);
       expect(job.id, 'test_1');
+      expect(job.cid, 0);
       expect(job.error, isNull);
       expect(job.startedAt, isNull);
       expect(job.finishedAt, isNull);
@@ -174,6 +177,7 @@ void main() {
         videoName: '测试',
         episodeName: 'P1',
         bvid: 'BV1xx',
+        cid: 1001,
         formatId: '80',
         quality: '1080P',
         speed: 1024 * 1024, // 1 MB/s
@@ -194,6 +198,7 @@ void main() {
         videoName: '测试',
         episodeName: 'P1',
         bvid: 'BV1xx',
+        cid: 1001,
         formatId: '80',
         quality: '1080P',
         startedAt: now.subtract(const Duration(hours: 1, minutes: 30, seconds: 15)),
@@ -207,6 +212,7 @@ void main() {
         videoName: '测试',
         episodeName: 'P1',
         bvid: 'BV1xx',
+        cid: 1001,
         formatId: '80',
         quality: '1080P',
       );
