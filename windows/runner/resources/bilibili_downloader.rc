@@ -1,0 +1,4 @@
+#include "resource.h"
+
+// App icon - will be provided by Flutter build system
+IDI_APP_ICON ICON "app_icon.ico"

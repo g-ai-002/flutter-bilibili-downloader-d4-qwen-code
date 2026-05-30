@@ -1,7 +1,7 @@
 name: bilibili_downloader
 description: Bilibili 视频下载器 - 支持搜索、扫码登录、高清下载
 publish_to: 'none'
-version: 0.1.0
+version: 0.1.1
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -15,14 +15,8 @@ dependencies:
   dio: ^5.4.0
   shared_preferences: ^2.2.2
   path_provider: ^2.1.2
-  permission_handler: ^11.3.0
-  intl: ^0.19.0
+  intl: ^0.18.1
   crypto: ^3.0.3
-  qr_flutter: ^4.1.0
-  url_launcher: ^6.2.4
-  open_file: ^3.3.2
-  fluttertoast: ^8.2.4
-  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -31,11 +25,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: NotoSansSC
-      fonts:
-        - asset: assets/fonts/NotoSansSC-Regular.ttf
-        - asset: assets/fonts/NotoSansSC-Bold.ttf
-          weight: 700
-  assets:
-    - assets/

@@ -34,13 +34,11 @@ class BilibiliDownloaderApp extends StatelessWidget {
               colorSchemeSeed: const Color(0xFF00A1D6),
               useMaterial3: true,
               brightness: Brightness.light,
-              fontFamily: 'NotoSansSC',
             ),
             darkTheme: ThemeData(
               colorSchemeSeed: const Color(0xFF00A1D6),
               useMaterial3: true,
               brightness: Brightness.dark,
-              fontFamily: 'NotoSansSC',
             ),
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             localizationsDelegates: const [
