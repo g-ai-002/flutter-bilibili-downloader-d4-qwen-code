@@ -19,13 +19,13 @@ if (flutterVersionCode == null) {
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '0.1.1'
+    flutterVersionName = '0.1.2'
 }
 
 android {
     namespace "com.bilibili.downloader"
     compileSdk 36
-    ndkVersion flutter.ndkVersion
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
