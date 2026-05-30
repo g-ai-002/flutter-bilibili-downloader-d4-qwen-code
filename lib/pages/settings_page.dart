@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../providers/settings_provider.dart';
 import '../providers/search_provider.dart';
 import '../services/log_service.dart';
@@ -15,11 +18,13 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String _logContent = '';
+  String _downloadDir = '';
 
   @override
   void initState() {
     super.initState();
     _loadLogs();
+    _loadDownloadDir();
   }
 
   Future<void> _loadLogs() async {
@@ -27,6 +32,15 @@ class _SettingsPageState extends State<SettingsPage> {
     if (mounted) {
       setState(() => _logContent = logs.join('\n'));
     }
+  }
+
+  Future<void> _loadDownloadDir() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      if (mounted) {
+        setState(() => _downloadDir = '${dir.path}/downloads');
+      }
+    } catch (_) {}
   }
 
   @override
@@ -122,6 +136,28 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          // 下载目录
+          if (_downloadDir.isNotEmpty)
+            ListTile(
+              leading: Icon(Icons.folder, color: theme.colorScheme.primary),
+              title: const Text('下载目录'),
+              subtitle: Text(
+                _downloadDir,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+              trailing: IconButton(
+                icon: Icon(Icons.copy, color: theme.colorScheme.primary),
+                tooltip: '复制路径',
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: _downloadDir));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('下载目录已复制到剪贴板'), duration: Duration(seconds: 2)),
+                  );
+                },
+              ),
+            ),
 
           const Divider(),
 

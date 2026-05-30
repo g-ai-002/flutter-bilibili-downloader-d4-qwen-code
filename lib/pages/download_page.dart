@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/download_job.dart';
 import '../providers/download_provider.dart';
@@ -174,6 +175,47 @@ class _DownloadJobCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+              ),
+            ],
+            // 已完成任务显示文件路径
+            if (isCompleted && job.filePath != null && job.filePath!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.folder_open, size: 16, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        job.filePath!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.copy, size: 16, color: theme.colorScheme.primary),
+                      tooltip: '复制路径',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: job.filePath!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('路径已复制到剪贴板'), duration: Duration(seconds: 2)),
+                        );
+                      },
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 8),
