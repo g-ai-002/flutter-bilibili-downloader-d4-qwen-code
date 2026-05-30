@@ -27,9 +27,6 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _loadSearchHistory() async {
     final storage = await StorageService.instance;
-    setState(() {
-      _searchHistory = [];
-    });
     final history = await storage.getSearchHistory();
     if (mounted) {
       setState(() => _searchHistory = history);
@@ -45,6 +42,8 @@ class _SearchPageState extends State<SearchPage> {
 
     if (!mounted) return;
     context.read<SearchProvider>().search(keyword);
+    // 避免重复
+    _searchHistory.remove(keyword);
     setState(() => _searchHistory.insert(0, keyword));
   }
 

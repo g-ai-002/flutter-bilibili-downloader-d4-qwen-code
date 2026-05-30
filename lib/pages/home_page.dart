@@ -36,11 +36,11 @@ class _HomePageState extends State<HomePage> {
     final search = context.read<SearchProvider>();
     final download = context.read<DownloadProvider>();
 
-    // 初始化 API
-    search.initApi(settings.bilibiliCookies);
-
-    // 初始化下载服务
+    // 创建统一的 API 实例
     final api = BilibiliApi(cookies: settings.bilibiliCookies);
+
+    // 初始化搜索和下载服务共享同一 API 实例
+    search.initApi(api);
     final downloadService = DownloadService(api);
     download.initService(downloadService);
   }

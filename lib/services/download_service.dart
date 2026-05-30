@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/download_job.dart';
@@ -13,6 +12,7 @@ import 'log_service.dart';
 class DownloadService {
   final BilibiliApi _api;
   final List<DownloadJob> _jobs = [];
+  final Map<String, CancelToken> _cancelTokens = {};
   int _nextId = 1;
   int _activeCount = 0;
   final StreamController<DownloadJob> _jobController =
@@ -129,61 +129,64 @@ class DownloadService {
   /// 下载单个文件
   Future<void> _downloadFile(String url, String path, DownloadJob job) async {
     final dio = Dio();
-    await dio.download(
-      url,
-      path,
-      options: Options(
-        headers: {
-          'User-Agent': AppConstants.userAgent,
-          'Referer': 'https://www.bilibili.com/',
+    CancelToken cancelToken = CancelToken();
+    _cancelTokens[job.id] = cancelToken;
+
+    try {
+      await dio.download(
+        url,
+        path,
+        options: Options(
+          headers: {
+            'User-Agent': AppConstants.userAgent,
+            'Referer': 'https://www.bilibili.com/',
+          },
+        ),
+        cancelToken: cancelToken,
+        onReceiveProgress: (received, total) {
+          if (job.status == DownloadStatus.canceled) {
+            cancelToken.cancel();
+            return;
+          }
+          job.downloadedBytes = received;
+          job.totalBytes = total;
+          if (total > 0) {
+            job.progress = (received * 100 / total).round();
+          }
+          _jobController.add(job);
         },
-      ),
-      onReceiveProgress: (received, total) {
-        job.downloadedBytes = received;
-        job.totalBytes = total;
-        if (total > 0) {
-          job.progress = (received * 100 / total).round();
-        }
-        _jobController.add(job);
-      },
-    );
+      );
+    } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
+        // 取消操作，不视为错误
+        return;
+      }
+      rethrow;
+    } finally {
+      _cancelTokens.remove(job.id);
+    }
   }
 
   /// 取消任务
   void cancel(String jobId) {
-    final job = _jobs.firstWhere(
-      (j) => j.id == jobId,
-      orElse: () => DownloadJob(
-        id: '',
-        videoName: '',
-        episodeName: '',
-        bvid: '',
-        formatId: '',
-        quality: '',
-      ),
-    );
-    if (job.id.isEmpty) return;
+    final index = _jobs.indexWhere((j) => j.id == jobId);
+    if (index < 0) return;
+    final job = _jobs[index];
     if (job.status == DownloadStatus.queued || job.status == DownloadStatus.downloading) {
       job.status = DownloadStatus.canceled;
       job.finishedAt = DateTime.now();
+      // 取消正在进行的网络请求
+      _cancelTokens[jobId]?.cancel();
+      _cancelTokens.remove(jobId);
       _jobController.add(job);
     }
   }
 
   /// 重试任务
   void retry(String jobId) {
-    final job = _jobs.firstWhere(
-      (j) => j.id == jobId,
-      orElse: () => DownloadJob(
-        id: '',
-        videoName: '',
-        episodeName: '',
-        bvid: '',
-        formatId: '',
-        quality: '',
-      ),
-    );
-    if (job.id.isEmpty) return;
+    final index = _jobs.indexWhere((j) => j.id == jobId);
+    if (index < 0) return;
+    final job = _jobs[index];
     if (job.status == DownloadStatus.failed || job.status == DownloadStatus.canceled) {
       job.status = DownloadStatus.queued;
       job.error = null;

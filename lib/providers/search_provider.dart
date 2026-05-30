@@ -21,8 +21,8 @@ class SearchProvider extends ChangeNotifier {
   String? get error => _error;
   String get keyword => _keyword;
 
-  void initApi(String? cookies) {
-    _api = BilibiliApi(cookies: cookies);
+  void initApi(BilibiliApi api) {
+    _api = api;
   }
 
   void updateCookies(String? cookies) {

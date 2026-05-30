@@ -4,9 +4,10 @@ import 'package:path_provider/path_provider.dart';
 /// 日志服务
 class LogService {
   static LogService? _instance;
-  late final File _logFile;
+  File? _logFile;
   final List<String> _buffer = [];
   static const int _maxBufferLines = 1000;
+  bool _initialized = false;
 
   LogService._();
 
@@ -22,6 +23,7 @@ class LogService {
   }
 
   Future<void> _init() async {
+    if (_initialized) return;
     final dir = await getApplicationDocumentsDirectory();
     final logDir = Directory('${dir.path}/logs');
     if (!await logDir.exists()) {
@@ -34,6 +36,7 @@ class LogService {
     if (!await _logFile.exists()) {
       await _logFile.create();
     }
+    _initialized = true;
   }
 
   static void info(String message) {
@@ -53,6 +56,7 @@ class LogService {
   }
 
   void _log(String level, String message) {
+    if (!_initialized || _logFile == null) return;
     final now = DateTime.now();
     final timeStr =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}';
@@ -61,13 +65,20 @@ class LogService {
     if (_buffer.length > _maxBufferLines) {
       _buffer.removeAt(0);
     }
-    // 异步写入文件
-    _logFile.writeAsStringSync('$line\n', mode: FileMode.append);
+    try {
+      _logFile!.writeAsStringSync('$line\n', mode: FileMode.append);
+    } catch (_) {
+      // 日志写入失败不阻塞应用
+    }
   }
 
   static Future<String> getLogContent() async {
-    if (_instance == null) return '';
-    return _instance!._logFile.readAsString();
+    if (_instance == null || _instance!._logFile == null) return '';
+    try {
+      return _instance!._logFile!.readAsString();
+    } catch (_) {
+      return '';
+    }
   }
 
   static List<String> getRecentLogs([int lines = 100]) {
@@ -78,7 +89,7 @@ class LogService {
   }
 
   static Future<String> getLogFilePath() async {
-    if (_instance == null) return '';
-    return _instance!._logFile.path;
+    if (_instance == null || _instance!._logFile == null) return '';
+    return _instance!._logFile!.path;
   }
 }

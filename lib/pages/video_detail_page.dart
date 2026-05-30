@@ -59,17 +59,21 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     // 选择最佳画质
     String bestFormatId = '80'; // 默认 1080P
     String bestQuality = '1080P';
-    for (final q in AppConstants.qualityPriority) {
-      final match = detail.formats.where((f) => f.quality.contains(q)).toList();
-      if (match.isNotEmpty) {
-        bestFormatId = match.first.formatId;
-        bestQuality = match.first.quality;
-        break;
-      }
-    }
     if (detail.formats.isNotEmpty) {
-      bestFormatId = detail.formats.first.formatId;
-      bestQuality = detail.formats.first.quality;
+      // 先按优先级选择
+      for (final q in AppConstants.qualityPriority) {
+        final match = detail.formats.where((f) => f.quality.contains(q)).toList();
+        if (match.isNotEmpty) {
+          bestFormatId = match.first.formatId;
+          bestQuality = match.first.quality;
+          break;
+        }
+      }
+      // 如果优先级未匹配到，使用第一个可用画质
+      if (bestFormatId == '80' && detail.formats.isNotEmpty) {
+        bestFormatId = detail.formats.first.formatId;
+        bestQuality = detail.formats.first.quality;
+      }
     }
 
     return ListView(
