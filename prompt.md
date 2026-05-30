@@ -67,7 +67,7 @@
 - Windows版本支持不同窗口大小自适应
 - Android版本支持手机+折叠屏+平板电脑自适应布局
 - 界面需要支持简体中文
-- Windows系统优先使用`微软雅黑`字体, Android系统优先使用系统默认字体
+- Windows系统优先使用`Microsoft YaHei UI`字体, Android系统优先使用系统默认字体
 
 
 # Git 提交规范
