@@ -7,10 +7,12 @@ import 'providers/download_provider.dart';
 import 'providers/settings_provider.dart';
 import 'pages/home_page.dart';
 import 'services/log_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LogService.init();
+  await NotificationService.instance.init();
   runApp(const BilibiliDownloaderApp());
 }
 

@@ -7,6 +7,7 @@ import '../models/download_job.dart';
 import '../utils/constants.dart';
 import 'bilibili_api.dart';
 import 'log_service.dart';
+import 'notification_service.dart';
 
 /// 下载服务
 class DownloadService {
@@ -106,6 +107,8 @@ class DownloadService {
       job.status = DownloadStatus.completed;
       job.progress = 100;
       job.finishedAt = DateTime.now();
+      // 发送下载完成通知
+      NotificationService.instance.showDownloadComplete(job.videoName, job.episodeName);
     } catch (e) {
       LogService.error('下载失败: ${job.videoName}', e);
       if (job.retryCount < AppConstants.maxRetries) {
@@ -132,6 +135,9 @@ class DownloadService {
     CancelToken cancelToken = CancelToken();
     _cancelTokens[job.id] = cancelToken;
 
+    int lastBytes = 0;
+    final stopwatch = Stopwatch()..start();
+
     try {
       await dio.download(
         url,
@@ -152,6 +158,14 @@ class DownloadService {
           job.totalBytes = total;
           if (total > 0) {
             job.progress = (received * 100 / total).round();
+          }
+          // 计算下载速度（每秒更新）
+          final elapsed = stopwatch.elapsedMilliseconds;
+          if (elapsed >= 1000) {
+            final bytesDiff = received - lastBytes;
+            job.speed = bytesDiff / (elapsed / 1000);
+            lastBytes = received;
+            stopwatch.reset();
           }
           _jobController.add(job);
         },

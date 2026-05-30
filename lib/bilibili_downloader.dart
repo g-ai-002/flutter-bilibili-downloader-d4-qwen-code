@@ -10,6 +10,7 @@ export 'services/bilibili_login.dart';
 export 'services/download_service.dart';
 export 'services/storage_service.dart';
 export 'services/log_service.dart';
+export 'services/notification_service.dart';
 export 'providers/search_provider.dart';
 export 'providers/download_provider.dart';
 export 'providers/settings_provider.dart';
