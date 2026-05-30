@@ -1,1 +1,59 @@
-# flutter-bilibili-downloader-d4-qwen-code
+# Bilibili 视频下载器
+
+基于 Flutter 开发的跨平台 Bilibili 视频下载工具，支持 Android 和 Windows 平台。
+
+## 功能特性
+
+- 🔍 **视频搜索** - 搜索 Bilibili 视频和 UP 主
+- 📋 **视频详情** - 查看视频分集、画质信息
+- 📱 **扫码登录** - Bilibili 扫码登录，获取更高画质
+- ⬇️ **高清下载** - 优先下载最高画质视频
+- 📊 **下载管理** - 实时进度、暂停、重试、取消
+- 🌙 **深色模式** - 支持深色/浅色主题切换
+- 📝 **日志系统** - 完整的应用日志记录
+
+## 技术栈
+
+- **框架**: Flutter 3.19+
+- **语言**: Dart 3.2+
+- **状态管理**: Provider
+- **网络请求**: Dio
+- **本地存储**: SharedPreferences
+- **目标平台**: Android (minSdk 34, targetSdk 36), Windows 10+
+
+## 快速开始
+
+### 环境要求
+
+- Flutter SDK 3.19+
+- Dart SDK 3.2+
+- Android Studio (Android 构建)
+- Visual Studio 2022 (Windows 构建)
+
+### 构建
+
+```bash
+# 获取依赖
+flutter pub get
+
+# Android APK
+flutter build apk --release
+
+# Windows
+flutter build windows --release
+```
+
+## 版本历史
+
+### v0.1.0 (当前)
+- 初始版本
+- Bilibili 视频搜索与详情查看
+- Bilibili 扫码登录
+- 视频下载（优先最高画质）
+- 下载任务管理
+- 深色模式支持
+- 日志系统
+
+## 许可证
+
+MIT License

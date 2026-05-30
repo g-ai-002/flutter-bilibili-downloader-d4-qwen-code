@@ -1,40 +1,48 @@
-# 字节码 / 缓存
-__pycache__/
-*.py[cod]
-*.egg-info/
-.eggs/
+# Flutter
+.dart_tool/
+.packages
 build/
-dist/
-
-# 虚拟环境
-.venv/
-venv/
-env/
-
-# IDE
-.vscode/
+*.iml
 .idea/
+.vscode/
+*.lock
 
-# 测试 / 类型检查
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
+# Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/key.properties
 
-# 项目运行时产物
+# Windows
+windows/runner/Debug/
+windows/runner/Release/
+windows/runner/x64/
+windows/flutter/ephemeral/
+
+# macOS
+macos/Runner/DerivedData/
+macos/Flutter/ephemeral/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Linux
+linux/flutter/ephemeral/
+
+# Web
+web/
+
+# Project
 downloads/
 *.mp4
-*.ts
-*.m3u8
 *.log
-ovd.db
+.env
+token
 
-# 系统
+# System
 .DS_Store
 Thumbs.db
-
-# 私密配置
-.env
-*.local.toml
-token
