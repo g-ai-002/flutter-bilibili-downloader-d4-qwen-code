@@ -40,6 +40,7 @@ class DownloadJob {
   int totalBytes;
   double speed; // bytes/sec
   String? filePath;
+  int retryCount;
 
   DownloadJob({
     required this.id,
@@ -58,6 +59,7 @@ class DownloadJob {
     this.totalBytes = 0,
     this.speed = 0,
     this.filePath,
+    this.retryCount = 0,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -77,6 +79,7 @@ class DownloadJob {
         'totalBytes': totalBytes,
         'speed': speed,
         'filePath': filePath,
+        'retryCount': retryCount,
       };
 
   factory DownloadJob.fromJson(Map<String, dynamic> json) {
@@ -104,6 +107,7 @@ class DownloadJob {
       totalBytes: json['totalBytes'] as int? ?? 0,
       speed: (json['speed'] as num?)?.toDouble() ?? 0,
       filePath: json['filePath'] as String?,
+      retryCount: json['retryCount'] as int? ?? 0,
     );
   }
 

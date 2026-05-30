@@ -96,13 +96,6 @@ class BilibiliLogin {
         }
       }
     });
-    // 也提取 response cookies
-    for (final entry in resp.cookies) {
-      final cookieStr = '${entry.name}=${entry.value}';
-      if (!parts.any((p) => p.startsWith('${entry.name}='))) {
-        parts.add(cookieStr);
-      }
-    }
     return parts.join('; ');
   }
 }

@@ -145,7 +145,7 @@ class _DownloadJobCard extends StatelessWidget {
               const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: job.progress > 0 ? job.progress / 100 : null,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                backgroundColor: theme.colorScheme.surfaceVariant,
               ),
               const SizedBox(height: 4),
               Row(

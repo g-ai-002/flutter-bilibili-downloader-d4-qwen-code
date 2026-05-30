@@ -88,7 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
           // 下载设置
           _SectionHeader(title: '下载设置'),
           ListTile(
-            leading: Icon(Icons.quality, color: theme.colorScheme.primary),
+            leading: Icon(Icons.high_quality, color: theme.colorScheme.primary),
             title: const Text('首选画质'),
             subtitle: Text(settings.preferredQuality),
             trailing: DropdownButton<String>(
@@ -129,7 +129,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             leading: Icon(Icons.info_outline, color: theme.colorScheme.primary),
             title: const Text('版本'),
-            subtitle: const Text('0.1.0'),
+            subtitle: const Text('0.1.1'),
           ),
           ListTile(
             leading: Icon(Icons.description_outlined, color: theme.colorScheme.primary),

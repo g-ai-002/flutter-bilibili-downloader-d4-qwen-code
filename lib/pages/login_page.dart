@@ -123,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                         errorBuilder: (_, __, ___) => Container(
                           width: 200,
                           height: 200,
-                          color: theme.colorScheme.surfaceContainerHighest,
+                          color: theme.colorScheme.surfaceVariant,
                           child: const Icon(Icons.qr_code, size: 80),
                         ),
                       ),

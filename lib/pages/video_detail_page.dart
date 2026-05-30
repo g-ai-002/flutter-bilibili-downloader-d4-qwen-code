@@ -84,7 +84,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
                 height: 200,
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: theme.colorScheme.surfaceVariant,
                 child: const Icon(Icons.broken_image, size: 64),
               ),
             ),

@@ -67,7 +67,7 @@ class _SearchPageState extends State<SearchPage> {
             hintText: '搜索 Bilibili 视频...',
             border: InputBorder.none,
             filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             suffixIcon: IconButton(
               icon: const Icon(Icons.search),
@@ -196,7 +196,7 @@ class _SearchPageState extends State<SearchPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.video_search, size: 64, color: theme.colorScheme.primary.withOpacity(0.5)),
+          Icon(Icons.search, size: 64, color: theme.colorScheme.primary.withOpacity(0.5)),
           const SizedBox(height: 16),
           Text('搜索你想下载的 Bilibili 视频', style: theme.textTheme.bodyLarge),
           const SizedBox(height: 8),
@@ -235,7 +235,7 @@ class _VideoCard extends StatelessWidget {
                   errorBuilder: (_, __, ___) => Container(
                     width: 120,
                     height: 75,
-                    color: theme.colorScheme.surfaceContainerHighest,
+                    color: theme.colorScheme.surfaceVariant,
                     child: const Icon(Icons.broken_image),
                   ),
                 ),
