@@ -30,8 +30,9 @@
 ### v0.1.1 (当前版本 - PATCH)
 - [x] 修复 intl 版本冲突导致 CI 构建失败
 - [x] 修复 assets 目录和字体文件缺失
-- [x] 补全 Windows runner 文件
+- [x] 补全 Windows runner 文件（由 CI 自动生成）
 - [x] 清理未使用的依赖
+- [x] 修复 Android Gradle 构建（改用新版 plugin 声明方式）
 - [x] 更新版本号到 0.1.1
 
 ---
