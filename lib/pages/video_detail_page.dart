@@ -16,10 +16,40 @@ class VideoDetailPage extends StatefulWidget {
 }
 
 class _VideoDetailPageState extends State<VideoDetailPage> {
+  String? _selectedFormatId;
+  String? _selectedQuality;
+
   @override
   void initState() {
     super.initState();
     context.read<SearchProvider>().loadDetail(widget.bvid);
+  }
+
+  /// 根据优先级选择最佳画质
+  void _selectBestQuality(BiliVideoDetail detail, SettingsProvider settings) {
+    final preferredQuality = settings.preferredQuality;
+    String formatId = '80';
+    String quality = '1080P';
+
+    if (detail.formats.isNotEmpty) {
+      // 先按用户首选画质匹配
+      for (final q in AppConstants.qualityPriority) {
+        final match = detail.formats.where((f) => f.quality.contains(q)).toList();
+        if (match.isNotEmpty) {
+          formatId = match.first.formatId;
+          quality = match.first.quality;
+          break;
+        }
+      }
+      // 如果优先级未匹配到，使用第一个可用画质
+      if (formatId == '80' && detail.formats.isNotEmpty) {
+        formatId = detail.formats.first.formatId;
+        quality = detail.formats.first.quality;
+      }
+    }
+
+    _selectedFormatId = formatId;
+    _selectedQuality = quality;
   }
 
   @override
@@ -54,27 +84,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   Widget _buildDetail(BiliVideoDetail detail) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsProvider>();
-    final preferredQuality = settings.preferredQuality;
 
-    // 选择最佳画质
-    String bestFormatId = '80'; // 默认 1080P
-    String bestQuality = '1080P';
-    if (detail.formats.isNotEmpty) {
-      // 先按优先级选择
-      for (final q in AppConstants.qualityPriority) {
-        final match = detail.formats.where((f) => f.quality.contains(q)).toList();
-        if (match.isNotEmpty) {
-          bestFormatId = match.first.formatId;
-          bestQuality = match.first.quality;
-          break;
-        }
-      }
-      // 如果优先级未匹配到，使用第一个可用画质
-      if (bestFormatId == '80' && detail.formats.isNotEmpty) {
-        bestFormatId = detail.formats.first.formatId;
-        bestQuality = detail.formats.first.quality;
-      }
+    // 初始化画质选择
+    if (_selectedFormatId == null) {
+      _selectBestQuality(detail, settings);
     }
+
+    final bestFormatId = _selectedFormatId ?? '80';
+    final bestQuality = _selectedQuality ?? '1080P';
 
     return ListView(
       children: [
@@ -150,19 +167,28 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         // 画质选择
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('画质选择', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 12),
-              ...detail.formats.map((f) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: detail.formats.map((f) => FilterChip(
                   label: Text(f.quality, style: const TextStyle(fontSize: 12)),
-                  selected: f.formatId == bestFormatId,
-                  onSelected: (_) {},
+                  selected: f.formatId == _selectedFormatId,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() {
+                        _selectedFormatId = f.formatId;
+                        _selectedQuality = f.quality;
+                      });
+                    }
+                  },
                   visualDensity: VisualDensity.compact,
-                ),
-              )),
+                )).toList(),
+              ),
             ],
           ),
         ),
