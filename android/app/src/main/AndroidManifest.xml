@@ -9,7 +9,6 @@
     <application
         android:label="Bilibili 下载器"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
