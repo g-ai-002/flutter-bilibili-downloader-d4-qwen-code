@@ -218,5 +218,42 @@ void main() {
       );
       expect(job.duration, '');
     });
+
+    test('audioPath round trips via toJson/fromJson', () {
+      final job = DownloadJob(
+        id: 'test_audio',
+        videoName: '视频',
+        episodeName: 'P1',
+        bvid: 'BV1xx',
+        cid: 1,
+        formatId: '120',
+        quality: '4K',
+        filePath: '/tmp/video.mp4',
+        audioPath: '/tmp/audio.m4a',
+      );
+      final restored = DownloadJob.fromJson(job.toJson());
+      expect(restored.filePath, '/tmp/video.mp4');
+      expect(restored.audioPath, '/tmp/audio.m4a');
+    });
+  });
+
+  group('BiliUserInfo', () {
+    test('creates with required fields', () {
+      final user = BiliUserInfo(
+        mid: 12345,
+        uname: '测试用户',
+        face: 'https://i0.hdslb.com/face.jpg',
+        level: 6,
+      );
+      expect(user.mid, 12345);
+      expect(user.uname, '测试用户');
+      expect(user.face, 'https://i0.hdslb.com/face.jpg');
+      expect(user.level, 6);
+    });
+
+    test('level defaults to 0', () {
+      final user = BiliUserInfo(mid: 1, uname: 'a', face: '');
+      expect(user.level, 0);
+    });
   });
 }
