@@ -69,6 +69,24 @@ jobs:
       - name: Build Windows
         run: flutter build windows --release
 
+      - name: Download ffmpeg (bundle for one-click usage)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ffmpegUrl = 'https://github.com/GyanD/codexffmpeg/releases/download/7.0.2/ffmpeg-7.0.2-essentials_build.zip'
+          Write-Host "Downloading ffmpeg from $ffmpegUrl"
+          Invoke-WebRequest -UseBasicParsing -Uri $ffmpegUrl -OutFile ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-extracted -Force
+          $bin = Get-ChildItem -Path ffmpeg-extracted -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          if (-not $bin) { throw 'ffmpeg.exe not found in archive' }
+          $releaseDir = 'build\windows\x64\runner\Release'
+          Copy-Item $bin.FullName -Destination (Join-Path $releaseDir 'ffmpeg.exe') -Force
+          $probe = Get-ChildItem -Path ffmpeg-extracted -Recurse -Filter ffprobe.exe | Select-Object -First 1
+          if ($probe) {
+            Copy-Item $probe.FullName -Destination (Join-Path $releaseDir 'ffprobe.exe') -Force
+          }
+          Write-Host 'ffmpeg.exe bundled successfully'
+
       - name: Create Windows ZIP
         run: |
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath bilibili-downloader-windows.zip

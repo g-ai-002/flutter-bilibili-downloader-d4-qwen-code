@@ -121,20 +121,46 @@ class FileSystemService {
     return false;
   }
 
-  /// 检测系统 ffmpeg 是否可用
-  Future<bool> hasFFmpeg() async {
+  /// 检测 ffmpeg 可执行文件路径
+  /// 优先顺序：
+  ///   1. 应用同目录下的 ffmpeg.exe / ffmpeg（CI 已打包）
+  ///   2. 系统 PATH
+  /// 找不到返回 null
+  String? _ffmpegPath;
+  bool _ffmpegResolved = false;
+  Future<String?> resolveFfmpeg() async {
+    if (_ffmpegResolved) return _ffmpegPath;
+    _ffmpegResolved = true;
     try {
+      final exe = Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg';
+      // 1) 应用同目录
+      final exeDir = File(Platform.resolvedExecutable).parent.path;
+      final bundled = File('$exeDir${Platform.pathSeparator}$exe');
+      if (await bundled.exists()) {
+        _ffmpegPath = bundled.path;
+        return _ffmpegPath;
+      }
+      // 2) PATH
       final result = await Process.run(
         Platform.isWindows ? 'where' : 'which',
         ['ffmpeg'],
       );
-      return result.exitCode == 0;
-    } catch (_) {
-      return false;
-    }
+      if (result.exitCode == 0) {
+        final out = (result.stdout?.toString() ?? '').trim();
+        if (out.isNotEmpty) {
+          _ffmpegPath = out.split(RegExp(r'[\r\n]+')).first.trim();
+          return _ffmpegPath;
+        }
+      }
+    } catch (_) {}
+    _ffmpegPath = null;
+    return null;
   }
 
-  /// 合并视频轨与音频轨（依赖系统 ffmpeg）
+  /// 检测系统 ffmpeg 是否可用
+  Future<bool> hasFFmpeg() async => (await resolveFfmpeg()) != null;
+
+  /// 合并视频轨与音频轨（依赖系统/打包 ffmpeg）
   /// 成功返回输出路径，失败返回 null
   Future<String?> mergeAv({
     required String videoPath,
@@ -142,9 +168,9 @@ class FileSystemService {
     required String outputPath,
   }) async {
     try {
-      final hasFf = await hasFFmpeg();
-      if (!hasFf) {
-        LogService.warning('未检测到系统 ffmpeg，跳过合并');
+      final ff = await resolveFfmpeg();
+      if (ff == null) {
+        LogService.warning('未检测到 ffmpeg，跳过合并');
         return null;
       }
       final args = [
@@ -154,7 +180,7 @@ class FileSystemService {
         '-c', 'copy',
         outputPath,
       ];
-      final result = await Process.run('ffmpeg', args);
+      final result = await Process.run(ff, args);
       if (result.exitCode == 0 && await File(outputPath).exists()) {
         // 合并成功，删除中间文件
         try {
