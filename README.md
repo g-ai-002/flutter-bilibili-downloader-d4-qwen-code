@@ -45,7 +45,13 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.12 (当前)
+### v0.2.13 (当前)
+- 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException：
+  - **改用 Jetpack Media3 Transformer**：替换原生 MediaExtractor + MediaMuxer 方案，使用 Google 官方 Media3 Transformer API 实现 DASH 视频/音频合并
+  - **异步合并机制**：后台线程执行合并，支持超时控制（120s），不阻塞主线程
+  - **详细错误信息**：合并失败时返回包含 errorCode 的详细错误信息，便于问题定位
+
+### v0.2.12
 - 修复 Issue #9 + CI 构建失败：
   - **移除 ffmpeg-kit-min 依赖**：`com.arthenica:ffmpeg-kit-min:6.0-2` 已从 Maven 仓库下架，导致 Android CI 构建失败，已移除
   - **纯原生 MediaMuxer 合并**：移除所有 ffmpeg-kit 代码，Android 端仅使用原生 MediaExtractor + MediaMuxer 实现 DASH 视频/音频合并
