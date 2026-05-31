@@ -45,7 +45,19 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.7 (当前)
+### v0.2.8 (当前)
+- 修复 Issue #7 反馈（共 9 项）：
+  - **DASH 下载进度卡 98%**：处理 total=-1 未知大小；进度 clamp 到 99，合并前显示 99%
+  - **下载速度不准**：每个 part 独立速度跟踪，基于时间窗口增量计算
+  - **失败/取消任务可删除**：下载管理页为所有非下载中任务提供删除按钮
+  - **Windows 微软雅黑字体**：Windows 平台默认使用 Microsoft YaHei UI
+  - **下载管理器搜索**：支持按视频名称搜索已添加的下载任务
+  - **Cookie 持久化**：启动时预加载 SettingsProvider，确保登录状态不丢失
+  - **登录状态检测**：启动时验证 Cookies 有效性，失效则提示重新登录
+  - **详情页二次打开卡死**：clearDetail() 清除残留数据 + bvid 校验
+  - **发布时间显示**：搜索列表、UP 主列表、详情页显示视频发布时间
+
+### v0.2.7
 - 修复 Issue #6 评论补充反馈：
   - **画质选择体验优化**：视频详情页新增显式 Dropdown + ChoiceChip + 当前画质提示，算法改为基于 quality int 的稳定优先级
   - **Windows 内置 ffmpeg**：GitHub Actions 构建时自动下载并打包 `ffmpeg.exe` / `ffprobe.exe` 到 release zip 同目录，开箱即用无需用户额外安装
@@ -69,28 +81,12 @@ flutter build windows --release
 - 优先使用单文件格式下载（fnval=16），确保下载文件为含音视频的单文件
 - DASH 回退时 filePath 指向实际存在的视频文件
 
-### v0.2.4
-- 修复 Issue #4：显示已下载视频的本地存储地址
-- 下载页面已完成任务卡片显示文件存储路径，支持一键复制
-- 设置页面增加下载目录信息展示，支持复制路径
-- 优化 Android 存储权限（minSdk 34 使用应用专属存储无需额外权限）
-
-### v0.2.3
-- 重构优化存量代码，提升代码质量和健壮性
-- 修复 StorageService 单例模式，避免重复初始化
-- 修复 SearchPage 搜索历史竞态条件
-- 合并 DownloadService 重复代码，拆分长方法
-- 修复 DASH 下载 CancelToken 管理
-- 优化 BilibiliApi WBI 密钥获取重试机制
-- 优化 VideoDetailPage 画质选择逻辑
-
-### v0.1.x - v0.2.2（历史版本合并）
-- 初始版本：Bilibili 视频搜索、扫码登录、高清下载、下载管理、深色模式、日志系统
-- CI 构建修复、Bilibili API WBI 签名、Windows Release 构建
-- 重构优化：统一 API 实例、画质选择 Bug、CancelToken、LogService 线程安全
-- 下载历史持久化、画质选择交互、下载速度实时显示、搜索类型切换、下载完成通知
-- 修复 Issue #2 下载进度始终为 0（DownloadJob 缺少 cid）
-- 修复 Issue #3 DASH 下载进度回退、速度计算异常
+### v0.1.x - v0.2.4（历史版本合并）
+- v0.1.0：初始版本 — Bilibili 视频搜索、扫码登录、高清下载、下载管理、深色模式、日志系统
+- v0.1.1 ~ v0.1.3：CI 构建修复、Bilibili API WBI 签名、Windows Release 构建、重构优化
+- v0.2.0 ~ v0.2.2：下载历史持久化、画质选择交互、下载速度实时显示、搜索类型切换、下载完成通知、Issue #2/#3 修复
+- v0.2.3：重构优化（StorageService 单例、SearchPage 竞态、DASH CancelToken、长方法拆分、WBI 重试）
+- v0.2.4：修复 Issue #4 — 显示已下载视频本地存储地址
 
 ## 许可证
 

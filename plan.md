@@ -112,7 +112,20 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.7 (当前版本 - PATCH)
+### v0.2.8 (当前版本 - PATCH)
+修复 Issue #7 反馈的 9 大问题：
+- [x] **修复 Issue #7.1** - Windows DASH 下载完成后卡在 98%：处理 total=-1 情况；DASH 完成后立即设置进度 99%→100%
+- [x] **修复 Issue #7.2** - 下载速度计算与实际网速不符：每个 part 独立跟踪速度，基于时间窗口精确计算
+- [x] **修复 Issue #7.3** - 下载失败/取消的任务支持删除
+- [x] **修复 Issue #7.4** - Windows 字体设为 Microsoft YaHei UI
+- [x] **修复 Issue #7.5** - 下载管理列表支持搜索
+- [x] **修复 Issue #7.6** - Cookie 持久化：启动时预加载 SettingsProvider，确保 Cookies 已就绪
+- [x] **修复 Issue #7.7** - 启动时检测登录信息有效性，失效则清除并提醒
+- [x] **修复 Issue #7.8** - 视频详情页第二次打开一直转圈：clearDetail() 清除残留数据 + bvid 校验
+- [x] **修复 Issue #7.9** - 视频列表和详情页显示发布时间
+- [x] **更新版本号到 0.2.8**
+
+### v0.2.7 (PATCH)
 修复 Issue #6 补充评论反馈的 3 大问题：
 - [x] **修复 Issue #6 补充 1** - 视频详情页画质选择交互优化：增加显式 Dropdown，画质 Chip 改为 ChoiceChip 并显示"当前画质"提示；选择算法改为基于 quality int 的稳定优先级（避免 `contains` 误匹配）
 - [x] **修复 Issue #6 补充 2** - Windows 构建在 GitHub Actions 中自动下载并打包 ffmpeg.exe/ffprobe.exe 到 release zip 同目录，开箱即用无需用户安装；`FileSystemService.resolveFfmpeg` 同步支持"先查应用同目录，再回退到 PATH"
@@ -126,7 +139,21 @@
 
 ## 版本历史
 
-### v0.2.7 (当前版本)
+### v0.2.8 (当前版本)
+- **状态**: 开发中 🚧
+- **目标**: 修复 Issue #7 反馈的 9 大问题
+- **修复**:
+  - Windows DASH 下载完成进度卡在 98%：处理 total=-1 未知大小；进度 clamp 到 99 并在合并阶段显示 99%
+  - 下载速度与实际网速不符：每个 part 独立跟踪速度计算，基于时间窗口 + Part 增量
+  - 下载失败/取消任务支持删除
+  - Windows 字体设为 Microsoft YaHei UI
+  - 下载管理列表支持搜索
+  - Cookie 持久化：main() 中预加载 SettingsProvider
+  - 启动时检测登录信息有效性，失效则提示重新登录
+  - 视频详情页第二次打开卡死：clearDetail() + bvid 校验 + 错误重试按钮
+  - 视频列表和详情页显示发布时间
+
+### v0.2.7
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #6 评论补充反馈（画质选择 / Windows ffmpeg 内置 / 多个 LateInitializationError 与 412 风控）
 - **修复**:
