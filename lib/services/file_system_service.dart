@@ -171,7 +171,7 @@ class FileSystemService {
     required String audioPath,
     required String outputPath,
   }) async {
-    // Android: 优先使用原生 MediaMuxer
+    // Android: 使用 MediaMuxer，失败自动回退到 ffmpeg-kit
     if (Platform.isAndroid) {
       try {
         final merged = await _mergeChannel.invokeMethod<String>('mergeAv', {
@@ -185,12 +185,12 @@ class FileSystemService {
             await File(videoPath).delete();
             await File(audioPath).delete();
           } catch (_) {}
-          LogService.info('MediaMuxer 合并成功: $merged');
+          LogService.info('Android 合并成功: $merged');
           return merged;
         }
-        LogService.error('MediaMuxer 合并返回空结果', '');
+        LogService.error('Android 合并返回空结果', '');
       } catch (e) {
-        LogService.error('MediaMuxer 合并异常', e);
+        LogService.error('Android 合并异常 (MediaMuxer+ffmpeg 均失败)', e);
       }
       return null;
     }
