@@ -45,7 +45,12 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.9 (当前)
+### v0.2.10 (当前)
+- 修复 Issue #8：
+  - **Android DASH 视频/音频合并**：使用 Android MediaMuxer 原生 API 实现合并，无需外部 ffmpeg 依赖
+  - **下载中任务支持删除**：下载中/排队中任务增加删除按钮，删除时自动取消下载
+
+### v0.2.9
 - 修复 CI 构建失败：
   - **Dart 编译错误修复** - home_page.dart SnackBar const 上下文引用实例方法，移除 const；video_detail_page.dart nullable BiliVideoFormat 添加 null-assert
 
@@ -80,17 +85,13 @@ flutter build windows --release
   - 显示已登录账号头像 + 用户名（调用 `/x/web-interface/nav` 接口）
   - 宽屏（>=900px）切换为 NavigationRail 主从布局，手机端保持底部导航
 
-### v0.2.5
-- 修复 Issue #5：Android 上下载的视频文件不存在
-- 优先使用单文件格式下载（fnval=16），确保下载文件为含音视频的单文件
-- DASH 回退时 filePath 指向实际存在的视频文件
-
-### v0.1.x - v0.2.4（历史版本合并）
+### v0.1.x - v0.2.5（历史版本合并）
 - v0.1.0：初始版本 — Bilibili 视频搜索、扫码登录、高清下载、下载管理、深色模式、日志系统
 - v0.1.1 ~ v0.1.3：CI 构建修复、Bilibili API WBI 签名、Windows Release 构建、重构优化
 - v0.2.0 ~ v0.2.2：下载历史持久化、画质选择交互、下载速度实时显示、搜索类型切换、下载完成通知、Issue #2/#3 修复
 - v0.2.3：重构优化（StorageService 单例、SearchPage 竞态、DASH CancelToken、长方法拆分、WBI 重试）
 - v0.2.4：修复 Issue #4 — 显示已下载视频本地存储地址
+- v0.2.5：修复 Issue #5 — 优先使用单文件格式下载，Android 下载文件存在性修复
 
 ## 许可证
 
