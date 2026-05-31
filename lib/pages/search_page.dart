@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/video.dart';
 import '../providers/search_provider.dart';
-import '../providers/settings_provider.dart';
 import '../services/storage_service.dart';
 import 'video_detail_page.dart';
 import 'login_page.dart';
+import 'uploader_videos_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -188,7 +188,12 @@ class _SearchPageState extends State<SearchPage> {
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: () => context.read<SearchProvider>().loadUploaderVideos(uploader.mid),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UploaderVideosPage(uploader: uploader),
+                ),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
