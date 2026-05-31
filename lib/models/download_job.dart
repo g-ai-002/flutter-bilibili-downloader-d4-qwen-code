@@ -41,6 +41,7 @@ class DownloadJob {
   int totalBytes;
   double speed; // bytes/sec
   String? filePath;
+  String? audioPath; // DASH 未合并时的音频文件路径
   int retryCount;
 
   DownloadJob({
@@ -61,6 +62,7 @@ class DownloadJob {
     this.totalBytes = 0,
     this.speed = 0,
     this.filePath,
+    this.audioPath,
     this.retryCount = 0,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -82,6 +84,7 @@ class DownloadJob {
         'totalBytes': totalBytes,
         'speed': speed,
         'filePath': filePath,
+        'audioPath': audioPath,
         'retryCount': retryCount,
       };
 
@@ -111,6 +114,7 @@ class DownloadJob {
       totalBytes: json['totalBytes'] as int? ?? 0,
       speed: (json['speed'] as num?)?.toDouble() ?? 0,
       filePath: json['filePath'] as String?,
+      audioPath: json['audioPath'] as String?,
       retryCount: json['retryCount'] as int? ?? 0,
     );
   }

@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/download_job.dart';
 import '../utils/constants.dart';
 import 'bilibili_api.dart';
+import 'file_system_service.dart';
 import 'log_service.dart';
 import 'notification_service.dart';
 
@@ -89,9 +89,9 @@ class DownloadService {
       }
 
       // 创建下载目录
-      final dir = await getApplicationDocumentsDirectory();
+      final root = await FileSystemService.instance.getDownloadRoot();
       final downloadDir = Directory(
-          '${dir.path}/downloads/${_safeFileName(job.videoName)}');
+          '${root.path}${Platform.pathSeparator}${_safeFileName(job.videoName)}');
       if (!await downloadDir.exists()) {
         await downloadDir.create(recursive: true);
       }
@@ -125,10 +125,11 @@ class DownloadService {
     String audioUrl,
     Directory downloadDir,
   ) async {
-    final videoPath =
-        '${downloadDir.path}/${_safeFileName(job.episodeName)}_video.mp4';
-    final audioPath =
-        '${downloadDir.path}/${_safeFileName(job.episodeName)}_audio.m4a';
+    final sep = Platform.pathSeparator;
+    final base = '${downloadDir.path}$sep${_safeFileName(job.episodeName)}';
+    final videoPath = '${base}_video.mp4';
+    final audioPath = '${base}_audio.m4a';
+    final mergedPath = '$base.mp4';
 
     int videoTotal = 0;
     int audioTotal = 0;
@@ -155,7 +156,21 @@ class DownloadService {
       cumulativeLastBytes = cumulativeReceived;
     });
 
-    job.filePath = videoPath;
+    // 尝试调用系统 ffmpeg 合并（桌面端通常预装/可手动安装；Android 端默认不可用）
+    final merged = await FileSystemService.instance.mergeAv(
+      videoPath: videoPath,
+      audioPath: audioPath,
+      outputPath: mergedPath,
+    );
+    if (merged != null) {
+      job.filePath = merged;
+      job.audioPath = null;
+      LogService.info('已合并视频/音频: $merged');
+    } else {
+      // 未合并：filePath 指向视频文件，audioPath 指向音频文件
+      job.filePath = videoPath;
+      job.audioPath = audioPath;
+    }
   }
 
   /// 下载单文件格式
@@ -165,7 +180,7 @@ class DownloadService {
     Directory downloadDir,
   ) async {
     final videoPath =
-        '${downloadDir.path}/${_safeFileName(job.episodeName)}.mp4';
+        '${downloadDir.path}${Platform.pathSeparator}${_safeFileName(job.episodeName)}.mp4';
     int lastBytes = 0;
     final stopwatch = Stopwatch()..start();
     await _downloadPart(videoPath, url, job, (received, total) {

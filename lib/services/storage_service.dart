@@ -50,7 +50,7 @@ class StorageService {
   int get maxJobs => _prefs.getInt(AppConstants.prefKeyMaxJobs) ?? AppConstants.maxJobs;
   set maxJobs(int value) => _prefs.setInt(AppConstants.prefKeyMaxJobs, value);
 
-  String get preferredQuality => _prefs.getString(AppConstants.prefKeyQuality) ?? '1080P';
+  String get preferredQuality => _prefs.getString(AppConstants.prefKeyQuality) ?? '4K';
   set preferredQuality(String value) => _prefs.setString(AppConstants.prefKeyQuality, value);
 
   // --- 搜索历史 ---

@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'file_system_service.dart';
 
 /// 日志服务
 class LogService {
@@ -24,15 +24,11 @@ class LogService {
 
   Future<void> _init() async {
     if (_initialized) return;
-    final dir = await getApplicationDocumentsDirectory();
-    final logDir = Directory('${dir.path}/logs');
-    if (!await logDir.exists()) {
-      await logDir.create(recursive: true);
-    }
+    final logDir = await FileSystemService.instance.getLogRoot();
     final now = DateTime.now();
     final dateStr =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-    final logFile = File('${logDir.path}/app_$dateStr.log');
+    final logFile = File('${logDir.path}${Platform.pathSeparator}app_$dateStr.log');
     if (!await logFile.exists()) {
       await logFile.create();
     }
