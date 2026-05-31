@@ -27,25 +27,28 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   /// 根据优先级选择最佳画质
   void _selectBestQuality(BiliVideoDetail detail, SettingsProvider settings) {
-    String formatId = '80';
-    String quality = '1080P';
+    if (detail.formats.isEmpty) return;
 
-    if (detail.formats.isNotEmpty) {
-      // 先按用户首选画质匹配
-      for (final q in AppConstants.qualityPriority) {
-        final match = detail.formats.where((f) => f.quality.contains(q)).toList();
-        if (match.isNotEmpty) {
-          formatId = match.first.formatId;
-          quality = match.first.quality;
-          break;
-        }
-      }
-      // 如果优先级未匹配到，使用第一个可用画质
-      if (formatId == '80' && detail.formats.isNotEmpty) {
-        formatId = detail.formats.first.formatId;
-        quality = detail.formats.first.quality;
+    // 优先级：用户首选画质 -> 全局画质优先级 -> 列表第一个
+    final preferred = settings.preferredQuality;
+    final candidateOrder = <String>[
+      preferred,
+      ...AppConstants.qualityPriority.where((q) => q != preferred),
+    ];
+
+    String? formatId;
+    String? quality;
+    for (final q in candidateOrder) {
+      final match = detail.formats.where((f) => f.quality.contains(q)).toList();
+      if (match.isNotEmpty) {
+        formatId = match.first.formatId;
+        quality = match.first.quality;
+        break;
       }
     }
+
+    formatId ??= detail.formats.first.formatId;
+    quality ??= detail.formats.first.quality;
 
     if (_selectedFormatId != formatId || _selectedQuality != quality) {
       _selectedFormatId = formatId;
