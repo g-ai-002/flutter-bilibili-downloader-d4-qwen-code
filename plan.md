@@ -112,7 +112,14 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.10 (当前版本 - PATCH)
+### v0.2.11 (当前版本 - PATCH)
+修复 Issue #9 反馈的 MediaMuxer 合并失败：
+- [x] **修复 MediaMuxer buffer.clear() Bug** - writeTrack 循环中缺少 buffer.clear()，导致 buffer 位置累积错误，引发 PlatformException(MERGE_FAILED)
+- [x] **Android 添加 ffmpeg-kit 回退** - 引入 `com.arthenica:ffmpeg-kit-min:6.0-2`，MediaMuxer 失败时自动回退到 ffmpeg-kit 合并
+- [x] **改进异常信息** - 合并失败时返回更详细的错误信息（MediaMuxer 和 ffmpeg 的错误均会体现）
+- [x] **更新版本号到 0.2.11**
+
+### v0.2.10
 修复 Issue #8 反馈的 2 大问题：
 - [x] **修复 Issue #8.1** - 安卓 DASH 视频/音频合并：使用 Android MediaMuxer 原生 API 实现合并，无需外部依赖
 - [x] **修复 Issue #8.2** - 下载中的任务支持删除：下载中/排队中任务增加删除按钮，delete 时自动 cancel
@@ -150,7 +157,15 @@
 
 ## 版本历史
 
-### v0.2.10 (当前版本)
+### v0.2.11 (当前版本)
+- **状态**: 已发布 ✅
+- **目标**: 修复 Issue #9 - Android MediaMuxer 合并失败
+- **修复**:
+  - MediaMuxer writeTrack 添加 buffer.clear()，修复 buffer 位置累积导致 MERGE_FAILED
+  - Android 引入 ffmpeg-kit-min 6.0-2 作为回退方案，MediaMuxer 失败时自动切换
+  - 改进合并失败时的错误信息，同时展示 MediaMuxer 和 ffmpeg 的错误详情
+
+### v0.2.10
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #8
 - **修复**:

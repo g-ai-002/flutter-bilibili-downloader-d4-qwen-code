@@ -45,7 +45,13 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.10 (当前)
+### v0.2.11 (当前)
+- 修复 Issue #9：
+  - **Android DASH 合并修复**：修复 MediaMuxer writeTrack 中 buffer.clear() 缺失导致的 MERGE_FAILED 问题
+  - **Android ffmpeg-kit 回退**：引入 ffmpeg-kit-min 6.0-2，MediaMuxer 失败时自动回退到 ffmpeg 合并
+  - **更详细的错误信息**：合并失败时同时展示 MediaMuxer 和 ffmpeg 的错误详情，便于问题定位
+
+### v0.2.10
 - 修复 Issue #8：
   - **Android DASH 视频/音频合并**：使用 Android MediaMuxer 原生 API 实现合并，无需外部 ffmpeg 依赖
   - **下载中任务支持删除**：下载中/排队中任务增加删除按钮，删除时自动取消下载
