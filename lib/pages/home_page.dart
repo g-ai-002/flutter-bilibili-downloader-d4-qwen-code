@@ -79,9 +79,9 @@ class _HomePageState extends State<HomePage> {
         await settings.setBilibiliCookies(null);
         context.read<SearchProvider>().updateCookies(null);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('登录信息已过期，请重新扫码登录'),
-            duration: Duration(seconds: 4),
+          SnackBar(
+            content: const Text('登录信息已过期，请重新扫码登录'),
+            duration: const Duration(seconds: 4),
             action: SnackBarAction(
               label: '登录',
               onPressed: _navigateToLogin,

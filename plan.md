@@ -112,7 +112,12 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.8 (当前版本 - PATCH)
+### v0.2.9 (当前版本 - PATCH)
+修复 CI 构建失败（v0.2.8 遗留编译错误）：
+- [x] **修复 Dart 编译错误** - home_page.dart SnackBar const 上下文引用实例方法；video_detail_page.dart nullable 类型访问属性
+- [x] **更新版本号到 0.2.9**
+
+### v0.2.8 (PATCH)
 修复 Issue #7 反馈的 9 大问题：
 - [x] **修复 Issue #7.1** - Windows DASH 下载完成后卡在 98%：处理 total=-1 情况；DASH 完成后立即设置进度 99%→100%
 - [x] **修复 Issue #7.2** - 下载速度计算与实际网速不符：每个 part 独立跟踪速度，基于时间窗口精确计算
@@ -139,8 +144,15 @@
 
 ## 版本历史
 
-### v0.2.8 (当前版本)
+### v0.2.9 (当前版本)
 - **状态**: 开发中 🚧
+- **目标**: 修复 CI 构建失败（v0.2.8 遗留编译错误）
+- **修复**:
+  - home_page.dart：SnackBar 移除 const（引用实例方法 _navigateToLogin）
+  - video_detail_page.dart：nullable 类型 chosen 添加 null-assert
+
+### v0.2.8
+- **状态**: 已发布 ✅
 - **目标**: 修复 Issue #7 反馈的 9 大问题
 - **修复**:
   - Windows DASH 下载完成进度卡在 98%：处理 total=-1 未知大小；进度 clamp 到 99 并在合并阶段显示 99%

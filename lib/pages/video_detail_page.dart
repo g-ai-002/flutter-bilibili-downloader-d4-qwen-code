@@ -69,10 +69,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       }
     }
 
-    if (_selectedFormatId != chosen.formatId || _selectedQuality != chosen.quality) {
+    if (_selectedFormatId != chosen!.formatId || _selectedQuality != chosen!.quality) {
       setState(() {
-        _selectedFormatId = chosen.formatId;
-        _selectedQuality = chosen.quality;
+        _selectedFormatId = chosen!.formatId;
+        _selectedQuality = chosen!.quality;
       });
     }
   }

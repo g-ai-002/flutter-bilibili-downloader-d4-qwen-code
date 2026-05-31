@@ -45,7 +45,11 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.8 (当前)
+### v0.2.9 (当前)
+- 修复 CI 构建失败：
+  - **Dart 编译错误修复** - home_page.dart SnackBar const 上下文引用实例方法，移除 const；video_detail_page.dart nullable BiliVideoFormat 添加 null-assert
+
+### v0.2.8
 - 修复 Issue #7 反馈（共 9 项）：
   - **DASH 下载进度卡 98%**：处理 total=-1 未知大小；进度 clamp 到 99，合并前显示 99%
   - **下载速度不准**：每个 part 独立速度跟踪，基于时间窗口增量计算
