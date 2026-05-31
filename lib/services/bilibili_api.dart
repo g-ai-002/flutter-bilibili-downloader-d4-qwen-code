@@ -5,6 +5,16 @@ import '../utils/constants.dart';
 import '../utils/wbi_sign.dart';
 import 'log_service.dart';
 
+/// 业务可读的接口错误（用于将 412 风控等技术错误转成给用户看的提示）
+class BilibiliApiException implements Exception {
+  final String message;
+  final int? code;
+  BilibiliApiException(this.message, {this.code});
+
+  @override
+  String toString() => message;
+}
+
 /// Bilibili API 客户端
 class BilibiliApi {
   late final Dio _dio;
@@ -12,6 +22,8 @@ class BilibiliApi {
   String? _wbiImgUrl;
   String? _wbiSubUrl;
   DateTime? _wbiKeyFetchTime;
+  String? _buvid3;
+  bool _buvidPrepared = false;
 
   BilibiliApi({String? cookies}) {
     _cookies = cookies;
@@ -24,11 +36,14 @@ class BilibiliApi {
       },
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
+      // 412 等错误不直接抛异常，由调用方根据 code/状态自行处理。
+      validateStatus: (status) => status != null && status < 500,
     ));
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        if (_cookies != null && _cookies!.isNotEmpty) {
-          options.headers['Cookie'] = _cookies;
+        final merged = _composeCookies();
+        if (merged.isNotEmpty) {
+          options.headers['Cookie'] = merged;
         }
         handler.next(options);
       },
@@ -39,23 +54,65 @@ class BilibiliApi {
     _cookies = cookies;
   }
 
-  /// 获取 WBI 密钥（带重试）
+  String _composeCookies() {
+    final parts = <String>[];
+    if (_cookies != null && _cookies!.isNotEmpty) parts.add(_cookies!);
+    if (_buvid3 != null && _buvid3!.isNotEmpty && !(_cookies?.contains('buvid3=') ?? false)) {
+      parts.add('buvid3=${_buvid3!}');
+    }
+    return parts.join('; ');
+  }
+
+  /// 通过访问 www.bilibili.com 获取 `buvid3` cookie，
+  /// 这是解决搜索接口 412(风控) 的关键之一。
+  /// 仅执行一次，失败也只记录日志不阻塞业务。
+  Future<void> _ensureBuvid() async {
+    if (_buvidPrepared) return;
+    _buvidPrepared = true;
+    try {
+      final tmp = Dio(BaseOptions(
+        headers: {
+          'User-Agent': AppConstants.userAgent,
+          'Referer': 'https://www.bilibili.com/',
+        },
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        validateStatus: (s) => s != null && s < 500,
+      ));
+      final resp = await tmp.get('https://www.bilibili.com/');
+      final cookies = resp.headers.map['set-cookie'] ?? const <String>[];
+      for (final raw in cookies) {
+        final m = RegExp(r'buvid3=([^;]+)').firstMatch(raw);
+        if (m != null) {
+          _buvid3 = m.group(1);
+          break;
+        }
+      }
+      tmp.close(force: true);
+    } catch (e) {
+      LogService.warning('获取 buvid3 失败（将继续以匿名方式访问）: $e');
+    }
+  }
+
+  /// 获取 WBI 密钥（带重试，且会在风控时刷新 buvid3）
   Future<void> _ensureWbiKey() async {
     if (_wbiKeyFetchTime != null &&
         DateTime.now().difference(_wbiKeyFetchTime!).inSeconds < 600) {
       return;
     }
+    await _ensureBuvid();
     for (int attempt = 0; attempt < 3; attempt++) {
       try {
         final resp = await _dio.get('/x/web-interface/nav');
         final data = resp.data;
-        if (data['code'] == 0) {
+        if (data is Map && data['code'] == 0) {
           final wbiImg = data['data']['wbi_img'] ?? {};
           _wbiImgUrl = wbiImg['img_url'] ?? '';
           _wbiSubUrl = wbiImg['sub_url'] ?? '';
           _wbiKeyFetchTime = DateTime.now();
           return;
         }
+        // 部分账号未登录时 nav 仍返回 wbi_img，可继续；其它情况记录后重试
       } catch (e) {
         LogService.error('获取 WBI 密钥失败(第${attempt + 1}次)', e);
         if (attempt < 2) {
@@ -79,8 +136,14 @@ class BilibiliApi {
           ? WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!)
           : params;
       final resp = await _dio.get('/x/web-interface/search/type', queryParameters: signed);
+      if (resp.statusCode == 412) {
+        throw BilibiliApiException('请求被 B 站风控拦截(412)，请稍后再试，或扫码登录后重试。', code: 412);
+      }
       final data = resp.data;
-      if (data['code'] != 0) return [];
+      if (data is! Map || data['code'] != 0) {
+        final msg = (data is Map ? data['message']?.toString() : null) ?? '搜索失败';
+        throw BilibiliApiException(msg, code: data is Map ? data['code'] as int? : null);
+      }
 
       final results = <BiliVideo>[];
       for (final item in data['data']['result'] as List<dynamic>) {
@@ -97,9 +160,11 @@ class BilibiliApi {
         ));
       }
       return results;
+    } on BilibiliApiException {
+      rethrow;
     } catch (e) {
       LogService.error('搜索视频失败', e);
-      return [];
+      throw BilibiliApiException('搜索视频失败：$e');
     }
   }
 
@@ -178,65 +243,90 @@ class BilibiliApi {
   }
 
   /// 获取视频播放 URL（优先单文件格式，DASH 作为回退）
+  /// 失败时抛出 [BilibiliApiException]，便于下载层将原因透传给用户。
   Future<String?> getPlayUrl(String bvid, int cid, int quality) async {
-    try {
-      await _ensureWbiKey();
-      if (_wbiImgUrl == null || _wbiSubUrl == null) return null;
-
-      // 优先尝试单文件格式（fnval=16: MP4 含音视频）
-      String? result = await _fetchPlayUrl(bvid, cid, quality, '16');
-      if (result != null) return result;
-
-      // 回退到 DASH 格式
-      result = await _fetchPlayUrl(bvid, cid, quality, '4048');
-      return result;
-    } catch (e) {
-      LogService.error('获取播放 URL 失败', e);
-      return null;
+    await _ensureWbiKey();
+    if (_wbiImgUrl == null || _wbiSubUrl == null) {
+      throw BilibiliApiException('WBI 签名密钥获取失败，请检查网络后重试');
     }
+
+    // 优先尝试单文件格式（fnval=16: MP4 含音视频）
+    final single = await _fetchPlayUrlSafe(bvid, cid, quality, '16');
+    if (single.url != null) return single.url;
+
+    // 回退到 DASH 格式
+    final dash = await _fetchPlayUrlSafe(bvid, cid, quality, '4048');
+    if (dash.url != null) return dash.url;
+
+    // 两种都失败：综合两次结果给出尽量明确的错误
+    final err = dash.error ?? single.error;
+    if (err != null) {
+      throw BilibiliApiException(err);
+    }
+    throw BilibiliApiException(
+      '无法获取播放地址：可能需要登录或大会员（4K/1080P+ 需登录大会员），请前往设置中扫码登录后重试',
+    );
   }
 
-  /// 请求播放 URL
-  Future<String?> _fetchPlayUrl(
+  /// 请求播放 URL，将技术错误归一化为 (url, error) 元组
+  Future<_PlayUrlResult> _fetchPlayUrlSafe(
     String bvid,
     int cid,
     int quality,
     String fnval,
   ) async {
-    final params = {
-      'bvid': bvid,
-      'cid': cid.toString(),
-      'qn': quality.toString(),
-      'fnval': fnval,
-      'fnver': '0',
-      'fourk': '1',
-    };
+    try {
+      final params = {
+        'bvid': bvid,
+        'cid': cid.toString(),
+        'qn': quality.toString(),
+        'fnval': fnval,
+        'fnver': '0',
+        'fourk': '1',
+      };
 
-    final signed = WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!);
-    final resp = await _dio.get('/x/player/wbi/playurl', queryParameters: signed);
-    final data = resp.data;
-    if (data['code'] != 0) return null;
-
-    // 单文件格式：返回 durl
-    final durl = data['data']['durl'] as List<dynamic>? ?? [];
-    if (durl.isNotEmpty) {
-      return durl.first['url'] as String?;
-    }
-
-    // DASH 格式：返回视频+音频 URL
-    final dash = data['data']['dash'];
-    if (dash != null) {
-      final video = dash['video'] as List<dynamic>? ?? [];
-      final audio = dash['audio'] as List<dynamic>? ?? [];
-      if (video.isNotEmpty && audio.isNotEmpty) {
-        return jsonEncode({
-          'video': video.first['baseUrl'] ?? video.first['base_url'] ?? '',
-          'audio': audio.first['baseUrl'] ?? audio.first['base_url'] ?? '',
-        });
+      final signed = WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!);
+      final resp = await _dio.get('/x/player/wbi/playurl', queryParameters: signed);
+      if (resp.statusCode == 412) {
+        return _PlayUrlResult.err('B 站风控拦截(412)，请稍后再试或登录后重试');
       }
-    }
+      final data = resp.data;
+      if (data is! Map || data['code'] != 0) {
+        final code = data is Map ? data['code'] : null;
+        final msg = data is Map ? (data['message']?.toString() ?? '') : '';
+        // -101 未登录；-10403 大会员专享；87007/87008 充电视频
+        if (code == -101) {
+          return _PlayUrlResult.err('请先登录账号（部分画质/视频需要登录）');
+        }
+        if (code == -10403) {
+          return _PlayUrlResult.err('当前画质需要大会员，请降级画质或开通大会员');
+        }
+        return _PlayUrlResult.err(msg.isEmpty ? '获取播放地址失败 (code=$code)' : msg);
+      }
 
-    return null;
+      // 单文件格式：返回 durl
+      final durl = data['data']['durl'] as List<dynamic>? ?? [];
+      if (durl.isNotEmpty) {
+        final url = durl.first['url'] as String?;
+        if (url != null && url.isNotEmpty) return _PlayUrlResult.ok(url);
+      }
+
+      // DASH 格式：返回视频+音频 URL
+      final dash = data['data']['dash'];
+      if (dash != null) {
+        final video = dash['video'] as List<dynamic>? ?? [];
+        final audio = dash['audio'] as List<dynamic>? ?? [];
+        if (video.isNotEmpty && audio.isNotEmpty) {
+          return _PlayUrlResult.ok(jsonEncode({
+            'video': video.first['baseUrl'] ?? video.first['base_url'] ?? '',
+            'audio': audio.first['baseUrl'] ?? audio.first['base_url'] ?? '',
+          }));
+        }
+      }
+      return _PlayUrlResult.err('响应中未包含可用的播放地址');
+    } catch (e) {
+      return _PlayUrlResult.err('请求播放地址异常: $e');
+    }
   }
 
   /// 搜索 UP 主
@@ -252,8 +342,11 @@ class BilibiliApi {
           ? WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!)
           : params;
       final resp = await _dio.get('/x/web-interface/search/type', queryParameters: signed);
+      if (resp.statusCode == 412) {
+        throw BilibiliApiException('请求被 B 站风控拦截(412)，请稍后再试，或扫码登录后重试。', code: 412);
+      }
       final data = resp.data;
-      if (data['code'] != 0) return [];
+      if (data is! Map || data['code'] != 0) return [];
 
       final results = <BiliUploader>[];
       for (final item in data['data']['result'] as List<dynamic>? ?? []) {
@@ -268,9 +361,11 @@ class BilibiliApi {
         ));
       }
       return results;
+    } on BilibiliApiException {
+      rethrow;
     } catch (e) {
       LogService.error('搜索 UP 主失败', e);
-      return [];
+      throw BilibiliApiException('搜索 UP 主失败：$e');
     }
   }
 
@@ -372,4 +467,13 @@ class BilibiliApi {
     }
     return duration;
   }
+}
+
+/// 内部用于归一化 _fetchPlayUrlSafe 返回值的简单 Either。
+class _PlayUrlResult {
+  final String? url;
+  final String? error;
+  const _PlayUrlResult._(this.url, this.error);
+  factory _PlayUrlResult.ok(String url) => _PlayUrlResult._(url, null);
+  factory _PlayUrlResult.err(String err) => _PlayUrlResult._(null, err);
 }

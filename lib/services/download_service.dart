@@ -66,6 +66,7 @@ class DownloadService {
     _jobController.add(job);
 
     try {
+      // getPlayUrl 失败时会抛出 BilibiliApiException，错误消息已是面向用户的可读文案
       final playUrl = await _api.getPlayUrl(
         job.bvid,
         job.cid,
@@ -73,7 +74,7 @@ class DownloadService {
       );
 
       if (playUrl == null) {
-        throw Exception('无法获取播放地址');
+        throw Exception('无法获取播放地址：服务端返回空地址，请稍后重试');
       }
 
       // 解析播放 URL
@@ -248,9 +249,11 @@ class DownloadService {
   }
 
   /// 处理下载错误，支持自动重试
+  /// 业务类错误（未登录/会员限制/风控）不重试，避免无效重复刷接口。
   Future<void> _handleDownloadError(DownloadJob job, dynamic error) async {
     LogService.error('下载失败: ${job.videoName}', error);
-    if (job.retryCount < AppConstants.maxRetries) {
+    final isBusinessError = error is BilibiliApiException;
+    if (!isBusinessError && job.retryCount < AppConstants.maxRetries) {
       job.retryCount++;
       job.status = DownloadStatus.queued;
       job.error = null;
@@ -259,7 +262,7 @@ class DownloadService {
       return;
     }
     job.status = DownloadStatus.failed;
-    job.error = error.toString();
+    job.error = error is BilibiliApiException ? error.message : error.toString();
     job.finishedAt = DateTime.now();
   }
 
