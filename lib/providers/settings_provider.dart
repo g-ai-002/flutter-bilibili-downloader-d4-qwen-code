@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import '../models/video.dart';
+import '../services/bilibili_api.dart';
 import '../services/storage_service.dart';
 import '../services/log_service.dart';
 
@@ -8,14 +10,16 @@ class SettingsProvider extends ChangeNotifier {
   bool _darkMode = false;
   bool _bilibiliEnabled = false;
   String? _bilibiliCookies;
-  String _preferredQuality = '1080P';
+  String _preferredQuality = '4K';
   int _maxJobs = 50;
+  BiliUserInfo? _userInfo;
 
   bool get darkMode => _darkMode;
   bool get bilibiliEnabled => _bilibiliEnabled;
   String? get bilibiliCookies => _bilibiliCookies;
   String get preferredQuality => _preferredQuality;
   int get maxJobs => _maxJobs;
+  BiliUserInfo? get userInfo => _userInfo;
 
   Future<void> load() async {
     try {
@@ -42,6 +46,9 @@ class SettingsProvider extends ChangeNotifier {
     _bilibiliEnabled = cookies != null && cookies.isNotEmpty;
     _storage?.bilibiliCookies = cookies;
     _storage?.bilibiliEnabled = _bilibiliEnabled;
+    if (!_bilibiliEnabled) {
+      _userInfo = null;
+    }
     notifyListeners();
   }
 
@@ -55,5 +62,25 @@ class SettingsProvider extends ChangeNotifier {
     _maxJobs = value;
     _storage?.maxJobs = value;
     notifyListeners();
+  }
+
+  /// 刷新当前登录用户信息
+  Future<void> refreshUserInfo(BilibiliApi api) async {
+    if (!_bilibiliEnabled) {
+      if (_userInfo != null) {
+        _userInfo = null;
+        notifyListeners();
+      }
+      return;
+    }
+    final info = await api.getUserInfo();
+    if (info != null) {
+      _userInfo = info;
+      notifyListeners();
+    } else {
+      // cookies 已失效
+      _userInfo = null;
+      notifyListeners();
+    }
   }
 }

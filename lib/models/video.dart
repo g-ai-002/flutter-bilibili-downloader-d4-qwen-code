@@ -115,3 +115,18 @@ class BiliUploader {
     required this.sign,
   });
 }
+
+/// 当前登录用户信息
+class BiliUserInfo {
+  final int mid;
+  final String uname;
+  final String face;
+  final int level;
+
+  BiliUserInfo({
+    required this.mid,
+    required this.uname,
+    required this.face,
+    this.level = 0,
+  });
+}

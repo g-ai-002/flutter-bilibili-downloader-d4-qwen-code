@@ -61,7 +61,12 @@ class _LoginPageState extends State<LoginPage> {
         _pollTimer?.cancel();
         // 保存 cookies
         await context.read<SettingsProvider>().setBilibiliCookies(result.cookies);
+        if (!mounted) return;
+        final api = context.read<SearchProvider>().api;
         context.read<SearchProvider>().updateCookies(result.cookies);
+        if (api != null) {
+          await context.read<SettingsProvider>().refreshUserInfo(api);
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

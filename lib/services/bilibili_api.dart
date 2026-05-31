@@ -323,6 +323,28 @@ class BilibiliApi {
     }
   }
 
+  /// 获取当前登录用户信息 (uname / face / mid)
+  /// 未登录或失败返回 null
+  Future<BiliUserInfo?> getUserInfo() async {
+    if (_cookies == null || _cookies!.isEmpty) return null;
+    try {
+      final resp = await _dio.get('/x/web-interface/nav');
+      final data = resp.data;
+      if (data['code'] != 0) return null;
+      final d = data['data'] as Map<String, dynamic>;
+      if (d['isLogin'] != true) return null;
+      return BiliUserInfo(
+        mid: d['mid'] as int? ?? 0,
+        uname: d['uname'] as String? ?? '',
+        face: _normalizePic(d['face'] as String? ?? ''),
+        level: (d['level_info']?['current_level'] as int?) ?? 0,
+      );
+    } catch (e) {
+      LogService.error('获取用户信息失败', e);
+      return null;
+    }
+  }
+
   String _cleanHtml(String text) {
     return text.replaceAll(RegExp(r'<[^>]+>'), '').trim();
   }
