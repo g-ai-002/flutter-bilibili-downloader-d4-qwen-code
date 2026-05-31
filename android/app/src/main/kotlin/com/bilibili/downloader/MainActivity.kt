@@ -5,6 +5,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.EditedMediaItemSequence
+import androidx.media3.transformer.ExportException
+import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -92,14 +94,14 @@ class MainActivity : FlutterActivity() {
             val audioItem = MediaItem.fromUri(audioFile.toURI().toString())
 
             // 创建包含视频的序列
-            val videoSequence = EditedMediaItemSequence(
-                EditedMediaItem.Builder(videoItem).build()
-            )
+            val videoSequence = EditedMediaItemSequence.Builder(
+                listOf(EditedMediaItem.Builder(videoItem).build())
+            ).build()
 
             // 创建包含音频的序列
-            val audioSequence = EditedMediaItemSequence(
-                EditedMediaItem.Builder(audioItem).build()
-            )
+            val audioSequence = EditedMediaItemSequence.Builder(
+                listOf(EditedMediaItem.Builder(audioItem).build())
+            ).build()
 
             // 组合两个序列，Transformer 会自动对齐时间戳
             val composition = Composition.Builder(listOf(videoSequence, audioSequence))
@@ -109,7 +111,7 @@ class MainActivity : FlutterActivity() {
                 .addListener(object : Transformer.Listener {
                     override fun onCompleted(
                         composition: Composition,
-                        exportResult: Transformer.ExportResult
+                        exportResult: ExportResult
                     ) {
                         Log.i(
                             TAG, "Transformer 合并完成: output=$outputPath, " +
@@ -121,8 +123,8 @@ class MainActivity : FlutterActivity() {
 
                     override fun onError(
                         composition: Composition,
-                        exportResult: Transformer.ExportResult,
-                        exportException: Transformer.ExportException
+                        exportResult: ExportResult,
+                        exportException: ExportException
                     ) {
                         Log.e(
                             TAG,
@@ -158,7 +160,7 @@ class MainActivity : FlutterActivity() {
             }
         } finally {
             try {
-                transformer?.release()
+                transformer?.cancel()
             } catch (_: Exception) {}
         }
     }
