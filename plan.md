@@ -113,6 +113,13 @@
 - [x] **更新版本号到 0.2.6**
 
 ### v0.2.13 (当前版本 - PATCH)
+- **状态**: 已发布 ✅
+- **目标**: 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException，改用 Jetpack Media3 Transformer
+- **任务**:
+  - 引入 media3-transformer 依赖
+  - 使用 Composition + Transformer 方案替换原生 MediaMuxer
+  - 实现异步合并，支持详细错误信息
+
 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException，改用 Jetpack Media3 Transformer：
 - [x] **引入 media3-transformer 依赖** - 替换原生 MediaMuxer，使用 Jetpack Media3 Transformer 实现 DASH 合并
 - [x] **重写 MainActivity.kt 合并逻辑** - 使用 Composition + Transformer 方案，支持异步合并和详细错误信息
@@ -171,7 +178,7 @@
 ## 版本历史
 
 ### v0.2.13 (当前版本)
-- **状态**: 开发中 🔧
+- **状态**: 已发布 ✅
 - **目标**: 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException，改用 Jetpack Media3 Transformer
 - **任务**:
   - 引入 media3-transformer 依赖
