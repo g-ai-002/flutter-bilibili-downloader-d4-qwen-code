@@ -8,9 +8,13 @@ import 'providers/settings_provider.dart';
 import 'pages/home_page.dart';
 import 'services/log_service.dart';
 import 'services/notification_service.dart';
+import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 提前完成 StorageService 初始化，避免后续多个 Provider 并发
+  // 触发 SharedPreferences 异步加载竞态，导致 LateInitializationError。
+  await StorageService.instance;
   await LogService.init();
   await NotificationService.instance.init();
   runApp(const BilibiliDownloaderApp());
