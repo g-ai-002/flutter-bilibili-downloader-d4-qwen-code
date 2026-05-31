@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,19 +18,29 @@ void main() async {
   await StorageService.instance;
   await LogService.init();
   await NotificationService.instance.init();
-  runApp(const BilibiliDownloaderApp());
+
+  // 预加载设置，确保 Cookies 等配置在应用启动时已就绪
+  final settings = SettingsProvider();
+  await settings.load();
+
+  runApp(BilibiliDownloaderApp(preloadedSettings: settings));
 }
 
 class BilibiliDownloaderApp extends StatelessWidget {
-  const BilibiliDownloaderApp({super.key});
+  final SettingsProvider preloadedSettings;
+
+  const BilibiliDownloaderApp({super.key, required this.preloadedSettings});
 
   @override
   Widget build(BuildContext context) {
+    // Windows 平台优先使用 Microsoft YaHei UI 字体
+    final defaultFontFamily = Platform.isWindows ? 'Microsoft YaHei UI' : null;
+
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: preloadedSettings),
         ChangeNotifierProvider(create: (_) => SearchProvider()),
         ChangeNotifierProvider(create: (_) => DownloadProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()..load()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
@@ -40,11 +51,13 @@ class BilibiliDownloaderApp extends StatelessWidget {
               colorSchemeSeed: const Color(0xFF00A1D6),
               useMaterial3: true,
               brightness: Brightness.light,
+              fontFamily: defaultFontFamily,
             ),
             darkTheme: ThemeData(
               colorSchemeSeed: const Color(0xFF00A1D6),
               useMaterial3: true,
               brightness: Brightness.dark,
+              fontFamily: defaultFontFamily,
             ),
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             localizationsDelegates: const [

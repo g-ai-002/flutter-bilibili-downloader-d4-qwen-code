@@ -8,6 +8,7 @@ import '../services/download_service.dart';
 import 'search_page.dart';
 import 'download_page.dart';
 import 'settings_page.dart';
+import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -54,19 +55,49 @@ class _HomePageState extends State<HomePage> {
     final search = context.read<SearchProvider>();
     final download = context.read<DownloadProvider>();
 
-    // 创建统一的 API 实例
+    // 创建统一的 API 实例（settings 已在 main() 中预加载，cookies 已就绪）
     final api = BilibiliApi(cookies: settings.bilibiliCookies);
 
     search.initApi(api);
     final downloadService = DownloadService(api);
     download.initService(downloadService);
 
-    // 已登录则在启动时拉取一次账号信息
+    // 已登录则在启动时拉取一次账号信息，并验证 Cookies 有效性
     if (settings.bilibiliEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         settings.refreshUserInfo(api);
+        _verifyCookies(settings, api);
       });
     }
+  }
+
+  Future<void> _verifyCookies(SettingsProvider settings, BilibiliApi api) async {
+    try {
+      final valid = await api.verifyCookies();
+      if (!valid && mounted) {
+        // Cookies 已失效，清除登录状态并提示用户
+        await settings.setBilibiliCookies(null);
+        context.read<SearchProvider>().updateCookies(null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('登录信息已过期，请重新扫码登录'),
+            duration: Duration(seconds: 4),
+            action: SnackBarAction(
+              label: '登录',
+              onPressed: _navigateToLogin,
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      // 验证失败静默处理，不影响正常使用
+    }
+  }
+
+  void _navigateToLogin() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
   }
 
   @override
