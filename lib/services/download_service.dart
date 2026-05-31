@@ -105,6 +105,13 @@ class DownloadService {
         await _downloadSingleFile(job, videoUrl, downloadDir);
       }
 
+      // 下载过程中任务可能已被删除，检查是否仍存在
+      if (!_jobs.any((j) => j.id == job.id)) {
+        _activeCount--;
+        _processQueue();
+        return;
+      }
+
       job.status = DownloadStatus.completed;
       job.progress = 100;
       job.finishedAt = DateTime.now();
@@ -112,6 +119,13 @@ class DownloadService {
           .showDownloadComplete(job.videoName, job.episodeName);
     } catch (e) {
       await _handleDownloadError(job, e);
+    }
+
+    // 下载过程中任务可能已被删除，检查是否仍存在
+    if (!_jobs.any((j) => j.id == job.id)) {
+      _activeCount--;
+      _processQueue();
+      return;
     }
 
     _activeCount--;
@@ -167,6 +181,9 @@ class DownloadService {
       final cumulativeReceived = received + (audioTotal > 0 ? audioTotal : 0);
       onPartProgress(received, total, cumulativeReceived, cumulativeTotal);
     });
+
+    // 视频轨完成后检查是否已被删除
+    if (!_jobs.any((j) => j.id == job.id)) return;
 
     // 重置 part 速度追踪，避免视频轨残余值干扰音频轨速度
     partLastBytes = 0;
@@ -334,8 +351,18 @@ class DownloadService {
     }
   }
 
-  /// 删除任务
+  /// 删除任务（下载中则先取消）
   void remove(String jobId) {
+    // 如果正在下载，先取消
+    final idx = _jobs.indexWhere((j) => j.id == jobId);
+    if (idx >= 0) {
+      final job = _jobs[idx];
+      if (job.status == DownloadStatus.downloading ||
+          job.status == DownloadStatus.queued) {
+        _cancelTokens[jobId]?.cancel();
+        _cancelTokens.remove(jobId);
+      }
+    }
     _jobs.removeWhere((j) => j.id == jobId);
   }
 

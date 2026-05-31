@@ -294,6 +294,38 @@ class _DownloadJobCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // 下载中：取消 + 删除
+                if (isActive) ...[
+                  TextButton.icon(
+                    icon: const Icon(Icons.cancel, size: 16),
+                    label: const Text('取消'),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().cancel(job.id),
+                  ),
+                  const SizedBox(width: 4),
+                  TextButton.icon(
+                    icon: const Icon(Icons.delete_outline, size: 16),
+                    label: const Text('删除'),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().remove(job.id),
+                  ),
+                ],
+                // 排队中：取消 + 删除
+                if (isQueued) ...[
+                  TextButton.icon(
+                    icon: const Icon(Icons.cancel, size: 16),
+                    label: const Text('取消'),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().cancel(job.id),
+                  ),
+                  const SizedBox(width: 4),
+                  TextButton.icon(
+                    icon: const Icon(Icons.delete_outline, size: 16),
+                    label: const Text('删除'),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().remove(job.id),
+                  ),
+                ],
                 // 失败/取消：删除 + 失败时可重试
                 if (isFailed) ...[
                   TextButton.icon(
@@ -316,13 +348,6 @@ class _DownloadJobCard extends StatelessWidget {
                     label: const Text('删除'),
                     onPressed: () =>
                         context.read<DownloadProvider>().remove(job.id),
-                  ),
-                if (isQueued)
-                  TextButton.icon(
-                    icon: const Icon(Icons.cancel, size: 16),
-                    label: const Text('取消'),
-                    onPressed: () =>
-                        context.read<DownloadProvider>().cancel(job.id),
                   ),
                 if (isCompleted &&
                     job.filePath != null &&
