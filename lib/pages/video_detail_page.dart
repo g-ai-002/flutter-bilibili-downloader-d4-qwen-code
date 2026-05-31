@@ -25,34 +25,66 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     context.read<SearchProvider>().loadDetail(widget.bvid);
   }
 
-  /// 根据优先级选择最佳画质
+  /// 根据优先级选择最佳画质（基于 quality int 而非中文描述，避免 contains 误匹配）
   void _selectBestQuality(BiliVideoDetail detail, SettingsProvider settings) {
     if (detail.formats.isEmpty) return;
 
-    // 优先级：用户首选画质 -> 全局画质优先级 -> 列表第一个
-    final preferred = settings.preferredQuality;
-    final candidateOrder = <String>[
-      preferred,
-      ...AppConstants.qualityPriority.where((q) => q != preferred),
+    // 用户首选画质（文本）映射到 quality int 列表（一个文本可能对应多个 id）
+    final preferredIds = _preferredQualityIds(settings.preferredQuality);
+    final orderedIds = <int>[
+      ...preferredIds,
+      ...AppConstants.qualityIdPriority.where((id) => !preferredIds.contains(id)),
     ];
 
-    String? formatId;
-    String? quality;
-    for (final q in candidateOrder) {
-      final match = detail.formats.where((f) => f.quality.contains(q)).toList();
-      if (match.isNotEmpty) {
-        formatId = match.first.formatId;
-        quality = match.first.quality;
+    // 详情接口返回的 formatId 是 quality int 的字符串形式（80/120 等）
+    final available = <int, BiliVideoFormat>{};
+    for (final f in detail.formats) {
+      final id = int.tryParse(f.formatId);
+      if (id != null) available[id] = f;
+    }
+
+    BiliVideoFormat? chosen;
+    for (final id in orderedIds) {
+      if (available.containsKey(id)) {
+        chosen = available[id];
         break;
       }
     }
 
-    formatId ??= detail.formats.first.formatId;
-    quality ??= detail.formats.first.quality;
+    // 兜底：选择最高 quality 的
+    if (chosen == null) {
+      final sorted = available.entries.toList()
+        ..sort((a, b) => b.key.compareTo(a.key));
+      if (sorted.isNotEmpty) {
+        chosen = sorted.first.value;
+      } else {
+        chosen = detail.formats.first;
+      }
+    }
 
-    if (_selectedFormatId != formatId || _selectedQuality != quality) {
-      _selectedFormatId = formatId;
-      _selectedQuality = quality;
+    if (_selectedFormatId != chosen.formatId || _selectedQuality != chosen.quality) {
+      _selectedFormatId = chosen.formatId;
+      _selectedQuality = chosen.quality;
+    }
+  }
+
+  /// 将用户首选画质文本映射为可能的 quality id 列表
+  List<int> _preferredQualityIds(String label) {
+    switch (label) {
+      case '4K':
+        return [120];
+      case '1080P+':
+        return [112, 116]; // 1080P+ 与 1080P60 等同看待
+      case '1080P':
+        return [80, 116, 112];
+      case '720P':
+        return [64, 74];
+      case '480P':
+        return [32];
+      case '360P':
+        return [16];
+      default:
+        return const [];
     }
   }
 
@@ -174,12 +206,40 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('画质选择', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+              Row(
+                children: [
+                  Text('画质选择', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  // 显式下拉，给"画质选择"一个一目了然的入口
+                  if (detail.formats.isNotEmpty)
+                    DropdownButton<String>(
+                      value: _selectedFormatId,
+                      isDense: true,
+                      items: detail.formats
+                          .map((f) => DropdownMenuItem(
+                                value: f.formatId,
+                                child: Text(
+                                  f.quality,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        final f = detail.formats.firstWhere((e) => e.formatId == value);
+                        setState(() {
+                          _selectedFormatId = f.formatId;
+                          _selectedQuality = f.quality;
+                        });
+                      },
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: detail.formats.map((f) => FilterChip(
+                children: detail.formats.map((f) => ChoiceChip(
                   label: Text(f.quality, style: const TextStyle(fontSize: 12)),
                   selected: f.formatId == _selectedFormatId,
                   onSelected: (selected) {
@@ -192,6 +252,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   },
                   visualDensity: VisualDensity.compact,
                 )).toList(),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '当前画质：$bestQuality（部分高画质需登录大会员）',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

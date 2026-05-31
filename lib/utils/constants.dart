@@ -2,7 +2,7 @@
 
 class AppConstants {
   static const String appName = 'Bilibili 下载器';
-  static const String version = '0.2.6';
+  static const String version = '0.2.7';
 
   // Bilibili API
   static const String bilibiliBaseUrl = 'https://api.bilibili.com';
@@ -20,7 +20,7 @@ class AppConstants {
   static const int maxRetries = 3;
   static const int maxJobs = 50;
 
-  // 画质优先级 (从高到低)
+  // 画质优先级 (从高到低，文本名)
   static const List<String> qualityPriority = [
     '4K',
     '1080P+',
@@ -29,6 +29,33 @@ class AppConstants {
     '720P',
     '480P',
     '360P',
+  ];
+
+  /// 画质 quality (qn) 数字 -> 描述名 映射，用于稳定地按整数优先级选择最佳画质
+  /// 参考 B 站接口文档：https://github.com/SocialSisterYi/bilibili-API-collect
+  static const Map<int, String> qualityIdNames = {
+    127: '8K',
+    120: '4K',
+    116: '1080P60',
+    112: '1080P+',
+    80: '1080P',
+    74: '720P60',
+    64: '720P',
+    32: '480P',
+    16: '360P',
+    6: '240P',
+  };
+
+  /// 画质 quality 优先级（整数，从高到低）
+  static const List<int> qualityIdPriority = [
+    120, // 4K
+    116, // 1080P60
+    112, // 1080P+
+    80, // 1080P
+    74, // 720P60
+    64, // 720P
+    32, // 480P
+    16, // 360P
   ];
 
   // 存储
