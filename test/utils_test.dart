@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bilibili_downloader/utils/constants.dart';
 import 'package:bilibili_downloader/utils/wbi_sign.dart';
+import 'package:bilibili_downloader/services/bilibili_api.dart';
 
 void main() {
   group('AppConstants', () {
@@ -13,6 +14,25 @@ void main() {
       expect(AppConstants.qualityPriority.last, '360P');
     });
 
+    test('qualityIdPriority is ordered from high to low and starts at 120(4K)', () {
+      expect(AppConstants.qualityIdPriority.first, 120);
+      for (int i = 1; i < AppConstants.qualityIdPriority.length; i++) {
+        expect(
+          AppConstants.qualityIdPriority[i] <
+              AppConstants.qualityIdPriority[i - 1],
+          isTrue,
+          reason: 'qualityIdPriority must be strictly descending',
+        );
+      }
+    });
+
+    test('qualityIdNames covers all priority ids', () {
+      for (final id in AppConstants.qualityIdPriority) {
+        expect(AppConstants.qualityIdNames.containsKey(id), isTrue,
+            reason: 'missing name for quality id $id');
+      }
+    });
+
     test('API URLs are valid', () {
       expect(AppConstants.bilibiliBaseUrl, startsWith('https://'));
       expect(AppConstants.bilibiliPassportUrl, startsWith('https://'));
@@ -23,6 +43,20 @@ void main() {
       expect(AppConstants.maxConcurrentDownloads, greaterThan(0));
       expect(AppConstants.maxRetries, greaterThan(0));
       expect(AppConstants.maxJobs, greaterThan(0));
+    });
+  });
+
+  group('BilibiliApiException', () {
+    test('toString returns message', () {
+      final e = BilibiliApiException('请登录账号', code: -101);
+      expect(e.toString(), '请登录账号');
+      expect(e.code, -101);
+    });
+
+    test('message is preserved when code is null', () {
+      final e = BilibiliApiException('网络错误');
+      expect(e.code, isNull);
+      expect(e.message, '网络错误');
     });
   });
 
