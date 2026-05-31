@@ -114,9 +114,9 @@
 
 ### v0.2.13 (当前版本 - PATCH)
 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException，改用 Jetpack Media3 Transformer：
-- [ ] **引入 media3-transformer 依赖** - 替换原生 MediaMuxer，使用 Jetpack Media3 Transformer 实现 DASH 合并
-- [ ] **重写 MainActivity.kt 合并逻辑** - 使用 Composition + Transformer 方案，支持异步合并和详细错误信息
-- [ ] **更新版本号到 0.2.13**
+- [x] **引入 media3-transformer 依赖** - 替换原生 MediaMuxer，使用 Jetpack Media3 Transformer 实现 DASH 合并
+- [x] **重写 MainActivity.kt 合并逻辑** - 使用 Composition + Transformer 方案，支持异步合并和详细错误信息
+- [x] **更新版本号到 0.2.13**
 
 ### v0.2.12 (PATCH)
 修复 Issue #9（ffmpeg-kit 停更导致 CI 构建失败 + 原生 MediaMuxer 合并优化）：
