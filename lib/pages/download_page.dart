@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/download_job.dart';
 import '../providers/download_provider.dart';
+import '../services/file_system_service.dart';
 
 class DownloadPage extends StatelessWidget {
   const DownloadPage({super.key});
@@ -186,34 +188,22 @@ class _DownloadJobCard extends StatelessWidget {
                   color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.folder_open, size: 16, color: theme.colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        job.filePath!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    _buildPathRow(context, theme, '视频', job.filePath!),
+                    if (job.audioPath != null && job.audioPath!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      _buildPathRow(context, theme, '音频', job.audioPath!),
+                      const SizedBox(height: 4),
+                      Text(
+                        '提示：当前未合并视频/音频轨。Windows/桌面端安装系统 ffmpeg 后重新下载将自动合并。',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 11,
+                          color: theme.colorScheme.tertiary,
+                          fontSize: 10,
                         ),
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.copy, size: 16, color: theme.colorScheme.primary),
-                      tooltip: '复制路径',
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: job.filePath!));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('路径已复制到剪贴板'), duration: Duration(seconds: 2)),
-                        );
-                      },
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -234,6 +224,21 @@ class _DownloadJobCard extends StatelessWidget {
                     label: const Text('取消'),
                     onPressed: () => context.read<DownloadProvider>().cancel(job.id),
                   ),
+                if (isCompleted && job.filePath != null && job.filePath!.isNotEmpty &&
+                    (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
+                  TextButton.icon(
+                    icon: const Icon(Icons.folder_open, size: 16),
+                    label: const Text('打开所在目录'),
+                    onPressed: () async {
+                      final ok = await FileSystemService.instance
+                          .revealInFileManager(job.filePath!);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('当前平台不支持打开文件管理器')),
+                        );
+                      }
+                    },
+                  ),
                 if (isCompleted)
                   TextButton.icon(
                     icon: const Icon(Icons.delete_outline, size: 16),
@@ -245,6 +250,49 @@ class _DownloadJobCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPathRow(
+    BuildContext context,
+    ThemeData theme,
+    String label,
+    String path,
+  ) {
+    return Row(
+      children: [
+        Icon(Icons.insert_drive_file, size: 14, color: theme.colorScheme.primary),
+        const SizedBox(width: 6),
+        Text('$label: ',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            )),
+        Expanded(
+          child: Text(
+            path,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 11,
+            ),
+          ),
+        ),
+        IconButton(
+          icon: Icon(Icons.copy, size: 14, color: theme.colorScheme.primary),
+          tooltip: '复制路径',
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: path));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('路径已复制到剪贴板'), duration: Duration(seconds: 2)),
+            );
+          },
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+        ),
+      ],
     );
   }
 }
