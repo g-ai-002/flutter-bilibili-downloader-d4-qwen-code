@@ -45,7 +45,15 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.6 (当前)
+### v0.2.7 (当前)
+- 修复 Issue #6 评论补充反馈：
+  - **画质选择体验优化**：视频详情页新增显式 Dropdown + ChoiceChip + 当前画质提示，算法改为基于 quality int 的稳定优先级
+  - **Windows 内置 ffmpeg**：GitHub Actions 构建时自动下载并打包 `ffmpeg.exe` / `ffprobe.exe` 到 release zip 同目录，开箱即用无需用户额外安装
+  - **修复多个 `LateInitializationError`**：StorageService 引入 `_initFuture` 缓存解决并发竞态；main() 启动时预初始化 StorageService；NotificationService 增加平台守卫与全链路 try/catch
+  - **规避 412 风控**：BilibiliApi 启动时主动访问 `www.bilibili.com` 获取 `buvid3` cookie 并附加到所有后续请求
+  - **更友好的错误提示**：412 / -101(未登录) / -10403(大会员专享) 等错误转换为可读中文提示；下载层透传业务错误且不再无意义重试
+
+### v0.2.6
 - 修复 Issue #6（综合反馈 9 项）：
   - Windows DASH 下载自动调用系统 ffmpeg 合并视频/音频，未安装时保留双文件并明确提示
   - Android 下载到外部存储 `Movies/Bilibili`，可通过文件管理器/图库直接访问
@@ -76,17 +84,13 @@ flutter build windows --release
 - 优化 BilibiliApi WBI 密钥获取重试机制
 - 优化 VideoDetailPage 画质选择逻辑
 
-### v0.2.2
-- 修复 DASH 下载进度回退问题（Issue #3）
-- 优化 DASH 下载流程，合并视频轨和音频轨的进度计算
-- 修复下载速度计算在音频轨下载时重置的问题
-
-### v0.1.x - v0.2.1（历史版本合并）
+### v0.1.x - v0.2.2（历史版本合并）
 - 初始版本：Bilibili 视频搜索、扫码登录、高清下载、下载管理、深色模式、日志系统
 - CI 构建修复、Bilibili API WBI 签名、Windows Release 构建
 - 重构优化：统一 API 实例、画质选择 Bug、CancelToken、LogService 线程安全
 - 下载历史持久化、画质选择交互、下载速度实时显示、搜索类型切换、下载完成通知
 - 修复 Issue #2 下载进度始终为 0（DownloadJob 缺少 cid）
+- 修复 Issue #3 DASH 下载进度回退、速度计算异常
 
 ## 许可证
 

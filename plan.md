@@ -100,7 +100,7 @@
 - [x] **DASH 回退时修正 filePath** - DASH 格式下载时 filePath 指向实际存在的视频文件而非不存在的合并文件
 - [x] **更新版本号到 0.2.5**
 
-### v0.2.6 (当前版本 - PATCH)
+### v0.2.6 (PATCH)
 - [x] **修复 Issue #6.1** - Windows 下 DASH 视频/音频自动合并（系统 ffmpeg 可用时调用，失败时保留双文件并明确提示）
 - [x] **修复 Issue #6.2** - Android 下载文件保存到外部存储 Movies/Bilibili 目录，便于通过系统文件管理器和图库查看
 - [x] **修复 Issue #6.3** - UP 主搜索结果点击后跳转到独立的 UP 主视频列表页面，并支持继续点击进入视频详情
@@ -112,11 +112,35 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
+### v0.2.7 (当前版本 - PATCH)
+修复 Issue #6 补充评论反馈的 3 大问题：
+- [x] **修复 Issue #6 补充 1** - 视频详情页画质选择交互优化：增加显式 Dropdown，画质 Chip 改为 ChoiceChip 并显示"当前画质"提示；选择算法改为基于 quality int 的稳定优先级（避免 `contains` 误匹配）
+- [x] **修复 Issue #6 补充 2** - Windows 构建在 GitHub Actions 中自动下载并打包 ffmpeg.exe/ffprobe.exe 到 release zip 同目录，开箱即用无需用户安装；`FileSystemService.resolveFfmpeg` 同步支持"先查应用同目录，再回退到 PATH"
+- [x] **修复 Issue #6 补充 3.1** - 修复 `LateInitializationError: Field '_prefs' has not been initialized`：StorageService 改用 `_initFuture` 缓存初始化 Future，避免并发调用 instance 出现的竞态；main() 启动时预初始化 StorageService
+- [x] **修复 Issue #6 补充 3.2** - 修复 `LateInitializationError: Field '_instance' has not been initialized` 于 NotificationService：补充 Linux/macOS InitializationSettings；增加平台支持守卫（仅 Android/iOS/macOS/Linux 才调用插件）；初始化与展示全链路 try/catch 防御
+- [x] **修复 Issue #6 补充 3.3** - 修复搜索 412 风控：BilibiliApi 启动时主动访问 www.bilibili.com 获取 `buvid3` cookie 并附加到所有后续请求；对 412 状态码与业务错误码（-101 未登录、-10403 大会员专享）给出明确中文提示
+- [x] **修复 Issue #6 补充 3.4** - 修复"无法获取播放地址"含糊提示：getPlayUrl 失败时抛出可读的 `BilibiliApiException`，下载层透传到 UI；业务错误不重试，避免无意义重复刷接口
+- [x] **更新版本号到 0.2.7**
+
 ---
 
 ## 版本历史
 
-### v0.2.6 (当前版本)
+### v0.2.7 (当前版本)
+- **状态**: 已发布 ✅
+- **目标**: 修复 Issue #6 评论补充反馈（画质选择 / Windows ffmpeg 内置 / 多个 LateInitializationError 与 412 风控）
+- **修复**:
+  - 视频详情页画质选择新增显式 Dropdown + ChoiceChip + 当前画质提示，算法改用 quality int 比较
+  - GitHub Actions Windows 构建自动内置 ffmpeg.exe / ffprobe.exe（基于 GyanD ffmpeg-7.0.2-essentials），开箱即用
+  - `FileSystemService.resolveFfmpeg` 优先使用应用同目录 ffmpeg，回退到 PATH
+  - StorageService 改用 `_initFuture` 缓存避免并发竞态导致的 `LateInitializationError(_prefs)`
+  - main() 中预先 await StorageService 初始化，杜绝后续 Provider 拿到未就绪实例
+  - NotificationService 新增平台守卫（仅 Android/iOS/macOS/Linux），并补全 Linux/macOS 初始化设置，避免 Windows 上插件抛 late 异常
+  - BilibiliApi 启动时主动访问 www.bilibili.com 获取 `buvid3` cookie 规避 412 风控
+  - 412 / -101(未登录) / -10403(大会员专享) 等错误转换为面向用户的中文提示
+  - `getPlayUrl` 失败抛出 `BilibiliApiException`，下载层透传到 UI；业务错误不再无意义重试
+
+### v0.2.6
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #6（综合反馈 9 项）
 - **修复**:
@@ -156,22 +180,7 @@
   - 优化 BilibiliApi WBI 密钥获取重试机制
   - 优化 VideoDetailPage 画质选择时机
 
-### v0.2.2
-- **状态**: 已发布 ✅
-- **目标**: 修复 Issue #3 - 下载进度回退和速度计算问题
-- **修复**:
-  - DASH 下载时视频轨和音频轨分别下载导致进度条回退到 0%
-  - 音频轨下载时速度计算重置导致速度显示异常
-  - 优化 DASH 下载流程，合并视频轨和音频轨的进度计算
-
-### v0.2.1
-- **状态**: 已发布 ✅
-- **目标**: 修复 Issue #2 - 下载进度始终为 0 的问题
-- **修复**:
-  - DownloadJob 模型添加 cid 字段，确保下载时能正确获取播放地址
-  - 修复 download_service 中 cid 参数传递错误（误将 formatId 当作 cid 传入）
-
-### v0.1.x - v0.2.0（历史版本合并）
+### v0.1.x - v0.2.2（历史版本合并）
 - **状态**: 已发布 ✅
 - **范围**: 项目初始化与早期迭代
 - **要点**:
@@ -180,3 +189,5 @@
   - v0.1.2：重构优化（统一 API 实例、画质选择 Bug、CancelToken、LogService 线程安全、增加测试覆盖）
   - v0.1.3：修复 Issue #1（WBI 签名、Windows Release 构建）
   - v0.2.0：下载历史持久化、画质选择交互、下载速度实时显示、搜索类型切换、下载完成通知
+  - v0.2.1：修复 Issue #2（DownloadJob 缺少 cid 导致进度始终为 0）
+  - v0.2.2：修复 Issue #3（DASH 下载进度回退、速度计算异常，统一进度合并）
