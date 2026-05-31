@@ -69,6 +69,7 @@ class SearchProvider extends ChangeNotifier {
   /// 获取视频详情
   Future<void> loadDetail(String bvid) async {
     if (_api == null) return;
+    _detail = null; // 先清空旧数据
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -80,6 +81,14 @@ class SearchProvider extends ChangeNotifier {
       LogService.error('获取详情失败', e);
     }
 
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  /// 清除视频详情（切换页面时避免显示上一个视频的残留数据）
+  void clearDetail() {
+    _detail = null;
+    _error = null;
     _isLoading = false;
     notifyListeners();
   }

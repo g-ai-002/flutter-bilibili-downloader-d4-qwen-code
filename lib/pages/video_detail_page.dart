@@ -22,7 +22,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   @override
   void initState() {
     super.initState();
-    context.read<SearchProvider>().loadDetail(widget.bvid);
+    _loadDetail();
+  }
+
+  void _loadDetail() {
+    final provider = context.read<SearchProvider>();
+    // 清除旧数据，避免显示上一个视频的残留内容
+    provider.clearDetail();
+    provider.loadDetail(widget.bvid);
   }
 
   /// 根据优先级选择最佳画质（基于 quality int 而非中文描述，避免 contains 误匹配）
@@ -63,8 +70,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     }
 
     if (_selectedFormatId != chosen.formatId || _selectedQuality != chosen.quality) {
-      _selectedFormatId = chosen.formatId;
-      _selectedQuality = chosen.quality;
+      setState(() {
+        _selectedFormatId = chosen.formatId;
+        _selectedQuality = chosen.quality;
+      });
     }
   }
 
@@ -88,6 +97,16 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     }
   }
 
+  String _formatPubdateText(int pubdate) {
+    if (pubdate <= 0) return '';
+    try {
+      final dt = DateTime.fromMillisecondsSinceEpoch(pubdate * 1000);
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -99,17 +118,46 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             return const Center(child: CircularProgressIndicator());
           }
           final detail = provider.detail;
-          if (detail == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-                  const SizedBox(height: 16),
-                  Text(provider.error ?? '无法加载视频详情'),
-                ],
-              ),
-            );
+          // 确保加载的是当前请求的视频
+          if (detail == null || detail.bvid != widget.bvid) {
+            if (provider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                    const SizedBox(height: 16),
+                    Text(provider.error!),
+                    const SizedBox(height: 16),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('重试'),
+                      onPressed: _loadDetail,
+                    ),
+                  ],
+                ),
+              );
+            }
+            // 详情未加载完成或 bvid 不匹配
+            if (!provider.isLoading && detail == null) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                    const SizedBox(height: 16),
+                    const Text('无法加载视频详情'),
+                    const SizedBox(height: 16),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('重试'),
+                      onPressed: _loadDetail,
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const Center(child: CircularProgressIndicator());
           }
           return _buildDetail(detail);
         },
@@ -128,6 +176,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
     final bestFormatId = _selectedFormatId ?? '80';
     final bestQuality = _selectedQuality ?? '1080P';
+    final pubdateText = _formatPubdateText(detail.pubdate);
 
     return ListView(
       children: [
@@ -163,7 +212,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           ],
         ),
 
-        // 标题
+        // 标题与元信息
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -185,6 +234,18 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   Text('${detail.episodes.length} 集', style: theme.textTheme.bodyMedium),
                 ],
               ),
+              if (pubdateText.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text('发布时间: $pubdateText', style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    )),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               Text('简介', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),

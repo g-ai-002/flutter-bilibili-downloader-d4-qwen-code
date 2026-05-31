@@ -386,6 +386,22 @@ class _VideoCard extends StatelessWidget {
                         Text(video.duration, style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         )),
+                        if (video.pubdate.isNotEmpty) ...[
+                          const SizedBox(width: 12),
+                          Icon(Icons.calendar_today, size: 12, color: theme.colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              video.pubdate,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],

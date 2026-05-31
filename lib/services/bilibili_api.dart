@@ -156,7 +156,7 @@ class BilibiliApi {
           uploader: item['author'] as String? ?? '',
           duration: item['duration'] as String? ?? '',
           viewCount: _formatViewCount(item['play'] as int? ?? 0),
-          pubdate: item['pubdate']?.toString() ?? '',
+          pubdate: _formatPubdate(item['pubdate']),
         ));
       }
       return results;
@@ -200,6 +200,7 @@ class BilibiliApi {
         duration: v['duration'] as int? ?? 0,
         episodes: episodes,
         formats: formats,
+        pubdate: v['pubdate'] as int? ?? 0,
       );
     } catch (e) {
       LogService.error('获取视频详情失败', e);
@@ -396,7 +397,7 @@ class BilibiliApi {
           uploader: item['author'] as String? ?? '',
           duration: _formatDuration(item['length'] as String? ?? '0'),
           viewCount: _formatViewCount(item['play'] as int? ?? 0),
-          pubdate: item['created']?.toString() ?? '',
+          pubdate: _formatPubdate(item['created']),
         ));
       }
       return results;
@@ -455,6 +456,19 @@ class BilibiliApi {
       return '${(count / 10000).toStringAsFixed(1)}万';
     }
     return count.toString();
+  }
+
+  /// 将 Unix 时间戳（秒）格式化为 YYYY-MM-DD
+  String _formatPubdate(dynamic ts) {
+    if (ts == null) return '';
+    try {
+      final seconds = ts is int ? ts : int.tryParse(ts.toString()) ?? 0;
+      if (seconds <= 0) return '';
+      final dt = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
   }
 
   String _formatDuration(String duration) {

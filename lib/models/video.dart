@@ -51,6 +51,7 @@ class BiliVideoDetail {
   final int duration;
   final List<BiliEpisode> episodes;
   final List<BiliVideoFormat> formats;
+  final int pubdate; // Unix 时间戳
 
   BiliVideoDetail({
     required this.bvid,
@@ -61,6 +62,7 @@ class BiliVideoDetail {
     required this.duration,
     required this.episodes,
     required this.formats,
+    this.pubdate = 0,
   });
 }
 

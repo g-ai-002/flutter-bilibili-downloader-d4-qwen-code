@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bilibili_downloader/utils/constants.dart';
 import 'package:bilibili_downloader/utils/wbi_sign.dart';
 import 'package:bilibili_downloader/services/bilibili_api.dart';
+import 'package:bilibili_downloader/services/download_service.dart';
 
 void main() {
   group('AppConstants', () {
@@ -102,6 +103,36 @@ void main() {
       expect(result, containsKey('w_rid'));
       // Special characters should be sanitized
       expect(result['keyword'], 'testvalue');
+    });
+  });
+
+  group('DownloadService.calcCumulativeTotal', () {
+    test('both positive returns sum', () {
+      expect(DownloadService.calcCumulativeTotal(100, 50), 150);
+    });
+
+    test('first positive, second zero returns first', () {
+      expect(DownloadService.calcCumulativeTotal(100, 0), 100);
+    });
+
+    test('first zero, second positive returns second', () {
+      expect(DownloadService.calcCumulativeTotal(0, 50), 50);
+    });
+
+    test('first positive, second negative returns first', () {
+      expect(DownloadService.calcCumulativeTotal(100, -1), 100);
+    });
+
+    test('first negative, second positive returns second', () {
+      expect(DownloadService.calcCumulativeTotal(-1, 50), 50);
+    });
+
+    test('both zero returns zero', () {
+      expect(DownloadService.calcCumulativeTotal(0, 0), 0);
+    });
+
+    test('both negative returns zero', () {
+      expect(DownloadService.calcCumulativeTotal(-1, -1), 0);
     });
   });
 }
