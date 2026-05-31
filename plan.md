@@ -112,7 +112,18 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.13 (当前版本 - PATCH)
+### v0.2.14 (当前版本 - PATCH)
+- **状态**: 开发中 🚧
+- **目标**: 修复 Issue #9 — Media3 Transformer 线程错误导致合并失败
+- **任务**:
+  - 修复 Transformer 须在主线程上创建和调用的问题
+  - 移除 Thread 包装和 CountDownLatch，改用回调 + Handler 方案
+
+修复 Issue #9 — Media3 Transformer 线程错误：
+- [x] **修复 Transformer 线程问题** - Transformer 必须在主线程（有 Looper）上创建和访问；移除 Thread 包装，改用回调模式 + Handler 超时
+- [x] **更新版本号到 0.2.14**
+
+### v0.2.13 (PATCH)
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException，改用 Jetpack Media3 Transformer
 - **任务**:
@@ -177,7 +188,14 @@
 
 ## 版本历史
 
-### v0.2.13 (当前版本)
+### v0.2.14 (当前版本)
+- **状态**: 开发中 🚧
+- **目标**: 修复 Issue #9 — Media3 Transformer 线程错误导致合并失败
+- **任务**:
+  - 修复 Transformer 须在主线程上创建和调用的问题
+  - 移除 Thread 包装和 CountDownLatch，改用回调 + Handler 方案
+
+### v0.2.13
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException，改用 Jetpack Media3 Transformer
 - **任务**:

@@ -45,16 +45,22 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.13 (当前)
+### v0.2.14 (当前)
+- 修复 Issue #9 — Media3 Transformer 线程错误导致合并失败：
+  - **Transformer 线程修复**：Transformer 必须在主线程（有 Looper）上创建和调用所有方法
+  - **移除 Thread 包装**：改用回调模式 + Handler 超时，不再手动创建后台线程
+  - **修复合并失败**：解决 "Media3 Transformer 必须在创建它的同一个线程上被访问" 错误
+
+### v0.2.13
 - 修复 Issue #9 — MediaMuxer 合并仍报 IllegalArgumentException：
-  - **改用 Jetpack Media3 Transformer**：替换原生 MediaExtractor + MediaMuxer 方案，使用 Google 官方 Media3 Transformer API 实现 DASH 视频/音频合并
-  - **异步合并机制**：后台线程执行合并，支持超时控制（120s），不阻塞主线程
-  - **详细错误信息**：合并失败时返回包含 errorCode 的详细错误信息，便于问题定位
+  - **改用 Jetpack Media3 Transformer**：替换原生 MediaExtractor + MediaMuxer，使用 Composition + Transformer 方案
+  - **异步合并**：后台线程执行合并，支持超时控制（120s）
+  - **详细错误信息**：合并失败时返回 errorCode，便于定位
 
 ### v0.2.12
-- 修复 Issue #9 + CI 构建失败：
-  - **移除 ffmpeg-kit-min 依赖**：`com.arthenica:ffmpeg-kit-min:6.0-2` 已从 Maven 仓库下架，导致 Android CI 构建失败，已移除
-  - **纯原生 MediaMuxer 合并**：移除所有 ffmpeg-kit 代码，Android 端仅使用原生 MediaExtractor + MediaMuxer 实现 DASH 视频/音频合并
+- 修复 Issue #9 — CI 构建失败：
+  - **移除 ffmpeg-kit-min 依赖**：该库已从 Maven 下架导致 CI Android 构建失败
+  - **纯原生 MediaMuxer 合并**：移除所有 ffmpeg-kit 代码
   - **清理 ProGuard 规则**：移除已废弃的 ffmpeg-kit ProGuard 规则
 
 ### v0.2.11
