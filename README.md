@@ -45,7 +45,13 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.11 (当前)
+### v0.2.12 (当前)
+- 修复 Issue #9 + CI 构建失败：
+  - **移除 ffmpeg-kit-min 依赖**：`com.arthenica:ffmpeg-kit-min:6.0-2` 已从 Maven 仓库下架，导致 Android CI 构建失败，已移除
+  - **纯原生 MediaMuxer 合并**：移除所有 ffmpeg-kit 代码，Android 端仅使用原生 MediaExtractor + MediaMuxer 实现 DASH 视频/音频合并
+  - **清理 ProGuard 规则**：移除已废弃的 ffmpeg-kit ProGuard 规则
+
+### v0.2.11
 - 修复 Issue #9：
   - **Android DASH 合并修复**：修复 MediaMuxer writeTrack 中 buffer.clear() 缺失导致的 MERGE_FAILED 问题
   - **Android ffmpeg-kit 回退**：引入 ffmpeg-kit-min 6.0-2，MediaMuxer 失败时自动回退到 ffmpeg 合并

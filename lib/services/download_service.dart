@@ -201,7 +201,7 @@ class DownloadService {
     job.progress = 99;
     _jobController.add(job);
 
-    // 尝试调用系统 ffmpeg 合并（桌面端通常预装/可手动安装；Android 端默认不可用）
+    // 尝试合并视频/音频（Android: MediaMuxer; 桌面: ffmpeg）
     final merged = await FileSystemService.instance.mergeAv(
       videoPath: videoPath,
       audioPath: audioPath,

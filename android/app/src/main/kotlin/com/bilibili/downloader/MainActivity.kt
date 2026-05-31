@@ -3,8 +3,6 @@ package com.bilibili.downloader
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
-import com.arthenica.ffmpegkit.FFmpegKit
-import com.arthenica.ffmpegkit.ReturnCode
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -34,24 +32,16 @@ class MainActivity : FlutterActivity() {
                 }
 
                 try {
-                    // 先用 MediaMuxer 尝试合并（轻量无依赖）
                     mergeAvWithMediaMuxer(videoPath, audioPath, outputPath)
                     result.success(outputPath)
                     android.util.Log.i(TAG, "MediaMuxer 合并成功: $outputPath")
                 } catch (e: Exception) {
-                    android.util.Log.w(TAG, "MediaMuxer 合并失败，回退到 ffmpeg-kit: ${e.message}")
-                    try {
-                        mergeAvWithFFmpeg(videoPath, audioPath, outputPath)
-                        result.success(outputPath)
-                        android.util.Log.i(TAG, "ffmpeg-kit 合并成功: $outputPath")
-                    } catch (ffmpegError: Exception) {
-                        android.util.Log.e(TAG, "ffmpeg-kit 合并也失败", ffmpegError)
-                        result.error(
-                            "MERGE_FAILED",
-                            "MediaMuxer: ${e.message ?: "未知错误"}; FFmpeg: ${ffmpegError.message ?: "未知错误"}",
-                            null
-                        )
-                    }
+                    android.util.Log.e(TAG, "MediaMuxer 合并失败", e)
+                    result.error(
+                        "MERGE_FAILED",
+                        e.message ?: "MediaMuxer 合并未知错误",
+                        e.toString()
+                    )
                 }
             } else {
                 result.notImplemented()
@@ -62,6 +52,9 @@ class MainActivity : FlutterActivity() {
     /**
      * 使用 Android 原生 MediaExtractor + MediaMuxer 合并视频轨和音频轨。
      * 将 videoPath 的视频轨道与 audioPath 的音频轨道重新封装到 outputPath。
+     *
+     * 原理：MediaMuxer 仅做容器级封装（不解码/不重编码），速度接近文件拷贝，
+     * 适用于 B 站 DASH 格式的 H.264/H.265 视频轨 + AAC 音频轨合并。
      */
     private fun mergeAvWithMediaMuxer(videoPath: String, audioPath: String, outputPath: String) {
         val videoFile = File(videoPath)
@@ -110,7 +103,10 @@ class MainActivity : FlutterActivity() {
 
             // 确保输出目录存在
             val outFile = File(outputPath)
-            outFile.parentFile?.mkdirs()
+            val parentDir = outFile.parentFile
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs()
+            }
 
             // 创建 MediaMuxer
             val muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
@@ -129,8 +125,12 @@ class MainActivity : FlutterActivity() {
                 audioExtractor.selectTrack(audioTrackIndex)
                 writeTrack(audioExtractor, muxer, audioOutIndex)
             } finally {
-                muxer.stop()
-                muxer.release()
+                try {
+                    muxer.stop()
+                } catch (_: Exception) {}
+                try {
+                    muxer.release()
+                } catch (_: Exception) {}
             }
         } finally {
             videoExtractor.release()
@@ -139,30 +139,8 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * 使用 ffmpeg-kit 合并视频轨和音频轨（Android 端可靠回退方案）。
-     */
-    private fun mergeAvWithFFmpeg(videoPath: String, audioPath: String, outputPath: String) {
-        val outFile = File(outputPath)
-        outFile.parentFile?.mkdirs()
-
-        val cmd = "-y -i \"$videoPath\" -i \"$audioPath\" -c copy \"$outputPath\""
-        val session = FFmpegKit.execute(cmd)
-        val returnCode = session.returnCode
-
-        if (ReturnCode.isSuccess(returnCode)) {
-            if (File(outputPath).exists()) {
-                return
-            }
-            throw IllegalStateException("ffmpeg 执行完成但输出文件不存在: $outputPath")
-        }
-
-        val failStackTrace = session.failStackTrace ?: ""
-        val output = session.output ?: ""
-        throw IllegalStateException("ffmpeg 合并失败 (rc=$returnCode): $output\n$failStackTrace")
-    }
-
-    /**
-     * 将 extractor 中当前选中的轨道数据写入 muxer。
+     * 将 extractor 中当前选中的轨道数据逐帧写入 muxer。
+     * 每帧读取前调用 buffer.clear() 重置 buffer 位置，避免位置累积导致 MERGE_FAILED。
      */
     private fun writeTrack(extractor: MediaExtractor, muxer: MediaMuxer, trackIndex: Int) {
         val bufferInfo = android.media.MediaCodec.BufferInfo()

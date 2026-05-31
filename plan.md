@@ -112,7 +112,14 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.11 (当前版本 - PATCH)
+### v0.2.12 (当前版本 - PATCH)
+修复 Issue #9（ffmpeg-kit 停更导致 CI 构建失败 + 原生 MediaMuxer 合并优化）：
+- [x] **移除 ffmpeg-kit-min 依赖** - `com.arthenica:ffmpeg-kit-min:6.0-2` 已从 Maven 仓库下架/不可用，导致 CI Android 构建失败
+- [x] **移除 MainActivity.kt 中 ffmpeg-kit 代码** - ffmpeg-kit 已停更，移除所有相关 import 和 mergeAvWithFFmpeg 方法
+- [x] **完善原生 MediaMuxer 合并** - 纯 Android 原生 MediaExtractor + MediaMuxer 方案，优化错误处理和日志输出
+- [x] **更新版本号到 0.2.12**
+
+### v0.2.11
 修复 Issue #9 反馈的 MediaMuxer 合并失败：
 - [x] **修复 MediaMuxer buffer.clear() Bug** - writeTrack 循环中缺少 buffer.clear()，导致 buffer 位置累积错误，引发 PlatformException(MERGE_FAILED)
 - [x] **Android 添加 ffmpeg-kit 回退** - 引入 `com.arthenica:ffmpeg-kit-min:6.0-2`，MediaMuxer 失败时自动回退到 ffmpeg-kit 合并
@@ -157,7 +164,15 @@
 
 ## 版本历史
 
-### v0.2.11 (当前版本)
+### v0.2.12 (当前版本)
+- **状态**: 开发中 🔧
+- **目标**: 修复 Issue #9 — 移除已停更的 ffmpeg-kit，完善原生 MediaMuxer 合并
+- **任务**:
+  - 移除 ffmpeg-kit-min 依赖（CI 构建失败根因）
+  - 移除 MainActivity.kt 中所有 ffmpeg-kit 代码
+  - 完善原生 MediaMuxer 合并的错误处理
+
+### v0.2.11
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #9 - Android MediaMuxer 合并失败
 - **修复**:

@@ -7,7 +7,7 @@ import 'log_service.dart';
 /// - 下载根目录解析（Windows/Android 差异化）
 /// - 日志目录解析
 /// - 打开文件管理器并定位到目标文件
-/// - DASH 视频/音频合并（Android: MediaMuxer; 桌面: ffmpeg）
+/// - DASH 视频/音频合并（Android: 原生 MediaMuxer; 桌面: ffmpeg）
 class FileSystemService {
   static const _mergeChannel = MethodChannel('com.bilibili.downloader/ffmpeg');
   static FileSystemService? _instance;
@@ -171,7 +171,7 @@ class FileSystemService {
     required String audioPath,
     required String outputPath,
   }) async {
-    // Android: 使用 MediaMuxer，失败自动回退到 ffmpeg-kit
+    // Android: 使用原生 MediaMuxer
     if (Platform.isAndroid) {
       try {
         final merged = await _mergeChannel.invokeMethod<String>('mergeAv', {
@@ -185,12 +185,12 @@ class FileSystemService {
             await File(videoPath).delete();
             await File(audioPath).delete();
           } catch (_) {}
-          LogService.info('Android 合并成功: $merged');
+          LogService.info('Android MediaMuxer 合并成功: $merged');
           return merged;
         }
-        LogService.error('Android 合并返回空结果', '');
+        LogService.error('Android MediaMuxer 合并返回空结果', '');
       } catch (e) {
-        LogService.error('Android 合并异常 (MediaMuxer+ffmpeg 均失败)', e);
+        LogService.error('Android MediaMuxer 合并异常', e);
       }
       return null;
     }
