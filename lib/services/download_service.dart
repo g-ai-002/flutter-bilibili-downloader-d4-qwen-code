@@ -134,28 +134,55 @@ class DownloadService {
 
     int videoTotal = 0;
     int audioTotal = 0;
-    int cumulativeLastBytes = 0;
-    final stopwatch = Stopwatch()..start();
+
+    // 速度计算用：每个 part 独立跟踪上次测量的字节数和时间
+    int partLastBytes = 0;
+    DateTime partLastTime = DateTime.now();
+
+    void onPartProgress(int partReceived, int partTotal, int cumulativeReceived, int cumulativeTotal) {
+      // 总进度基于累计值（DASH 两个文件合并计算）
+      job.downloadedBytes = cumulativeReceived;
+      job.totalBytes = cumulativeTotal;
+      if (cumulativeTotal > 0) {
+        job.progress = (cumulativeReceived * 100 / cumulativeTotal).round().clamp(0, 99);
+      }
+      // 速度基于 part 增量（避免跨 part 的累积值干扰）
+      final now = DateTime.now();
+      final timeDiffMs = now.difference(partLastTime).inMilliseconds;
+      if (timeDiffMs >= 1000 && partReceived > partLastBytes) {
+        final bytesDiff = partReceived - partLastBytes;
+        if (bytesDiff > 0) {
+          job.speed = bytesDiff / (timeDiffMs / 1000.0);
+        }
+        partLastBytes = partReceived;
+        partLastTime = now;
+      }
+      _jobController.add(job);
+    }
 
     // 下载视频轨
     await _downloadPart(videoPath, videoUrl, job, (received, total) {
-      videoTotal = total;
-      final cumulativeTotal = total + audioTotal;
-      final cumulativeReceived = received + audioTotal;
-      _updateProgress(job, cumulativeReceived, cumulativeTotal,
-          cumulativeLastBytes, stopwatch);
-      cumulativeLastBytes = cumulativeReceived;
+      videoTotal = total > 0 ? total : videoTotal;
+      final cumulativeTotal = calcCumulativeTotal(total, audioTotal);
+      final cumulativeReceived = received + (audioTotal > 0 ? audioTotal : 0);
+      onPartProgress(received, total, cumulativeReceived, cumulativeTotal);
     });
+
+    // 重置 part 速度追踪，避免视频轨残余值干扰音频轨速度
+    partLastBytes = 0;
+    partLastTime = DateTime.now();
 
     // 下载音频轨
     await _downloadPart(audioPath, audioUrl, job, (received, total) {
-      audioTotal = total;
-      final cumulativeTotal = videoTotal + total;
-      final cumulativeReceived = videoTotal + received;
-      _updateProgress(job, cumulativeReceived, cumulativeTotal,
-          cumulativeLastBytes, stopwatch);
-      cumulativeLastBytes = cumulativeReceived;
+      audioTotal = total > 0 ? total : audioTotal;
+      final cumulativeTotal = calcCumulativeTotal(videoTotal, total);
+      final cumulativeReceived = (videoTotal > 0 ? videoTotal : 0) + received;
+      onPartProgress(received, total, cumulativeReceived, cumulativeTotal);
     });
+
+    // 两段都下载完成，标记 99%（合并阶段）
+    job.progress = 99;
+    _jobController.add(job);
 
     // 尝试调用系统 ffmpeg 合并（桌面端通常预装/可手动安装；Android 端默认不可用）
     final merged = await FileSystemService.instance.mergeAv(
@@ -174,6 +201,14 @@ class DownloadService {
     }
   }
 
+  /// 计算 DASH 累计总大小（处理 total=-1 的未知大小情况）
+  static int calcCumulativeTotal(int part1Total, int part2Total) {
+    if (part1Total > 0 && part2Total > 0) return part1Total + part2Total;
+    if (part1Total > 0) return part1Total;
+    if (part2Total > 0) return part2Total;
+    return 0;
+  }
+
   /// 下载单文件格式
   Future<void> _downloadSingleFile(
     DownloadJob job,
@@ -183,29 +218,28 @@ class DownloadService {
     final videoPath =
         '${downloadDir.path}${Platform.pathSeparator}${_safeFileName(job.episodeName)}.mp4';
     int lastBytes = 0;
-    final stopwatch = Stopwatch()..start();
+    DateTime lastTime = DateTime.now();
+
     await _downloadPart(videoPath, url, job, (received, total) {
-      _updateProgress(job, received, total, lastBytes, stopwatch);
-      lastBytes = received;
+      job.downloadedBytes = received;
+      job.totalBytes = total;
+      if (total > 0) {
+        job.progress = (received * 100 / total).round().clamp(0, 99);
+      }
+      // 速度基于增量计算
+      final now = DateTime.now();
+      final timeDiffMs = now.difference(lastTime).inMilliseconds;
+      if (timeDiffMs >= 1000 && received > lastBytes) {
+        final bytesDiff = received - lastBytes;
+        if (bytesDiff > 0) {
+          job.speed = bytesDiff / (timeDiffMs / 1000.0);
+        }
+        lastBytes = received;
+        lastTime = now;
+      }
+      _jobController.add(job);
     });
     job.filePath = videoPath;
-  }
-
-  /// 更新下载进度（支持 DASH 合并进度）
-  void _updateProgress(DownloadJob job, int received, int total,
-      int lastBytes, Stopwatch stopwatch) {
-    job.downloadedBytes = received;
-    job.totalBytes = total;
-    if (total > 0) {
-      job.progress = (received * 100 / total).round();
-    }
-    final elapsed = stopwatch.elapsedMilliseconds;
-    if (elapsed >= 1000) {
-      final bytesDiff = received - lastBytes;
-      job.speed = bytesDiff / (elapsed / 1000);
-      stopwatch.reset();
-    }
-    _jobController.add(job);
   }
 
   /// 下载单个文件，通过回调报告进度

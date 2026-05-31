@@ -6,8 +6,31 @@ import '../models/download_job.dart';
 import '../providers/download_provider.dart';
 import '../services/file_system_service.dart';
 
-class DownloadPage extends StatelessWidget {
+class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key});
+
+  @override
+  State<DownloadPage> createState() => _DownloadPageState();
+}
+
+class _DownloadPageState extends State<DownloadPage> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<DownloadJob> _filteredJobs(List<DownloadJob> jobs) {
+    if (_searchQuery.isEmpty) return jobs;
+    return jobs
+        .where((j) =>
+            j.videoName.contains(_searchQuery) ||
+            j.episodeName.contains(_searchQuery))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,31 +63,86 @@ class DownloadPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer<DownloadProvider>(
-        builder: (context, provider, _) {
-          if (provider.jobs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.download_outlined, size: 64, color: theme.colorScheme.primary.withOpacity(0.5)),
-                  const SizedBox(height: 16),
-                  Text('暂无下载任务', style: theme.textTheme.bodyLarge),
-                  const SizedBox(height: 8),
-                  Text('搜索视频并添加到下载队列', style: theme.textTheme.bodySmall),
-                ],
+      body: Column(
+        children: [
+          // 搜索栏
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: '搜索下载任务...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                isDense: true,
               ),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: provider.jobs.length,
-            itemBuilder: (context, index) {
-              final job = provider.jobs[index];
-              return _DownloadJobCard(job: job);
-            },
-          );
-        },
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+          ),
+          // 列表
+          Expanded(
+            child: Consumer<DownloadProvider>(
+              builder: (context, provider, _) {
+                final jobs = _filteredJobs(provider.jobs);
+                if (provider.jobs.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.download_outlined,
+                            size: 64,
+                            color:
+                                theme.colorScheme.primary.withOpacity(0.5)),
+                        const SizedBox(height: 16),
+                        Text('暂无下载任务', style: theme.textTheme.bodyLarge),
+                        const SizedBox(height: 8),
+                        Text('搜索视频并添加到下载队列',
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  );
+                }
+                if (jobs.isEmpty && _searchQuery.isNotEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search_off,
+                            size: 48,
+                            color:
+                                theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(height: 16),
+                        Text('未找到匹配的下载任务',
+                            style: theme.textTheme.bodyLarge),
+                      ],
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: jobs.length,
+                  itemBuilder: (context, index) {
+                    final job = jobs[index];
+                    return _DownloadJobCard(job: job);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -81,6 +159,7 @@ class _DownloadJobCard extends StatelessWidget {
     final isActive = job.status == DownloadStatus.downloading;
     final isCompleted = job.status == DownloadStatus.completed;
     final isFailed = job.status == DownloadStatus.failed;
+    final isCanceled = job.status == DownloadStatus.canceled;
     final isQueued = job.status == DownloadStatus.queued;
 
     Color statusColor;
@@ -127,7 +206,8 @@ class _DownloadJobCard extends StatelessWidget {
                         job.videoName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       if (job.episodeName != job.videoName)
                         Text(
@@ -141,7 +221,8 @@ class _DownloadJobCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Text(job.status.label, style: TextStyle(color: statusColor, fontSize: 12)),
+                Text(job.status.label,
+                    style: TextStyle(color: statusColor, fontSize: 12)),
               ],
             ),
             if (isActive || isQueued) ...[
@@ -176,7 +257,8 @@ class _DownloadJobCard extends StatelessWidget {
                 job.error!,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.error),
               ),
             ],
             // 已完成任务显示文件路径
@@ -212,19 +294,39 @@ class _DownloadJobCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (isFailed)
+                // 失败/取消：删除 + 失败时可重试
+                if (isFailed) ...[
                   TextButton.icon(
                     icon: const Icon(Icons.refresh, size: 16),
                     label: const Text('重试'),
-                    onPressed: () => context.read<DownloadProvider>().retry(job.id),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().retry(job.id),
+                  ),
+                  const SizedBox(width: 4),
+                  TextButton.icon(
+                    icon: const Icon(Icons.delete_outline, size: 16),
+                    label: const Text('删除'),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().remove(job.id),
+                  ),
+                ],
+                if (isCanceled)
+                  TextButton.icon(
+                    icon: const Icon(Icons.delete_outline, size: 16),
+                    label: const Text('删除'),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().remove(job.id),
                   ),
                 if (isQueued)
                   TextButton.icon(
                     icon: const Icon(Icons.cancel, size: 16),
                     label: const Text('取消'),
-                    onPressed: () => context.read<DownloadProvider>().cancel(job.id),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().cancel(job.id),
                   ),
-                if (isCompleted && job.filePath != null && job.filePath!.isNotEmpty &&
+                if (isCompleted &&
+                    job.filePath != null &&
+                    job.filePath!.isNotEmpty &&
                     (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
                   TextButton.icon(
                     icon: const Icon(Icons.folder_open, size: 16),
@@ -234,7 +336,8 @@ class _DownloadJobCard extends StatelessWidget {
                           .revealInFileManager(job.filePath!);
                       if (!ok && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('当前平台不支持打开文件管理器')),
+                          const SnackBar(
+                              content: Text('当前平台不支持打开文件管理器')),
                         );
                       }
                     },
@@ -243,7 +346,8 @@ class _DownloadJobCard extends StatelessWidget {
                   TextButton.icon(
                     icon: const Icon(Icons.delete_outline, size: 16),
                     label: const Text('删除'),
-                    onPressed: () => context.read<DownloadProvider>().remove(job.id),
+                    onPressed: () =>
+                        context.read<DownloadProvider>().remove(job.id),
                   ),
               ],
             ),
@@ -261,7 +365,8 @@ class _DownloadJobCard extends StatelessWidget {
   ) {
     return Row(
       children: [
-        Icon(Icons.insert_drive_file, size: 14, color: theme.colorScheme.primary),
+        Icon(Icons.insert_drive_file,
+            size: 14, color: theme.colorScheme.primary),
         const SizedBox(width: 6),
         Text('$label: ',
             style: theme.textTheme.bodySmall?.copyWith(
@@ -285,7 +390,9 @@ class _DownloadJobCard extends StatelessWidget {
           onPressed: () {
             Clipboard.setData(ClipboardData(text: path));
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('路径已复制到剪贴板'), duration: Duration(seconds: 2)),
+              const SnackBar(
+                  content: Text('路径已复制到剪贴板'),
+                  duration: Duration(seconds: 2)),
             );
           },
           visualDensity: VisualDensity.compact,
