@@ -203,7 +203,7 @@ class _DownloadPageState extends State<DownloadPage> {
 class _DownloadJobCard extends StatelessWidget {
   final DownloadJob job;
 
-  const _DownloadJobCard({required this.job});
+  const _DownloadJobCard({super.key, required this.job});
 
   @override
   Widget build(BuildContext context) {
