@@ -175,9 +175,10 @@ class MainActivity : FlutterActivity() {
                 .build()
 
             // 显式启用 transmuxing 优化：格式兼容时不解码/不重编码，直接复制流
-            Log.i(TAG, "正在初始化 Transformer（transmuxing 优化已启用）...")
+            Log.i(TAG, "正在初始化 Transformer（transmuxing 音视频均已启用）...")
             val builder = Transformer.Builder(context)
-                .setTransmuxOptimizationEnabled(true)
+                .setTransmuxVideo(true)
+                .setTransmuxAudio(true)
 
             transformer = builder
                 .addListener(object : Transformer.Listener {
