@@ -112,14 +112,14 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.17 (当前版本 - PATCH)
-- **状态**: 开发中 🚧
+### v0.2.17
+- **状态**: 已发布 ✅
 - **目标**: 修复 Issue #12（2 项反馈）
 - **任务**:
-  - [ ] 修复 Windows 下载管理批量清理/删除按钮无作用
-  - [ ] 修复 Android Media3 Transformer 合并失败：`Unsupported sample MIME type video/mp4`
-  - [ ] 更新版本号到 0.2.17
-  - [ ] CI 构建通过
+  - [x] 修复 Windows 下载管理批量清理/删除按钮无作用
+  - [x] 修复 Android Media3 Transformer 合并失败：`Unsupported sample MIME type video/mp4`
+  - [x] 更新版本号到 0.2.17
+  - [x] CI 构建通过
 
 ### v0.2.16
 - **状态**: 已发布 ✅
