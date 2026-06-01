@@ -1,27 +1,4 @@
-/// Stub implementation for platforms where ffmpeg_kit_extended_flutter is not available.
-/// Used only on web (dart.library.io absent). On native platforms the real
-/// package is imported instead via ffmpeg_kit_real.dart.
-
-class Session {
-  dynamic getReturnCode() => null;
-  String? getFailStackTrace() => null;
-}
-
-class ReturnCode {
-  static bool isSuccess(dynamic returnCode) => false;
-}
-
-class FFmpegKit {
-  static Future<Session> executeAsync(
-    String command, {
-    void Function(Session)? onComplete,
-  }) async {
-    final session = Session();
-    onComplete?.call(session);
-    return session;
-  }
-}
-
-class FFmpegKitExtended {
-  static Future<void> initialize() async {}
-}
+/// 此文件已废弃，不再被任何代码引用。
+/// 平台特定实现现在使用 ffmpeg_platform.dart（构建时互换）。
+/// 保留此文件以避免 git 历史混乱。
+library ffmpeg_kit_stub_deprecated;

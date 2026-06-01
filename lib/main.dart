@@ -7,7 +7,7 @@ import 'providers/search_provider.dart';
 import 'providers/download_provider.dart';
 import 'providers/settings_provider.dart';
 import 'pages/home_page.dart';
-import 'services/ffmpeg_kit_wrapper.dart';
+import 'services/ffmpeg_platform.dart';
 import 'services/log_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
@@ -20,10 +20,8 @@ void main() async {
   await LogService.init();
   await NotificationService.instance.init();
 
-  // 初始化 ffmpeg_kit_extended_flutter（仅 Android 需要；Windows 使用原生 ffmpeg）
-  if (Platform.isAndroid) {
-    await FFmpegKitExtended.initialize();
-  }
+  // 初始化 ffmpeg（Android: ffmpeg_kit_extended_flutter; Windows: 无操作）
+  await initializeFfmpeg();
 
   // 预加载设置，确保 Cookies 等配置在应用启动时已就绪
   final settings = SettingsProvider();

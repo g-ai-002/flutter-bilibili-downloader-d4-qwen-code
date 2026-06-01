@@ -24,6 +24,11 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Switch to Android dependencies and platform files
+        run: |
+          cp pubspec_android.yaml pubspec.yaml
+          cp lib/services/ffmpeg_android.dart lib/services/ffmpeg_platform.dart
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -75,6 +80,11 @@ jobs:
 
       - name: Generate Windows platform files
         run: flutter create --platforms=windows --project-name bilibili_downloader .
+
+      - name: Switch to Windows platform files
+        shell: pwsh
+        run: |
+          Copy-Item -Path lib/services/ffmpeg_windows.dart -Destination lib/services/ffmpeg_platform.dart -Force
 
       - name: Install dependencies
         run: flutter pub get

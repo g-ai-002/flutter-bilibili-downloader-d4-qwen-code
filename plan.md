@@ -121,17 +121,19 @@
   - [x] 移除 CI Windows 构建中 ffmpeg.exe 捆绑步骤
   - [x] 更新 UI 提示文案（不再提示安装系统 ffmpeg）
   - [x] 更新版本号到 0.2.36
-- **注意**: v0.2.38 中 Windows 重新回到原生 ffmpeg 调用（Process.run），恢复 resolveFfmpeg() 和 CI ffmpeg 捆绑
+- **注意**: v0.2.41 中 Windows 重新回到原生 ffmpeg 调用（Process.run），恢复 resolveFfmpeg() 和 CI ffmpeg 捆绑
 
-### v0.2.38 (PATCH)
+### v0.2.41 (PATCH)
 - **状态**: 开发中 🔧
-- **目标**: Windows 平台 DASH 合并重新回到原生 ffmpeg 调用，Android 保留 ffmpeg_kit_extended_flutter
+- **目标**: Windows/Android 双平台依赖分离管理 — Windows 使用原生 ffmpeg (Process.run)，Android 使用 ffmpeg_kit_extended_flutter
 - **任务**:
-  - [x] Windows mergeAv() 改用 Process.run 调用原生 ffmpeg（-c copy 无损流复制）
-  - [x] 恢复 FileSystemService.resolveFfmpeg()（应用同目录优先，回退 PATH）
-  - [x] main.dart 中 FFmpegKitExtended.initialize() 仅在非 Windows 平台调用
-  - [x] 恢复 CI Windows 构建中 ffmpeg.exe 捆绑步骤
-  - [ ] 更新版本号到 0.2.38
+  - [x] 创建 pubspec_android.yaml（含 ffmpeg_kit_extended_flutter）和 pubspec_windows.yaml（不含）
+  - [x] 创建平台特定 ffmpeg 实现文件：ffmpeg_android.dart / ffmpeg_windows.dart / ffmpeg_platform.dart
+  - [x] file_system_service.dart 移除 ffmpeg_kit_wrapper 导入，改为委托 ffmpeg_platform.dart
+  - [x] resolveFfmpeg() 从 FileSystemService 移至 ffmpeg_windows.dart（避免循环依赖）
+  - [x] main.dart 通过 initializeFfmpeg() 统一初始化，不再直接引用 FFmpegKitExtended
+  - [x] CI 工作流：Android/Windows 构建前互换 pubspec 和 platform dart 文件
+  - [x] 更新版本号到 0.2.41
 
 ### v0.2.34 (PATCH)
 - **状态**: 已发布 ✅

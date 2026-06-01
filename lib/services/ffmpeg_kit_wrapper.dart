@@ -1,5 +1,4 @@
-/// Platform-conditional export: uses the real ffmpeg_kit on native platforms
-/// and a stub on web, so that the app compiles everywhere even though
-/// ffmpeg_kit_extended_flutter is restricted to android in pubspec.yaml.
-export 'ffmpeg_kit_stub.dart'
-    if (dart.library.io) 'ffmpeg_kit_real.dart';
+/// 此文件已废弃，不再被任何代码引用。
+/// 平台特定实现现在使用 ffmpeg_platform.dart（构建时互换）。
+/// 保留此文件以避免 git 历史混乱。
+library ffmpeg_kit_wrapper_deprecated;
