@@ -1,11 +1,9 @@
 package com.bilibili.downloader
 
-import android.media.MediaMetadataRetriever
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.EditedMediaItemSequence
@@ -129,14 +127,9 @@ class MainActivity : FlutterActivity() {
             val composition = Composition.Builder(listOf(videoSequence, audioSequence))
                 .build()
 
-            // 检测输入视频的 MIME 类型，设置 setVideoMimeType 以启用转封装（无损）模式
-            val videoMimeType = getVideoMimeType(videoFile.absolutePath)
-
+            // Media3 Transformer 会自动检测输入格式并选择最优输出编码，
+            // 无需手动设置 setVideoMimeType（错误传入容器 MIME 如 video/mp4 反而会导致异常）
             val builder = Transformer.Builder(context)
-            if (videoMimeType != null) {
-                builder.setVideoMimeType(videoMimeType)
-                Log.i(TAG, "设置视频 MIME 类型: $videoMimeType (转封装/无损模式)")
-            }
 
             transformer = builder
                 .addListener(object : Transformer.Listener {
@@ -203,26 +196,6 @@ class MainActivity : FlutterActivity() {
 
             Log.e(TAG, "Media3 Transformer 初始化失败", e)
             callback(false, null, "Media3 Transformer 初始化失败: ${e.message}")
-        }
-    }
-
-    /**
-     * 使用 MediaMetadataRetriever 获取视频文件的 MIME 类型。
-     * 返回 null 表示无法检测。
-     */
-    private fun getVideoMimeType(filePath: String): String? {
-        val retriever = MediaMetadataRetriever()
-        return try {
-            retriever.setDataSource(filePath)
-            val mime = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE)
-            mime
-        } catch (e: Exception) {
-            Log.w(TAG, "无法获取视频 MIME 类型: ${e.message}")
-            null
-        } finally {
-            try {
-                retriever.release()
-            } catch (_: Exception) {}
         }
     }
 }
