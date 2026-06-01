@@ -18,7 +18,7 @@ dependencies:
   intl: ^0.18.1
   crypto: ^3.0.3
   flutter_local_notifications: ^17.0.0
-  ffmpeg_kit_flutter_new_min: ^3.1.0
+  ffmpeg_kit_extended_flutter: 0.5.7
 
 dev_dependencies:
   flutter_test:
@@ -27,3 +27,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+ffmpeg_kit_extended_config:
+  type: "base"

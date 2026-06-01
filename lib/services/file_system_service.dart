@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:ffmpeg_kit_flutter_new_min/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_extended_flutter/ffmpeg_kit_extended_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'log_service.dart';
 
@@ -170,15 +171,20 @@ class FileSystemService {
     required String audioPath,
     required String outputPath,
   }) async {
-    // Android: 使用 ffmpeg_kit_flutter 无损合并
+    // Android: 使用 ffmpeg_kit_extended_flutter 无损合并
     if (Platform.isAndroid) {
       try {
         final command =
             '-y -i "$videoPath" -i "$audioPath" -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 "$outputPath"';
         LogService.info('Android ffmpeg 无损合并开始: $command');
-        final session = await FFmpegKit.execute(command);
-        final returnCode = await session.getReturnCode();
-        if (returnCode != null && await returnCode.isValueSuccess()) {
+        final completer = Completer<Session>();
+        FFmpegKit.executeAsync(
+          command,
+          onComplete: (session) => completer.complete(session),
+        );
+        final session = await completer.future;
+        final returnCode = session.getReturnCode();
+        if (returnCode != null && ReturnCode.isSuccess(returnCode)) {
           if (await File(outputPath).exists()) {
             // 合并成功，删除中间文件
             try {
@@ -190,11 +196,10 @@ class FileSystemService {
           }
         }
         // 获取失败详情
-        final failStack = await session.getFailStackTrace();
-        final output = await session.getOutput();
+        final failStack = session.getFailStackTrace();
         LogService.error(
           'Android ffmpeg 无损合并失败',
-          'stderr: ${failStack ?? output ?? "无"}',
+          'stderr: ${failStack ?? "无"}',
         );
       } catch (e) {
         LogService.error('Android ffmpeg 无损合并异常', e);
