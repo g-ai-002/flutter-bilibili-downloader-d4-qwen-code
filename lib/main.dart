@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-import 'package:ffmpeg_kit_extended_flutter/ffmpeg_kit_extended_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -19,9 +18,6 @@ void main() async {
   await StorageService.instance;
   await LogService.init();
   await NotificationService.instance.init();
-
-  // 初始化 ffmpeg_kit_extended_flutter
-  await FFmpegKitExtended.initialize();
 
   // 预加载设置，确保 Cookies 等配置在应用启动时已就绪
   final settings = SettingsProvider();

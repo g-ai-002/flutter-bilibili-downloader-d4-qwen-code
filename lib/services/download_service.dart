@@ -228,7 +228,7 @@ class DownloadService {
     job.mergeStartedAt = DateTime.now();
     _jobController.add(job);
 
-    // 尝试合并视频/音频（Android: Media3 Transformer; 桌面: ffmpeg）
+    // 尝试合并视频/音频（Android: 原生 MediaExtractor/MediaMuxer; 桌面: ffmpeg）
     final merged = await FileSystemService.instance.mergeAv(
       videoPath: videoPath,
       audioPath: audioPath,

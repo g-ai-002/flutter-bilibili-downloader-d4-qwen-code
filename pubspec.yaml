@@ -1,7 +1,7 @@
 name: bilibili_downloader
 description: Bilibili 视频下载器 - 支持搜索、扫码登录、高清下载
 publish_to: 'none'
-version: 0.2.17
+version: 0.2.34
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
@@ -18,7 +18,6 @@ dependencies:
   intl: ^0.20.2
   crypto: ^3.0.3
   flutter_local_notifications: ^17.0.0
-  ffmpeg_kit_extended_flutter: 0.5.7
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +26,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-ffmpeg_kit_extended_config:
-  type: "base"

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:ffmpeg_kit_extended_flutter/ffmpeg_kit_extended_flutter.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'log_service.dart';
 
@@ -8,11 +8,13 @@ import 'log_service.dart';
 /// - 下载根目录解析（Windows/Android 差异化）
 /// - 日志目录解析
 /// - 打开文件管理器并定位到目标文件
-/// - DASH 视频/音频合并（Android: ffmpeg_kit_flutter; 桌面: ffmpeg）
+/// - DASH 视频/音频合并（Android: 原生 MediaExtractor/MediaMuxer; 桌面: ffmpeg）
 class FileSystemService {
   static FileSystemService? _instance;
   static FileSystemService get instance => _instance ??= FileSystemService._();
   FileSystemService._();
+
+  static const _channel = MethodChannel('com.bilibili.downloader/merge');
 
   Directory? _downloadRoot;
   Directory? _logRoot;
@@ -163,7 +165,7 @@ class FileSystemService {
   Future<bool> hasFFmpeg() async => (await resolveFfmpeg()) != null;
 
   /// 合并视频轨与音频轨
-  /// - Android: 使用 ffmpeg_kit_flutter（-c copy 无损流复制）
+  /// - Android: 使用原生 MediaExtractor/MediaMuxer（通过 MethodChannel）
   /// - 桌面端: 使用系统/打包 ffmpeg
   /// 成功返回输出路径，失败返回 null
   Future<String?> mergeAv({
@@ -171,38 +173,27 @@ class FileSystemService {
     required String audioPath,
     required String outputPath,
   }) async {
-    // Android: 使用 ffmpeg_kit_extended_flutter 无损合并
+    // Android: 使用原生 MediaExtractor/MediaMuxer 无损合并
     if (Platform.isAndroid) {
       try {
-        final command =
-            '-y -i "$videoPath" -i "$audioPath" -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 "$outputPath"';
-        LogService.info('Android ffmpeg 无损合并开始: $command');
-        final completer = Completer<Session>();
-        FFmpegKit.executeAsync(
-          command,
-          onComplete: (session) => completer.complete(session),
-        );
-        final session = await completer.future;
-        final returnCode = session.getReturnCode();
-        if (returnCode != null && ReturnCode.isSuccess(returnCode)) {
-          if (await File(outputPath).exists()) {
-            // 合并成功，删除中间文件
-            try {
-              await File(videoPath).delete();
-              await File(audioPath).delete();
-            } catch (_) {}
-            LogService.info('Android ffmpeg 无损合并成功: $outputPath');
-            return outputPath;
-          }
+        LogService.info('Android 原生合并开始: video=$videoPath, audio=$audioPath');
+        final result = await _channel.invokeMethod<bool>('mergeAv', {
+          'videoPath': videoPath,
+          'audioPath': audioPath,
+          'outputPath': outputPath,
+        });
+        if (result == true && await File(outputPath).exists()) {
+          // 合并成功，删除中间文件
+          try {
+            await File(videoPath).delete();
+            await File(audioPath).delete();
+          } catch (_) {}
+          LogService.info('Android 原生合并成功: $outputPath');
+          return outputPath;
         }
-        // 获取失败详情
-        final failStack = session.getFailStackTrace();
-        LogService.error(
-          'Android ffmpeg 无损合并失败',
-          'stderr: ${failStack ?? "无"}',
-        );
+        LogService.error('Android 原生合并失败: result=$result');
       } catch (e) {
-        LogService.error('Android ffmpeg 无损合并异常', e);
+        LogService.error('Android 原生合并异常', e);
       }
       return null;
     }
