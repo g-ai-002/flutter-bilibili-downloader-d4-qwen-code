@@ -4,6 +4,7 @@ import '../models/video.dart';
 import '../utils/constants.dart';
 import '../utils/wbi_sign.dart';
 import 'log_service.dart';
+import 'storage_service.dart';
 
 /// 业务可读的接口错误（用于将 412 风控等技术错误转成给用户看的提示）
 class BilibiliApiException implements Exception {

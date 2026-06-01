@@ -112,8 +112,17 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.15 (当前版本 - PATCH)
+### v0.2.16 (当前版本 - PATCH)
 - **状态**: 开发中 🚧
+- **目标**: 修复 CI 编译错误（v0.2.15 遗留）
+- **任务**:
+  - [ ] 修复 bilibili_api.dart 缺少 StorageService import 导致编译失败
+  - [ ] 修复 download_service.dart num/int 类型不匹配导致编译失败
+  - [ ] 更新版本号到 0.2.16
+  - [ ] CI 构建通过
+
+### v0.2.15
+- **状态**: 已发布 ✅
 - **目标**: 修复 Issue #10（5 项反馈）+ Issue #11（Media3 Transformer 无损合并）
 - **任务**:
   - [x] Issue #10.1: 断点续传功能（app 重启后恢复下载）

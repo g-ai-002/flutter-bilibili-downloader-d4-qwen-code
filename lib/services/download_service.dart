@@ -348,7 +348,7 @@ class DownloadService {
               return;
             }
             await raf.writeFrom(chunk);
-            received += chunk.length;
+            received = received + (chunk.length as int);
             onProgress(received, totalSize);
           }
         } finally {

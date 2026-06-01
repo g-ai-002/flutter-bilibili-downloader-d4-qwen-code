@@ -45,7 +45,13 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.15 (当前)
+### v0.2.16 (当前)
+- 修复 CI 编译错误（v0.2.15 遗留）：
+  - **修复 bilibili_api.dart**：补充缺失的 `StorageService` import
+  - **修复 download_service.dart**：修复 `num`/`int` 类型不匹配导致 Dart 编译失败
+  - **CI 构建恢复**：确保 Android + Windows 构建通过
+
+### v0.2.15
 - 修复 Issue #10（5 项反馈）：
   - **断点续传**：app 重启后自动恢复未完成的下载任务，使用 HTTP Range 支持从断点继续下载
   - **合并超时增大**：Android 合并超时从 120s 增大到 10 小时（36000s）
