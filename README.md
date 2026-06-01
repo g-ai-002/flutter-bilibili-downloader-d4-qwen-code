@@ -45,7 +45,17 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.2.14 (当前)
+### v0.2.15 (当前)
+- 修复 Issue #10（5 项反馈）：
+  - **断点续传**：app 重启后自动恢复未完成的下载任务，使用 HTTP Range 支持从断点继续下载
+  - **合并超时增大**：Android 合并超时从 120s 增大到 10 小时（36000s）
+  - **批量清理**：下载管理新增 PopupMenu 按状态批量清理任务（已完成/失败/已取消/排队中/全部）
+  - **时间显示增强**：下载卡片显示已用时、预估剩余时间；已完成任务显示下载用时、合并用时、总用时
+  - **Cookie 持久化改进**：buvid3 持久化缓存，减少每次启动的网络请求
+- 修复 Issue #11：
+  - **Media3 Transformer 无损合并**：使用 `setVideoMimeType` 启用转封装（passthrough）模式，避免重编码
+
+### v0.2.14
 - 修复 Issue #9 — Media3 Transformer 线程错误导致合并失败：
   - **Transformer 线程修复**：Transformer 必须在主线程（有 Looper）上创建和调用所有方法
   - **移除 Thread 包装**：改用回调模式 + Handler 超时，不再手动创建后台线程

@@ -71,6 +71,14 @@ class StorageService {
   bool get bilibiliEnabled => _p.getBool(AppConstants.prefKeyLoginEnabled) ?? false;
   set bilibiliEnabled(bool value) => _p.setBool(AppConstants.prefKeyLoginEnabled, value);
 
+  /// 缓存的 buvid3（用于反风控）
+  String? get cachedBuvid3 => _p.getString('cached_buvid3');
+  set cachedBuvid3(String? value) {
+    if (value != null && value.isNotEmpty) {
+      _p.setString('cached_buvid3', value);
+    }
+  }
+
   // --- 下载设置 ---
   String get downloadDir => _p.getString(AppConstants.prefKeyDownloadDir) ?? '';
   set downloadDir(String value) => _p.setString(AppConstants.prefKeyDownloadDir, value);

@@ -65,10 +65,21 @@ class BilibiliApi {
 
   /// 通过访问 www.bilibili.com 获取 `buvid3` cookie，
   /// 这是解决搜索接口 412(风控) 的关键之一。
-  /// 仅执行一次，失败也只记录日志不阻塞业务。
+  /// 会优先从本地存储加载已缓存的 buvid3，仅首次或缓存不存在时请求。
   Future<void> _ensureBuvid() async {
     if (_buvidPrepared) return;
     _buvidPrepared = true;
+
+    // 尝试从本地存储加载已缓存的 buvid3
+    try {
+      final storage = await StorageService.instance;
+      final cached = storage.cachedBuvid3;
+      if (cached != null && cached.isNotEmpty) {
+        _buvid3 = cached;
+        return;
+      }
+    } catch (_) {}
+
     try {
       final tmp = Dio(BaseOptions(
         headers: {
@@ -85,6 +96,11 @@ class BilibiliApi {
         final m = RegExp(r'buvid3=([^;]+)').firstMatch(raw);
         if (m != null) {
           _buvid3 = m.group(1);
+          // 持久化 buvid3
+          try {
+            final storage = await StorageService.instance;
+            storage.cachedBuvid3 = _buvid3;
+          } catch (_) {}
           break;
         }
       }

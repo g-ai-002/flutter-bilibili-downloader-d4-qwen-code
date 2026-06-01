@@ -1,7 +1,7 @@
 name: bilibili_downloader
 description: Bilibili 视频下载器 - 支持搜索、扫码登录、高清下载
 publish_to: 'none'
-version: 0.2.14
+version: 0.2.15
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

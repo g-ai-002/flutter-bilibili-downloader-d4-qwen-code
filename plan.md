@@ -112,7 +112,19 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
-### v0.2.14 (当前版本 - PATCH)
+### v0.2.15 (当前版本 - PATCH)
+- **状态**: 开发中 🚧
+- **目标**: 修复 Issue #10（5 项反馈）+ Issue #11（Media3 Transformer 无损合并）
+- **任务**:
+  - [x] Issue #10.1: 断点续传功能（app 重启后恢复下载）
+  - [x] Issue #10.2: Android 合并超时从 120s 增大到 10 小时
+  - [x] Issue #10.3: 下载管理批量清理不同状态任务
+  - [x] Issue #10.4: 下载任务显示下载/合并/总用时、已执行和剩余时间
+  - [x] Issue #10.5: Cookie 登录信息持久化改进
+  - [x] Issue #11: Media3 Transformer 使用 setVideoMimeType 实现无损合并
+  - [x] 更新版本号到 0.2.15
+
+### v0.2.14
 - **状态**: 已发布 ✅
 - **目标**: 修复 Issue #9 — Media3 Transformer 线程错误导致合并失败
 - **任务**:
