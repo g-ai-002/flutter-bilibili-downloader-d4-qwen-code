@@ -1,11 +1,12 @@
 /// FFmpeg 平台实现入口。
 /// 此文件在 CI 构建时根据目标平台自动互换：
-///   - Windows 构建: 内容 = ffmpeg_windows.dart（使用原生 ffmpeg Process.run）
+///   - Windows 构建: 内容 = ffmpeg_windows.dart（使用原生 ffmpeg Process.start）
 ///   - Android 构建: 内容 = ffmpeg_android.dart（使用 ffmpeg_kit_extended_flutter）
 ///
 /// 本地开发默认使用 Windows 版本（与默认 pubspec.yaml 匹配）。
 library ffmpeg_platform;
 
+import 'dart:convert';
 import 'dart:io';
 import 'log_service.dart';
 
@@ -72,8 +73,14 @@ Future<String?> mergeAvPlatform({
       outputPath,
     ];
     LogService.info('ffmpeg 无损合并开始 (原生): $ff ${args.join(" ")}');
-    final result = await Process.run(ff, args);
-    if (result.exitCode == 0 && await File(outputPath).exists()) {
+    final process = await Process.start(ff, args);
+    // 同时 drain stdout/stderr 避免管道缓冲区满阻塞进程
+    final stdoutFuture = process.stdout.transform(utf8.decoder).join();
+    final stderrFuture = process.stderr.transform(utf8.decoder).join();
+    final exitCode = await process.exitCode;
+    await stdoutFuture; // 确保 stdout drain 完成
+    final stderrStr = await stderrFuture;
+    if (exitCode == 0 && await File(outputPath).exists()) {
       try {
         await File(videoPath).delete();
         await File(audioPath).delete();
@@ -82,8 +89,8 @@ Future<String?> mergeAvPlatform({
       return outputPath;
     }
     LogService.error(
-      'ffmpeg 合并失败 (exitCode=${result.exitCode})',
-      result.stderr?.toString() ?? '',
+      'ffmpeg 合并失败 (exitCode=$exitCode)',
+      stderrStr,
     );
   } catch (e) {
     LogService.error('ffmpeg 调用异常', e);

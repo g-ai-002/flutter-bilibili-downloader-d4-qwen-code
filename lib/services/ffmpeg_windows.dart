@@ -1,7 +1,8 @@
-/// Windows 平台 ffmpeg 合并实现，使用原生 ffmpeg（Process.run）。
+/// Windows 平台 ffmpeg 合并实现，使用原生 ffmpeg（Process.start）。
 /// 不依赖 ffmpeg_kit_extended_flutter，确保 Windows 构建无需该包。
 library ffmpeg_windows;
 
+import 'dart:convert';
 import 'dart:io';
 import 'log_service.dart';
 
@@ -68,8 +69,14 @@ Future<String?> mergeAvPlatform({
       outputPath,
     ];
     LogService.info('ffmpeg 无损合并开始 (原生): $ff ${args.join(" ")}');
-    final result = await Process.run(ff, args);
-    if (result.exitCode == 0 && await File(outputPath).exists()) {
+    final process = await Process.start(ff, args);
+    // 同时 drain stdout/stderr 避免管道缓冲区满阻塞进程
+    final stdoutFuture = process.stdout.transform(utf8.decoder).join();
+    final stderrFuture = process.stderr.transform(utf8.decoder).join();
+    final exitCode = await process.exitCode;
+    await stdoutFuture; // 确保 stdout drain 完成
+    final stderrStr = await stderrFuture;
+    if (exitCode == 0 && await File(outputPath).exists()) {
       try {
         await File(videoPath).delete();
         await File(audioPath).delete();
@@ -78,8 +85,8 @@ Future<String?> mergeAvPlatform({
       return outputPath;
     }
     LogService.error(
-      'ffmpeg 合并失败 (exitCode=${result.exitCode})',
-      result.stderr?.toString() ?? '',
+      'ffmpeg 合并失败 (exitCode=$exitCode)',
+      stderrStr,
     );
   } catch (e) {
     LogService.error('ffmpeg 调用异常', e);

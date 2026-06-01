@@ -65,8 +65,16 @@ class FileSystemService {
   /// 获取日志根目录（仅文件父目录，路径展示用）
   Future<Directory> getLogRoot() async {
     if (_logRoot != null) return _logRoot!;
-    final dir = await getApplicationDocumentsDirectory();
-    final logDir = Directory('${dir.path}/logs');
+
+    Directory baseDir;
+    if (Platform.isAndroid) {
+      final extDir = await getExternalStorageDirectory();
+      baseDir = extDir ?? await getApplicationDocumentsDirectory();
+    } else {
+      baseDir = await getApplicationDocumentsDirectory();
+    }
+
+    final logDir = Directory('${baseDir.path}/logs');
     if (!await logDir.exists()) {
       await logDir.create(recursive: true);
     }

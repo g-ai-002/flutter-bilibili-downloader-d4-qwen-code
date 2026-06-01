@@ -69,80 +69,101 @@ class _SearchPageState extends State<SearchPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          focusNode: _focusNode,
-          decoration: InputDecoration(
-            hintText: '搜索 Bilibili 视频...',
-            border: InputBorder.none,
-            filled: true,
-            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () => _search(_searchController.text),
-            ),
-          ),
-          textInputAction: TextInputAction.search,
-          onSubmitted: _search,
-        ),
-        actions: [
-          // 搜索类型切换
-          Center(
-            child: SegmentedButton<SearchType>(
-              segments: const [
-                ButtonSegment(value: SearchType.video, label: Text('视频', style: TextStyle(fontSize: 12))),
-                ButtonSegment(value: SearchType.uploader, label: Text('UP主', style: TextStyle(fontSize: 12))),
+        title: const Text('搜索'),
+      ),
+      body: Column(
+        children: [
+          // 第一行：视频/UP主选择居中，右边二维码
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                const Spacer(),
+                SegmentedButton<SearchType>(
+                  segments: const [
+                    ButtonSegment(value: SearchType.video, label: Text('视频', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: SearchType.uploader, label: Text('UP主', style: TextStyle(fontSize: 12))),
+                  ],
+                  selected: {_searchType},
+                  onSelectionChanged: (selected) {
+                    setState(() => _searchType = selected.first);
+                  },
+                  style: ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.qr_code),
+                  tooltip: '扫码登录',
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                  ),
+                ),
               ],
-              selected: {_searchType},
-              onSelectionChanged: (selected) {
-                setState(() => _searchType = selected.first);
-              },
-              style: ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
             ),
           ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.qr_code),
-            tooltip: '扫码登录',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginPage()),
+          const SizedBox(height: 8),
+          // 第二行：搜索框（单独一行）
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _focusNode,
+              decoration: InputDecoration(
+                hintText: '搜索 Bilibili 视频...',
+                filled: true,
+                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () => _search(_searchController.text),
+                ),
+              ),
+              textInputAction: TextInputAction.search,
+              onSubmitted: _search,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 搜索结果/历史/空状态
+          Expanded(
+            child: Consumer<SearchProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (provider.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                        const SizedBox(height: 16),
+                        Text(provider.error!, style: theme.textTheme.bodyLarge),
+                      ],
+                    ),
+                  );
+                }
+                if (_searchType == SearchType.uploader && provider.uploaderResults.isNotEmpty) {
+                  return _buildUploaderResultsList(provider.uploaderResults);
+                }
+                if (provider.results.isNotEmpty) {
+                  return _buildResultsList(provider.results);
+                }
+                if (_searchHistory.isNotEmpty) {
+                  return _buildSearchHistory();
+                }
+                return _buildEmptyState();
+              },
             ),
           ),
         ],
-      ),
-      body: Consumer<SearchProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-                  const SizedBox(height: 16),
-                  Text(provider.error!, style: theme.textTheme.bodyLarge),
-                ],
-              ),
-            );
-          }
-          if (_searchType == SearchType.uploader && provider.uploaderResults.isNotEmpty) {
-            return _buildUploaderResultsList(provider.uploaderResults);
-          }
-          if (provider.results.isNotEmpty) {
-            return _buildResultsList(provider.results);
-          }
-          if (_searchHistory.isNotEmpty) {
-            return _buildSearchHistory();
-          }
-          return _buildEmptyState();
-        },
       ),
     );
   }
