@@ -20,8 +20,10 @@ void main() async {
   await LogService.init();
   await NotificationService.instance.init();
 
-  // 初始化 ffmpeg_kit_extended_flutter
-  await FFmpegKitExtended.initialize();
+  // 初始化 ffmpeg_kit_extended_flutter（仅 Android 需要；Windows 使用原生 ffmpeg）
+  if (!Platform.isWindows) {
+    await FFmpegKitExtended.initialize();
+  }
 
   // 预加载设置，确保 Cookies 等配置在应用启动时已就绪
   final settings = SettingsProvider();

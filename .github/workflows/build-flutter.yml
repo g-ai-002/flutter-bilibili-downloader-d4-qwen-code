@@ -60,6 +60,19 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Print environment info
+        shell: pwsh
+        run: |
+          Write-Host "========================================"
+          Write-Host "  构建环境信息"
+          Write-Host "========================================"
+          Write-Host "OS: $($env:OS) $($env:PROCESSOR_ARCHITECTURE)"
+          Write-Host "USERPROFILE: $env:USERPROFILE"
+          Write-Host "PWD: $(Get-Location)"
+          flutter --version
+          dart --version
+          Write-Host "========================================"
+
       - name: Generate Windows platform files
         run: flutter create --platforms=windows --project-name bilibili_downloader .
 
@@ -67,11 +80,72 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows
-        run: flutter build windows --release
+        run: flutter build windows --release -v
+
+      - name: List build output
+        shell: pwsh
+        run: |
+          $releaseDir = 'build\windows\x64\runner\Release'
+          Write-Host "========================================"
+          Write-Host "  构建产物列表: $releaseDir"
+          Write-Host "========================================"
+          if (Test-Path $releaseDir) {
+            Get-ChildItem $releaseDir | ForEach-Object {
+              $sizeMB = [math]::Round($_.Length / 1MB, 2)
+              Write-Host "  $($_.Name)  ($sizeMB MB)"
+            }
+            $totalMB = [math]::Round((Get-ChildItem $releaseDir | Measure-Object Length -Sum).Sum / 1MB, 2)
+            Write-Host "  总大小: $totalMB MB"
+          } else {
+            Write-Host "  [目录不存在]"
+          }
+          Write-Host "========================================"
+
+      - name: Download ffmpeg (bundle for native merging)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ffmpegUrl = 'https://github.com/GyanD/codexffmpeg/releases/download/8.1.1/ffmpeg-8.1.1-essentials_build.zip'
+          Write-Host "========================================"
+          Write-Host "  下载 ffmpeg"
+          Write-Host "========================================"
+          Write-Host "URL: $ffmpegUrl"
+          Invoke-WebRequest -UseBasicParsing -Uri $ffmpegUrl -OutFile ffmpeg.zip
+          $zipSizeMB = [math]::Round((Get-Item ffmpeg.zip).Length / 1MB, 2)
+          Write-Host "下载完成: ffmpeg.zip ($zipSizeMB MB)"
+          Write-Host "解压中..."
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-extracted -Force
+          Write-Host "查找 ffmpeg.exe..."
+          $bin = Get-ChildItem -Path ffmpeg-extracted -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          if (-not $bin) { throw 'ffmpeg.exe not found in archive' }
+          Write-Host "找到: $($bin.FullName) ($([math]::Round($bin.Length / 1MB, 2)) MB)"
+          $releaseDir = 'build\windows\x64\runner\Release'
+          Copy-Item $bin.FullName -Destination (Join-Path $releaseDir 'ffmpeg.exe') -Force
+          Write-Host "已拷贝 ffmpeg.exe 到 $releaseDir"
+          # 删除多余的 ffprobe.exe（非必需，节省约 83MB）
+          $ffprobePath = Join-Path $releaseDir 'ffprobe.exe'
+          if (Test-Path $ffprobePath) {
+            $ffprobeSizeMB = [math]::Round((Get-Item $ffprobePath).Length / 1MB, 2)
+            Remove-Item $ffprobePath -Force
+            Write-Host "已删除 ffprobe.exe (节省 $ffprobeSizeMB MB)"
+          }
+          Write-Host "========================================"
+          Write-Host "  最终产物列表:"
+          Get-ChildItem $releaseDir | ForEach-Object {
+            $sizeMB = [math]::Round($_.Length / 1MB, 2)
+            Write-Host "  $($_.Name)  ($sizeMB MB)"
+          }
+          $totalMB = [math]::Round((Get-ChildItem $releaseDir | Measure-Object Length -Sum).Sum / 1MB, 2)
+          Write-Host "  总大小: $totalMB MB"
+          Write-Host "========================================"
 
       - name: Create Windows ZIP
+        shell: pwsh
         run: |
+          Write-Host "创建 ZIP 包..."
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath bilibili-downloader-windows.zip
+          $zipSizeMB = [math]::Round((Get-Item bilibili-downloader-windows.zip).Length / 1MB, 2)
+          Write-Host "ZIP 创建完成: bilibili-downloader-windows.zip ($zipSizeMB MB)"
 
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
