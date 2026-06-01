@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'log_service.dart';
 
@@ -7,9 +7,8 @@ import 'log_service.dart';
 /// - 下载根目录解析（Windows/Android 差异化）
 /// - 日志目录解析
 /// - 打开文件管理器并定位到目标文件
-/// - DASH 视频/音频合并（Android: Media3 Transformer; 桌面: ffmpeg）
+/// - DASH 视频/音频合并（Android: ffmpeg_kit_flutter; 桌面: ffmpeg）
 class FileSystemService {
-  static const _mergeChannel = MethodChannel('com.bilibili.downloader/ffmpeg');
   static FileSystemService? _instance;
   static FileSystemService get instance => _instance ??= FileSystemService._();
   FileSystemService._();
@@ -163,7 +162,7 @@ class FileSystemService {
   Future<bool> hasFFmpeg() async => (await resolveFfmpeg()) != null;
 
   /// 合并视频轨与音频轨
-  /// - Android: 使用 Jetpack Media3 Transformer（通过平台通道）
+  /// - Android: 使用 ffmpeg_kit_flutter（-c copy 无损流复制）
   /// - 桌面端: 使用系统/打包 ffmpeg
   /// 成功返回输出路径，失败返回 null
   Future<String?> mergeAv({
@@ -171,26 +170,34 @@ class FileSystemService {
     required String audioPath,
     required String outputPath,
   }) async {
-    // Android: 使用 Media3 Transformer
+    // Android: 使用 ffmpeg_kit_flutter 无损合并
     if (Platform.isAndroid) {
       try {
-        final merged = await _mergeChannel.invokeMethod<String>('mergeAv', {
-          'videoPath': videoPath,
-          'audioPath': audioPath,
-          'outputPath': outputPath,
-        });
-        if (merged != null && await File(merged).exists()) {
-          // 合并成功，删除中间文件
-          try {
-            await File(videoPath).delete();
-            await File(audioPath).delete();
-          } catch (_) {}
-          LogService.info('Android Media3 Transformer 合并成功: $merged');
-          return merged;
+        final command =
+            '-y -i "$videoPath" -i "$audioPath" -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 "$outputPath"';
+        LogService.info('Android ffmpeg 无损合并开始: $command');
+        final session = await FFmpegKit.execute(command);
+        final returnCode = await session.getReturnCode();
+        if (ReturnCode.isSuccess(returnCode)) {
+          if (await File(outputPath).exists()) {
+            // 合并成功，删除中间文件
+            try {
+              await File(videoPath).delete();
+              await File(audioPath).delete();
+            } catch (_) {}
+            LogService.info('Android ffmpeg 无损合并成功: $outputPath');
+            return outputPath;
+          }
         }
-        LogService.error('Android Media3 Transformer 合并返回空结果', '');
+        // 获取失败详情
+        final failStack = await session.getFailStackTrace();
+        final output = await session.getOutput();
+        LogService.error(
+          'Android ffmpeg 无损合并失败 (returnCode=$returnCode)',
+          'stderr: ${failStack ?? output ?? "无"}',
+        );
       } catch (e) {
-        LogService.error('Android Media3 Transformer 合并异常', e);
+        LogService.error('Android ffmpeg 无损合并异常', e);
       }
       return null;
     }
