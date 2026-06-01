@@ -95,32 +95,54 @@ class DownloadProvider extends ChangeNotifier {
   /// 删除任务
   void remove(String jobId) {
     _service?.remove(jobId);
-    _jobs.removeWhere((j) => j.id == jobId);
+    _jobs = List<DownloadJob>.from(_jobs)..removeWhere((j) => j.id == jobId);
     notifyListeners();
+    _persistJobs();
   }
 
   /// 清除已完成任务
   void clearCompleted() {
-    _jobs.removeWhere((j) => j.status == DownloadStatus.completed);
+    final toRemove = _jobs.where((j) => j.status == DownloadStatus.completed).toList();
+    for (final job in toRemove) {
+      _service?.remove(job.id);
+    }
+    _jobs = List<DownloadJob>.from(_jobs)..removeWhere((j) => j.status == DownloadStatus.completed);
     notifyListeners();
+    _persistJobs();
   }
 
   /// 清除失败任务
   void clearFailed() {
-    _jobs.removeWhere((j) => j.status == DownloadStatus.failed);
+    final toRemove = _jobs.where((j) => j.status == DownloadStatus.failed).toList();
+    for (final job in toRemove) {
+      _service?.remove(job.id);
+    }
+    _jobs = List<DownloadJob>.from(_jobs)..removeWhere((j) => j.status == DownloadStatus.failed);
     notifyListeners();
+    _persistJobs();
   }
 
   /// 清除已取消任务
   void clearCanceled() {
-    _jobs.removeWhere((j) => j.status == DownloadStatus.canceled);
+    final toRemove = _jobs.where((j) => j.status == DownloadStatus.canceled).toList();
+    for (final job in toRemove) {
+      _service?.remove(job.id);
+    }
+    _jobs = List<DownloadJob>.from(_jobs)..removeWhere((j) => j.status == DownloadStatus.canceled);
     notifyListeners();
+    _persistJobs();
   }
 
   /// 清除排队中任务
   void clearQueued() {
-    _jobs.removeWhere((j) => j.status == DownloadStatus.queued);
+    final toRemove = _jobs.where((j) => j.status == DownloadStatus.queued).toList();
+    for (final job in toRemove) {
+      _service?.cancel(job.id);
+      _service?.remove(job.id);
+    }
+    _jobs = List<DownloadJob>.from(_jobs)..removeWhere((j) => j.status == DownloadStatus.queued);
     notifyListeners();
+    _persistJobs();
   }
 
   /// 重试所有失败任务

@@ -188,7 +188,7 @@ class _DownloadPageState extends State<DownloadPage> {
                   itemCount: jobs.length,
                   itemBuilder: (context, index) {
                     final job = jobs[index];
-                    return _DownloadJobCard(job: job);
+                    return _DownloadJobCard(key: ValueKey(job.id), job: job);
                   },
                 );
               },
