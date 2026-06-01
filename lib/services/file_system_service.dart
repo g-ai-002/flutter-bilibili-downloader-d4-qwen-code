@@ -178,7 +178,7 @@ class FileSystemService {
         LogService.info('Android ffmpeg 无损合并开始: $command');
         final session = await FFmpegKit.execute(command);
         final returnCode = await session.getReturnCode();
-        if (await returnCode.isValueSuccess()) {
+        if (returnCode != null && await returnCode.isValueSuccess()) {
           if (await File(outputPath).exists()) {
             // 合并成功，删除中间文件
             try {
