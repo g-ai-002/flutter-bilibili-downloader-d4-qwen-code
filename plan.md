@@ -112,6 +112,16 @@
 - [x] **修复 Issue #6.9** - 宽屏（>=900px）使用 NavigationRail + 主从布局（左侧导航 + 右侧内容），手机端保持底部导航
 - [x] **更新版本号到 0.2.6**
 
+### v0.2.36 (PATCH)
+- **状态**: 开发中 🔧
+- **目标**: Windows 平台 DASH 合并切换到 ffmpeg_kit_extended_flutter，统一双平台合并方案
+- **任务**:
+  - [x] Windows 平台 mergeAv() 改用 ffmpeg_kit_extended_flutter（与 Android 统一），移除 Process.run 外部 ffmpeg 调用
+  - [x] 移除 FileSystemService.resolveFfmpeg() / hasFFmpeg()
+  - [x] 移除 CI Windows 构建中 ffmpeg.exe 捆绑步骤
+  - [x] 更新 UI 提示文案（不再提示安装系统 ffmpeg）
+  - [x] 更新版本号到 0.2.36
+
 ### v0.2.34 (PATCH)
 - **状态**: 已发布 ✅
 - **目标**: 修复 CI Windows 构建失败 + Issue #13

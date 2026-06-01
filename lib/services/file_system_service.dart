@@ -8,7 +8,7 @@ import 'log_service.dart';
 /// - 下载根目录解析（Windows/Android 差异化）
 /// - 日志目录解析
 /// - 打开文件管理器并定位到目标文件
-/// - DASH 视频/音频合并（Android: ffmpeg_kit_flutter; 桌面: ffmpeg）
+/// - DASH 视频/音频合并（ffmpeg_kit_extended_flutter 统一双平台）
 class FileSystemService {
   static FileSystemService? _instance;
   static FileSystemService get instance => _instance ??= FileSystemService._();
@@ -123,119 +123,44 @@ class FileSystemService {
     return false;
   }
 
-  /// 检测 ffmpeg 可执行文件路径
-  /// 优先顺序：
-  ///   1. 应用同目录下的 ffmpeg.exe / ffmpeg（CI 已打包）
-  ///   2. 系统 PATH
-  /// 找不到返回 null
-  String? _ffmpegPath;
-  bool _ffmpegResolved = false;
-  Future<String?> resolveFfmpeg() async {
-    if (_ffmpegResolved) return _ffmpegPath;
-    _ffmpegResolved = true;
-    try {
-      final exe = Platform.isWindows ? 'ffmpeg.exe' : 'ffmpeg';
-      // 1) 应用同目录
-      final exeDir = File(Platform.resolvedExecutable).parent.path;
-      final bundled = File('$exeDir${Platform.pathSeparator}$exe');
-      if (await bundled.exists()) {
-        _ffmpegPath = bundled.path;
-        return _ffmpegPath;
-      }
-      // 2) PATH
-      final result = await Process.run(
-        Platform.isWindows ? 'where' : 'which',
-        ['ffmpeg'],
-      );
-      if (result.exitCode == 0) {
-        final out = (result.stdout?.toString() ?? '').trim();
-        if (out.isNotEmpty) {
-          _ffmpegPath = out.split(RegExp(r'[\r\n]+')).first.trim();
-          return _ffmpegPath;
-        }
-      }
-    } catch (_) {}
-    _ffmpegPath = null;
-    return null;
-  }
-
-  /// 检测系统 ffmpeg 是否可用
-  Future<bool> hasFFmpeg() async => (await resolveFfmpeg()) != null;
-
-  /// 合并视频轨与音频轨
-  /// - Android: 使用 ffmpeg_kit_flutter（-c copy 无损流复制）
-  /// - 桌面端: 使用系统/打包 ffmpeg
+  /// 合并视频轨与音频轨（无损流复制）
+  /// - 使用 ffmpeg_kit_extended_flutter（-c copy），Windows 和 Android 统一
   /// 成功返回输出路径，失败返回 null
   Future<String?> mergeAv({
     required String videoPath,
     required String audioPath,
     required String outputPath,
   }) async {
-    // Android: 使用 ffmpeg_kit_extended_flutter 无损合并
-    if (Platform.isAndroid) {
-      try {
-        final command =
-            '-y -i "$videoPath" -i "$audioPath" -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 "$outputPath"';
-        LogService.info('Android ffmpeg 无损合并开始: $command');
-        final completer = Completer<Session>();
-        FFmpegKit.executeAsync(
-          command,
-          onComplete: (session) => completer.complete(session),
-        );
-        final session = await completer.future;
-        final returnCode = session.getReturnCode();
-        if (returnCode != null && ReturnCode.isSuccess(returnCode)) {
-          if (await File(outputPath).exists()) {
-            // 合并成功，删除中间文件
-            try {
-              await File(videoPath).delete();
-              await File(audioPath).delete();
-            } catch (_) {}
-            LogService.info('Android ffmpeg 无损合并成功: $outputPath');
-            return outputPath;
-          }
-        }
-        // 获取失败详情
-        final failStack = session.getFailStackTrace();
-        LogService.error(
-          'Android ffmpeg 无损合并失败',
-          'stderr: ${failStack ?? "无"}',
-        );
-      } catch (e) {
-        LogService.error('Android ffmpeg 无损合并异常', e);
-      }
-      return null;
-    }
-
-    // 桌面端: ffmpeg
     try {
-      final ff = await resolveFfmpeg();
-      if (ff == null) {
-        LogService.warning('未检测到 ffmpeg，跳过合并');
-        return null;
+      final command =
+          '-y -i "$videoPath" -i "$audioPath" -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 "$outputPath"';
+      LogService.info('ffmpeg 无损合并开始: $command');
+      final completer = Completer<Session>();
+      FFmpegKit.executeAsync(
+        command,
+        onComplete: (session) => completer.complete(session),
+      );
+      final session = await completer.future;
+      final returnCode = session.getReturnCode();
+      if (returnCode != null && ReturnCode.isSuccess(returnCode)) {
+        if (await File(outputPath).exists()) {
+          // 合并成功，删除中间文件
+          try {
+            await File(videoPath).delete();
+            await File(audioPath).delete();
+          } catch (_) {}
+          LogService.info('ffmpeg 无损合并成功: $outputPath');
+          return outputPath;
+        }
       }
-      final args = [
-        '-y',
-        '-i', videoPath,
-        '-i', audioPath,
-        '-c', 'copy',
-        outputPath,
-      ];
-      final result = await Process.run(ff, args);
-      if (result.exitCode == 0 && await File(outputPath).exists()) {
-        // 合并成功，删除中间文件
-        try {
-          await File(videoPath).delete();
-          await File(audioPath).delete();
-        } catch (_) {}
-        return outputPath;
-      }
+      // 获取失败详情
+      final failStack = session.getFailStackTrace();
       LogService.error(
-        'ffmpeg 合并失败 (exitCode=${result.exitCode})',
-        result.stderr?.toString() ?? '',
+        'ffmpeg 无损合并失败',
+        'stderr: ${failStack ?? "无"}',
       );
     } catch (e) {
-      LogService.error('ffmpeg 调用异常', e);
+      LogService.error('ffmpeg 无损合并异常', e);
     }
     return null;
   }

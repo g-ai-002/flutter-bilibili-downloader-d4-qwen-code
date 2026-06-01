@@ -352,7 +352,7 @@ class _DownloadJobCard extends StatelessWidget {
                       _buildPathRow(context, theme, '音频', job.audioPath!),
                       const SizedBox(height: 4),
                       Text(
-                        '提示：当前未合并视频/音频轨。Windows/桌面端安装系统 ffmpeg 后重新下载将自动合并。',
+                        '提示：本次未成功合并视频/音频轨。可尝试重新下载以触发自动合并。',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.tertiary,
                           fontSize: 10,
