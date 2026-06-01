@@ -113,13 +113,13 @@
 - [x] **更新版本号到 0.2.6**
 
 ### v0.2.16 (当前版本 - PATCH)
-- **状态**: 开发中 🚧
+- **状态**: 已发布 ✅
 - **目标**: 修复 CI 编译错误（v0.2.15 遗留）
 - **任务**:
-  - [ ] 修复 bilibili_api.dart 缺少 StorageService import 导致编译失败
-  - [ ] 修复 download_service.dart num/int 类型不匹配导致编译失败
-  - [ ] 更新版本号到 0.2.16
-  - [ ] CI 构建通过
+  - [x] 修复 bilibili_api.dart 缺少 StorageService import 导致编译失败
+  - [x] 修复 download_service.dart num/int 类型不匹配导致编译失败
+  - [x] 更新版本号到 0.2.16
+  - [x] CI 构建通过
 
 ### v0.2.15
 - **状态**: 已发布 ✅
