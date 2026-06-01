@@ -45,7 +45,7 @@ class BilibiliDownloaderApp extends StatelessWidget {
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp(
-            title: 'Bilibili 下载器',
+            title: 'B站视频下载',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               colorSchemeSeed: const Color(0xFF00A1D6),
