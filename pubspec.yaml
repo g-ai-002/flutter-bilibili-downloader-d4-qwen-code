@@ -15,7 +15,7 @@ dependencies:
   dio: ^5.4.0
   shared_preferences: ^2.2.2
   path_provider: ^2.1.2
-  intl: ^0.18.1
+  intl: ^0.20.2
   crypto: ^3.0.3
   flutter_local_notifications: ^17.0.0
   ffmpeg_kit_extended_flutter: 0.5.7
