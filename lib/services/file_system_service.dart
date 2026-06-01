@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:ffmpeg_kit_extended_flutter/ffmpeg_kit_extended_flutter.dart';
+import 'ffmpeg_kit_wrapper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'log_service.dart';
 

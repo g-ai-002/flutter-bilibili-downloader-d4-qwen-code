@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-import 'package:ffmpeg_kit_extended_flutter/ffmpeg_kit_extended_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,6 +7,7 @@ import 'providers/search_provider.dart';
 import 'providers/download_provider.dart';
 import 'providers/settings_provider.dart';
 import 'pages/home_page.dart';
+import 'services/ffmpeg_kit_wrapper.dart';
 import 'services/log_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
@@ -21,7 +21,7 @@ void main() async {
   await NotificationService.instance.init();
 
   // 初始化 ffmpeg_kit_extended_flutter（仅 Android 需要；Windows 使用原生 ffmpeg）
-  if (!Platform.isWindows) {
+  if (Platform.isAndroid) {
     await FFmpegKitExtended.initialize();
   }
 
