@@ -43,6 +43,12 @@ class _DownloadPageState extends State<DownloadPage> {
             builder: (context, provider, _) {
               final hasFailed = provider.failedJobs.isNotEmpty;
               final hasCompleted = provider.completedJobs.isNotEmpty;
+              final hasCanceled = provider.jobs
+                  .where((j) => j.status == DownloadStatus.canceled)
+                  .isNotEmpty;
+              final hasQueued = provider.jobs
+                  .where((j) => j.status == DownloadStatus.queued)
+                  .isNotEmpty;
               return Row(
                 children: [
                   if (hasFailed)
@@ -51,12 +57,58 @@ class _DownloadPageState extends State<DownloadPage> {
                       tooltip: '重试全部',
                       onPressed: provider.retryAll,
                     ),
-                  if (hasCompleted)
-                    IconButton(
-                      icon: const Icon(Icons.clear_all),
-                      tooltip: '清除已完成',
-                      onPressed: provider.clearCompleted,
-                    ),
+                  PopupMenuButton<String>(
+                    tooltip: '批量清理',
+                    icon: const Icon(Icons.cleaning_services_outlined),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'completed':
+                          provider.clearCompleted();
+                          break;
+                        case 'failed':
+                          provider.clearFailed();
+                          break;
+                        case 'canceled':
+                          provider.clearCanceled();
+                          break;
+                        case 'queued':
+                          provider.clearQueued();
+                          break;
+                        case 'all':
+                          provider.clearCompleted();
+                          provider.clearFailed();
+                          provider.clearCanceled();
+                          provider.clearQueued();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      if (hasCompleted)
+                        const PopupMenuItem(
+                          value: 'completed',
+                          child: Text('清除已完成任务'),
+                        ),
+                      if (hasFailed)
+                        const PopupMenuItem(
+                          value: 'failed',
+                          child: Text('清除失败任务'),
+                        ),
+                      if (hasCanceled)
+                        const PopupMenuItem(
+                          value: 'canceled',
+                          child: Text('清除已取消任务'),
+                        ),
+                      if (hasQueued)
+                        const PopupMenuItem(
+                          value: 'queued',
+                          child: Text('清除排队中任务'),
+                        ),
+                      const PopupMenuItem(
+                        value: 'all',
+                        child: Text('清除全部'),
+                      ),
+                    ],
+                  ),
                 ],
               );
             },
@@ -250,6 +302,27 @@ class _DownloadJobCard extends StatelessWidget {
                     ),
                 ],
               ),
+              if (isActive) ...[
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    if (job.elapsedTime.isNotEmpty)
+                      Text('已用时 ${job.elapsedTime}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                          )),
+                    if (job.remainingTime.isNotEmpty) ...[
+                      if (job.elapsedTime.isNotEmpty) const SizedBox(width: 8),
+                      Text(job.remainingTime,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontSize: 11,
+                          )),
+                    ],
+                  ],
+                ),
+              ],
             ],
             if (isFailed && job.error != null) ...[
               const SizedBox(height: 4),
@@ -261,7 +334,7 @@ class _DownloadJobCard extends StatelessWidget {
                     ?.copyWith(color: theme.colorScheme.error),
               ),
             ],
-            // 已完成任务显示文件路径
+            // 已完成任务显示文件路径和时间
             if (isCompleted && job.filePath != null && job.filePath!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Container(
@@ -282,6 +355,18 @@ class _DownloadJobCard extends StatelessWidget {
                         '提示：当前未合并视频/音频轨。Windows/桌面端安装系统 ffmpeg 后重新下载将自动合并。',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.tertiary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                    if (job.totalDuration.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '下载用时: ${job.downloadDuration}'
+                        '${job.mergeDuration.isNotEmpty ? ' | 合并用时: ${job.mergeDuration}' : ''}'
+                        ' | 总用时: ${job.totalDuration}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 10,
                         ),
                       ),

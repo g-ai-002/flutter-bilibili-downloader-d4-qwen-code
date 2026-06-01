@@ -36,6 +36,8 @@ class DownloadJob {
   final DateTime createdAt;
   DateTime? startedAt;
   DateTime? finishedAt;
+  DateTime? mergeStartedAt;
+  DateTime? mergeFinishedAt;
   int progress; // 0-100
   int downloadedBytes;
   int totalBytes;
@@ -57,6 +59,8 @@ class DownloadJob {
     DateTime? createdAt,
     this.startedAt,
     this.finishedAt,
+    this.mergeStartedAt,
+    this.mergeFinishedAt,
     this.progress = 0,
     this.downloadedBytes = 0,
     this.totalBytes = 0,
@@ -79,6 +83,8 @@ class DownloadJob {
         'createdAt': createdAt.toIso8601String(),
         'startedAt': startedAt?.toIso8601String(),
         'finishedAt': finishedAt?.toIso8601String(),
+        'mergeStartedAt': mergeStartedAt?.toIso8601String(),
+        'mergeFinishedAt': mergeFinishedAt?.toIso8601String(),
         'progress': progress,
         'downloadedBytes': downloadedBytes,
         'totalBytes': totalBytes,
@@ -109,6 +115,12 @@ class DownloadJob {
       finishedAt: json['finishedAt'] != null
           ? DateTime.parse(json['finishedAt'] as String)
           : null,
+      mergeStartedAt: json['mergeStartedAt'] != null
+          ? DateTime.parse(json['mergeStartedAt'] as String)
+          : null,
+      mergeFinishedAt: json['mergeFinishedAt'] != null
+          ? DateTime.parse(json['mergeFinishedAt'] as String)
+          : null,
       progress: json['progress'] as int? ?? 0,
       downloadedBytes: json['downloadedBytes'] as int? ?? 0,
       totalBytes: json['totalBytes'] as int? ?? 0,
@@ -123,6 +135,56 @@ class DownloadJob {
     if (startedAt == null) return '';
     final end = finishedAt ?? DateTime.now();
     final diff = end.difference(startedAt!);
+    return _formatDuration(diff);
+  }
+
+  /// 下载阶段用时（排除合并时间）
+  String get downloadDuration {
+    if (startedAt == null) return '';
+    final end = mergeStartedAt ?? finishedAt ?? DateTime.now();
+    final diff = end.difference(startedAt!);
+    return _formatDuration(diff);
+  }
+
+  /// 合并阶段用时
+  String get mergeDuration {
+    if (mergeStartedAt == null) return '';
+    final end = mergeFinishedAt ?? DateTime.now();
+    final diff = end.difference(mergeStartedAt!);
+    return _formatDuration(diff);
+  }
+
+  /// 总用时（含下载+合并）
+  String get totalDuration {
+    if (startedAt == null) return '';
+    final end = finishedAt ?? DateTime.now();
+    final diff = end.difference(startedAt!);
+    return _formatDuration(diff);
+  }
+
+  /// 预估剩余时间
+  String get remainingTime {
+    if (speed <= 0 || totalBytes <= 0) return '';
+    final remainingBytes = totalBytes - downloadedBytes;
+    if (remainingBytes <= 0) return '';
+    final seconds = remainingBytes / speed;
+    if (seconds > 3600) {
+      return '剩余 ${(seconds / 3600).toStringAsFixed(1)} 小时';
+    } else if (seconds > 60) {
+      return '剩余 ${(seconds / 60).toStringAsFixed(0)} 分钟';
+    }
+    return '剩余 ${seconds.toStringAsFixed(0)} 秒';
+  }
+
+  /// 已执行时间
+  String get elapsedTime {
+    if (startedAt == null) return '';
+    final end = finishedAt ?? DateTime.now();
+    final diff = end.difference(startedAt!);
+    return _formatDuration(diff);
+  }
+
+  String _formatDuration(Duration diff) {
     if (diff.inHours > 0) {
       return '${diff.inHours}:${diff.inMinutes.remainder(60).toString().padLeft(2, '0')}:${diff.inSeconds.remainder(60).toString().padLeft(2, '0')}';
     }

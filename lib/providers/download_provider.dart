@@ -29,7 +29,9 @@ class DownloadProvider extends ChangeNotifier {
       final storage = await StorageService.instance;
       final persisted = await storage.loadDownloadJobs();
       if (persisted.isNotEmpty) {
-        _jobs = persisted;
+        // 恢复任务到下载服务（包括续传排队中的任务）
+        service.restoreJobs(persisted);
+        _jobs = service.jobs;
         notifyListeners();
       }
     } catch (e) {
@@ -100,6 +102,24 @@ class DownloadProvider extends ChangeNotifier {
   /// 清除已完成任务
   void clearCompleted() {
     _jobs.removeWhere((j) => j.status == DownloadStatus.completed);
+    notifyListeners();
+  }
+
+  /// 清除失败任务
+  void clearFailed() {
+    _jobs.removeWhere((j) => j.status == DownloadStatus.failed);
+    notifyListeners();
+  }
+
+  /// 清除已取消任务
+  void clearCanceled() {
+    _jobs.removeWhere((j) => j.status == DownloadStatus.canceled);
+    notifyListeners();
+  }
+
+  /// 清除排队中任务
+  void clearQueued() {
+    _jobs.removeWhere((j) => j.status == DownloadStatus.queued);
     notifyListeners();
   }
 

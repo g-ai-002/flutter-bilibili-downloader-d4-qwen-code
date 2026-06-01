@@ -48,6 +48,32 @@ class DownloadService {
     return job;
   }
 
+  /// 恢复持久化的下载任务（app 重启后调用）
+  void restoreJobs(List<DownloadJob> savedJobs) {
+    for (final savedJob in savedJobs) {
+      // 只恢复尚未完成的任务
+      if (savedJob.status == DownloadStatus.queued ||
+          savedJob.status == DownloadStatus.downloading) {
+        // 重置为排队状态
+        savedJob.status = DownloadStatus.queued;
+        savedJob.error = null;
+        // 确保 id 不冲突
+        final idNum = int.tryParse(savedJob.id.split('_').first) ?? 0;
+        if (idNum >= _nextId) {
+          _nextId = idNum + 1;
+        }
+        _jobs.add(savedJob);
+        _jobController.add(savedJob);
+      } else if (savedJob.status == DownloadStatus.completed ||
+          savedJob.status == DownloadStatus.failed ||
+          savedJob.status == DownloadStatus.canceled) {
+        // 已完成/失败/取消的任务直接加入列表（不重新下载）
+        _jobs.add(savedJob);
+      }
+    }
+    _processQueue();
+  }
+
   /// 处理下载队列
   void _processQueue() {
     while (_activeCount < AppConstants.maxConcurrentDownloads) {
@@ -199,6 +225,7 @@ class DownloadService {
 
     // 两段都下载完成，标记 99%（合并阶段）
     job.progress = 99;
+    job.mergeStartedAt = DateTime.now();
     _jobController.add(job);
 
     // 尝试合并视频/音频（Android: Media3 Transformer; 桌面: ffmpeg）
@@ -207,6 +234,7 @@ class DownloadService {
       audioPath: audioPath,
       outputPath: mergedPath,
     );
+    job.mergeFinishedAt = DateTime.now();
     if (merged != null) {
       job.filePath = merged;
       job.audioPath = null;
@@ -259,7 +287,7 @@ class DownloadService {
     job.filePath = videoPath;
   }
 
-  /// 下载单个文件，通过回调报告进度
+  /// 下载单个文件，通过回调报告进度（支持断点续传）
   Future<void> _downloadPart(
     String path,
     String url,
@@ -270,25 +298,83 @@ class DownloadService {
     final cancelToken = CancelToken();
     _cancelTokens[job.id] = cancelToken;
 
+    final file = File(path);
+    int startByte = 0;
+    if (await file.exists()) {
+      startByte = await file.length();
+    }
+
     try {
-      await dio.download(
-        url,
-        path,
-        options: Options(
-          headers: {
-            'User-Agent': AppConstants.userAgent,
-            'Referer': 'https://www.bilibili.com/',
-          },
-        ),
-        cancelToken: cancelToken,
-        onReceiveProgress: (received, total) {
-          if (job.status == DownloadStatus.canceled) {
-            cancelToken.cancel();
-            return;
+      if (startByte > 0) {
+        // 断点续传：使用 HTTP Range 请求从已有字节处继续下载
+        LogService.info('断点续传: $path, 已下载 $startByte 字节');
+        final response = await dio.get(
+          url,
+          options: Options(
+            headers: {
+              'User-Agent': AppConstants.userAgent,
+              'Referer': 'https://www.bilibili.com/',
+              'Range': 'bytes=$startByte-',
+            },
+            responseType: ResponseType.stream,
+          ),
+          cancelToken: cancelToken,
+        );
+
+        // 解析 Content-Range 获取总大小
+        int totalSize = 0;
+        final contentRange = response.headers.value('content-range');
+        if (contentRange != null) {
+          final match = RegExp(r'/(\d+)').firstMatch(contentRange);
+          if (match != null) {
+            totalSize = int.tryParse(match.group(1)!) ?? 0;
           }
-          onProgress(received, total);
-        },
-      );
+        }
+        // 如果服务端返回 200（无 Range 支持），则总大小为 Content-Length
+        if (totalSize == 0) {
+          final contentLength =
+              response.headers.value('content-length');
+          if (contentLength != null) {
+            totalSize = startByte + (int.tryParse(contentLength) ?? 0);
+          }
+        }
+
+        final raf = await file.open(mode: FileMode.append);
+        try {
+          int received = startByte;
+          await for (final chunk in response.data.stream) {
+            if (job.status == DownloadStatus.canceled) {
+              cancelToken.cancel();
+              return;
+            }
+            await raf.writeFrom(chunk);
+            received += chunk.length;
+            onProgress(received, totalSize);
+          }
+        } finally {
+          await raf.close();
+        }
+      } else {
+        // 全新下载
+        await dio.download(
+          url,
+          path,
+          options: Options(
+            headers: {
+              'User-Agent': AppConstants.userAgent,
+              'Referer': 'https://www.bilibili.com/',
+            },
+          ),
+          cancelToken: cancelToken,
+          onReceiveProgress: (received, total) {
+            if (job.status == DownloadStatus.canceled) {
+              cancelToken.cancel();
+              return;
+            }
+            onProgress(received, total);
+          },
+        );
+      }
     } catch (e) {
       if (e is DioException && CancelToken.isCancel(e)) {
         return;
