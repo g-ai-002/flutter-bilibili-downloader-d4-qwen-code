@@ -12,7 +12,6 @@ android/.gradle/
 android/app/build/
 android/build/
 android/local.properties
-android/key.properties
 
 # Windows
 windows/runner/Debug/

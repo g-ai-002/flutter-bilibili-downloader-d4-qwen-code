@@ -22,6 +22,15 @@ if (flutterVersionName == null) {
     flutterVersionName = '0.1.2'
 }
 
+// 加载项目统一签名配置（有效期 36500 天，各版本签名保持一致）
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
     namespace "com.bilibili.downloader"
     compileSdk 36
@@ -52,9 +61,22 @@ android {
         }
     }
 
-    buildTypes {
+    // 统一签名配置：debug 和 release 使用同一个长期密钥，避免"签名不一致"错误
+    signingConfigs {
         release {
-            signingConfig signingConfigs.debug
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+        release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
