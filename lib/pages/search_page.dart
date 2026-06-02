@@ -93,20 +93,27 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
-              Consumer<SettingsProvider>(
-                builder: (context, settings, _) {
-                  final user = settings.userInfo;
-                  return user != null && user.face.isNotEmpty
-                      ? CircleAvatar(
-                          radius: 16,
-                          backgroundImage: NetworkImage(user.face),
-                        )
-                      : CircleAvatar(
-                          radius: 16,
-                          backgroundColor: theme.colorScheme.surfaceVariant,
-                          child: Icon(Icons.person, size: 18, color: theme.colorScheme.onSurfaceVariant),
-                        );
-                },
+              // 与右侧 IconButton 保持一致的 48×48 触摸区域，视觉上左右对称
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: Consumer<SettingsProvider>(
+                    builder: (context, settings, _) {
+                      final user = settings.userInfo;
+                      return user != null && user.face.isNotEmpty
+                          ? CircleAvatar(
+                              radius: 16,
+                              backgroundImage: NetworkImage(user.face),
+                            )
+                          : CircleAvatar(
+                              radius: 16,
+                              backgroundColor: theme.colorScheme.surfaceVariant,
+                              child: Icon(Icons.person, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                            );
+                    },
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
