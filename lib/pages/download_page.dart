@@ -99,7 +99,6 @@ class _DownloadPageState extends State<DownloadPage> {
                         tooltip: '批量清理',
                         icon: const Icon(Icons.cleaning_services_outlined),
                         iconSize: 20,
-                        visualDensity: VisualDensity.compact,
                         onSelected: (value) {
                           switch (value) {
                             case 'completed':
