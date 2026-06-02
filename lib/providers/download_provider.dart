@@ -9,6 +9,8 @@ class DownloadProvider extends ChangeNotifier {
   DownloadService? _service;
   List<DownloadJob> _jobs = [];
   bool _initialized = false;
+  DateTime _lastNotifyTime = DateTime.fromMillisecondsSinceEpoch(0);
+  static const _notifyThrottle = Duration(milliseconds: 200);
 
   DownloadService? get service => _service;
   List<DownloadJob> get jobs => _jobs;
@@ -32,7 +34,7 @@ class DownloadProvider extends ChangeNotifier {
       } else {
         _jobs.insert(0, job);
       }
-      notifyListeners();
+      _throttledNotify(job);
       _persistJobs();
     });
 
@@ -155,6 +157,17 @@ class DownloadProvider extends ChangeNotifier {
       if (job.status == DownloadStatus.failed) {
         _service?.retry(job.id);
       }
+    }
+  }
+
+  /// 节流通知：状态变更立即通知，进度更新限制频率避免窗口拖动时卡顿
+  void _throttledNotify(DownloadJob job) {
+    final now = DateTime.now();
+    // 状态变化（非 downloading）或距上次通知超过节流间隔才触发
+    if (job.status != DownloadStatus.downloading ||
+        now.difference(_lastNotifyTime) >= _notifyThrottle) {
+      _lastNotifyTime = now;
+      notifyListeners();
     }
   }
 }
