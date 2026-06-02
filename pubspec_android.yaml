@@ -18,6 +18,7 @@ dependencies:
   intl: ^0.20.2
   crypto: ^3.0.3
   flutter_local_notifications: ^17.0.0
+  url_launcher: ^6.2.0
   ffmpeg_kit_extended_flutter: 0.5.7
 
 dev_dependencies:
