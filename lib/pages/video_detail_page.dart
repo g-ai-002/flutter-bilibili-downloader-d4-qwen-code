@@ -256,11 +256,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   Text(_formatDuration(detail.duration), style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   )),
-                  const SizedBox(width: 12),
-                  Text('画质：$bestQuality', style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  )),
                 ],
               ),
               const SizedBox(height: 8),
