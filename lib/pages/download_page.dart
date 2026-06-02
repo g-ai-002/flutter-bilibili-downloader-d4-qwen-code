@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/download_job.dart';
 import '../providers/download_provider.dart';
 import '../services/file_system_service.dart';
+import 'video_detail_page.dart';
 
 class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key});
@@ -248,6 +249,26 @@ class _DownloadJobCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                // 封面缩略图
+                if (job.pic != null && job.pic!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.network(
+                        job.pic!,
+                        width: 64,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 64,
+                          height: 40,
+                          color: theme.colorScheme.surfaceVariant,
+                          child: Icon(Icons.broken_image, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ),
+                  ),
                 Icon(statusIcon, color: statusColor, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
@@ -333,6 +354,11 @@ class _DownloadJobCard extends StatelessWidget {
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: theme.colorScheme.error),
               ),
+            ],
+            // 已完成任务显示元数据
+            if (isCompleted) ...[
+              const SizedBox(height: 8),
+              _buildMetadataRow(context, theme, job),
             ],
             // 已完成任务显示文件路径和时间
             if (isCompleted && job.filePath != null && job.filePath!.isNotEmpty) ...[
@@ -459,12 +485,75 @@ class _DownloadJobCard extends StatelessWidget {
                     onPressed: () =>
                         context.read<DownloadProvider>().remove(job.id),
                   ),
+                if (job.bvid.isNotEmpty)
+                  TextButton.icon(
+                    icon: const Icon(Icons.open_in_browser, size: 16),
+                    label: const Text('详情'),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => VideoDetailPage(bvid: job.bvid),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMetadataRow(
+    BuildContext context,
+    ThemeData theme,
+    DownloadJob job,
+  ) {
+    final parts = <String>[];
+    if (job.fileSize != null && job.fileSize! > 0) {
+      parts.add(_formatFileSize(job.fileSize!));
+    }
+    if (job.videoWidth != null && job.videoHeight != null) {
+      parts.add('${job.videoWidth}x${job.videoHeight}');
+    }
+    if (job.fps != null) {
+      parts.add('${job.fps!.toStringAsFixed(1)} fps');
+    }
+    if (job.videoCodec != null && job.videoCodec!.isNotEmpty) {
+      parts.add('视频: ${job.videoCodec}');
+    }
+    if (job.audioCodec != null && job.audioCodec!.isNotEmpty) {
+      parts.add('音频: ${job.audioCodec}');
+    }
+    if (parts.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 4,
+        children: parts.map((p) => Text(
+          p,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 11,
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 
   Widget _buildPathRow(

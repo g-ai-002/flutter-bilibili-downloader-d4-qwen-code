@@ -45,6 +45,14 @@ class DownloadJob {
   String? filePath;
   String? audioPath; // DASH 未合并时的音频文件路径
   int retryCount;
+  // 视频元数据
+  String? pic; // 封面 URL
+  int? fileSize; // 文件大小（字节）
+  int? videoWidth;
+  int? videoHeight;
+  double? fps;
+  String? videoCodec;
+  String? audioCodec;
 
   DownloadJob({
     required this.id,
@@ -68,6 +76,13 @@ class DownloadJob {
     this.filePath,
     this.audioPath,
     this.retryCount = 0,
+    this.pic,
+    this.fileSize,
+    this.videoWidth,
+    this.videoHeight,
+    this.fps,
+    this.videoCodec,
+    this.audioCodec,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -92,6 +107,13 @@ class DownloadJob {
         'filePath': filePath,
         'audioPath': audioPath,
         'retryCount': retryCount,
+        'pic': pic,
+        'fileSize': fileSize,
+        'videoWidth': videoWidth,
+        'videoHeight': videoHeight,
+        'fps': fps,
+        'videoCodec': videoCodec,
+        'audioCodec': audioCodec,
       };
 
   factory DownloadJob.fromJson(Map<String, dynamic> json) {
@@ -128,6 +150,13 @@ class DownloadJob {
       filePath: json['filePath'] as String?,
       audioPath: json['audioPath'] as String?,
       retryCount: json['retryCount'] as int? ?? 0,
+      pic: json['pic'] as String?,
+      fileSize: json['fileSize'] as int?,
+      videoWidth: json['videoWidth'] as int?,
+      videoHeight: json['videoHeight'] as int?,
+      fps: (json['fps'] as num?)?.toDouble(),
+      videoCodec: json['videoCodec'] as String?,
+      audioCodec: json['audioCodec'] as String?,
     );
   }
 

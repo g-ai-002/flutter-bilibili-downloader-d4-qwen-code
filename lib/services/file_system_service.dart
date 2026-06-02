@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'ffmpeg_platform.dart';
+import '../models/video_metadata.dart';
 import 'package:path_provider/path_provider.dart';
 import 'log_service.dart';
 
@@ -143,5 +144,12 @@ class FileSystemService {
       audioPath: audioPath,
       outputPath: outputPath,
     );
+  }
+
+  /// 解析视频文件的媒体信息（分辨率、帧率、编码等）
+  /// 委托给平台特定实现（ffmpeg_platform.dart）。
+  /// 返回 null 表示解析不可用
+  Future<VideoMetadata?> probeMedia(String filePath) async {
+    return probeMediaPlatform(filePath);
   }
 }

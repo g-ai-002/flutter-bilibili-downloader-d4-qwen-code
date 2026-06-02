@@ -71,6 +71,7 @@ class DownloadProvider extends ChangeNotifier {
     required int cid,
     required String formatId,
     required String quality,
+    String? pic,
   }) {
     _service?.addJob(
       videoName: videoName,
@@ -79,6 +80,7 @@ class DownloadProvider extends ChangeNotifier {
       cid: cid,
       formatId: formatId,
       quality: quality,
+      pic: pic,
     );
   }
 

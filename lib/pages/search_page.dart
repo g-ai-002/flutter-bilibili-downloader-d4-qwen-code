@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/video.dart';
 import '../providers/search_provider.dart';
+import '../providers/settings_provider.dart';
 import '../services/storage_service.dart';
 import 'video_detail_page.dart';
 import 'login_page.dart';
@@ -69,11 +70,56 @@ class _SearchPageState extends State<SearchPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('搜索'),
+        leading: Consumer<SettingsProvider>(
+          builder: (context, settings, _) {
+            final user = settings.userInfo;
+            return Padding(
+              padding: const EdgeInsets.all(8),
+              child: user != null && user.face.isNotEmpty
+                  ? CircleAvatar(
+                      backgroundImage: NetworkImage(user.face),
+                    )
+                  : CircleAvatar(
+                      backgroundColor: theme.colorScheme.surfaceVariant,
+                      child: Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant),
+                    ),
+            );
+          },
+        ),
+        title: TextField(
+          controller: _searchController,
+          focusNode: _focusNode,
+          decoration: InputDecoration(
+            hintText: '搜索 Bilibili 视频...',
+            filled: true,
+            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () => _search(_searchController.text),
+            ),
+          ),
+          textInputAction: TextInputAction.search,
+          onSubmitted: _search,
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            tooltip: '扫码登录',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // 第一行：视频/UP主选择居中，右边二维码
+          // 视频/UP主选择
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
@@ -94,40 +140,7 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.qr_code),
-                  tooltip: '扫码登录',
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
-                  ),
-                ),
               ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          // 第二行：搜索框（单独一行）
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _searchController,
-              focusNode: _focusNode,
-              decoration: InputDecoration(
-                hintText: '搜索 Bilibili 视频...',
-                filled: true,
-                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () => _search(_searchController.text),
-                ),
-              ),
-              textInputAction: TextInputAction.search,
-              onSubmitted: _search,
             ),
           ),
           const SizedBox(height: 8),

@@ -32,6 +32,7 @@ class DownloadService {
     required int cid,
     required String formatId,
     required String quality,
+    String? pic,
   }) {
     final job = DownloadJob(
       id: '${_nextId++}_${DateTime.now().millisecondsSinceEpoch}',
@@ -41,6 +42,7 @@ class DownloadService {
       cid: cid,
       formatId: formatId,
       quality: quality,
+      pic: pic,
     );
     _jobs.insert(0, job);
     _jobController.add(job);
@@ -141,6 +143,13 @@ class DownloadService {
       job.status = DownloadStatus.completed;
       job.progress = 100;
       job.finishedAt = DateTime.now();
+
+      // 解析下载完成的视频文件元数据
+      final finalPath = job.filePath;
+      if (finalPath != null && finalPath.isNotEmpty) {
+        _fillMetadata(job, finalPath);
+      }
+
       NotificationService.instance
           .showDownloadComplete(job.videoName, job.episodeName);
     } catch (e) {
@@ -454,5 +463,21 @@ class DownloadService {
 
   String _safeFileName(String name) {
     return name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+  }
+
+  /// 填充下载完成视频的元数据（分辨率、帧率、编码等）
+  Future<void> _fillMetadata(DownloadJob job, String filePath) async {
+    try {
+      final metadata = await FileSystemService.instance.probeMedia(filePath);
+      if (metadata == null) return;
+      job.fileSize = metadata.fileSize;
+      job.videoWidth = metadata.width;
+      job.videoHeight = metadata.height;
+      job.fps = metadata.fps;
+      job.videoCodec = metadata.videoCodec;
+      job.audioCodec = metadata.audioCodec;
+    } catch (e) {
+      LogService.warning('获取视频元数据失败: ${job.videoName}', e);
+    }
   }
 }
