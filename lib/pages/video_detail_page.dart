@@ -17,8 +17,6 @@ class VideoDetailPage extends StatefulWidget {
 }
 
 class _VideoDetailPageState extends State<VideoDetailPage> {
-  String? _selectedFormatId;
-  String? _selectedQuality;
 
   @override
   void initState() {
@@ -32,9 +30,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   void _loadDetail() {
     final provider = context.read<SearchProvider>();
-    // 重置画质选择，避免不同视频间残留上一个视频的画质设置
-    _selectedFormatId = null;
-    _selectedQuality = null;
     // 清除旧数据，避免显示上一个视频的残留内容
     provider.clearDetail();
     provider.loadDetail(widget.bvid);
@@ -205,59 +200,34 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     final theme = Theme.of(context);
     final settings = context.read<SettingsProvider>();
 
-    // 初始化画质选择（纯计算，无 setState，避免在 build 阶段触发二次重建）
-    if (_selectedFormatId == null) {
-      final best = _computeBestQuality(detail, settings);
-      _selectedFormatId = best.formatId;
-      _selectedQuality = best.quality;
-    }
-
-    final bestFormatId = _selectedFormatId!;
-    final bestQuality = _selectedQuality!;
+    // 按设置中的首选画质自动选择，不再提供手动切换 UI
+    final best = _computeBestQuality(detail, settings);
+    final bestFormatId = best.formatId;
+    final bestQuality = best.quality;
     final pubdateText = _formatPubdateText(detail.pubdate);
-    final displayFormats = detail.formats.isEmpty ? _defaultFormats() : detail.formats;
 
     return ListView(
       children: [
-        // 封面（与列表封面比例一致：120:75 = 8:5）
+        // 封面
         AspectRatio(
           aspectRatio: 120 / 75,
-          child: Stack(
-            children: [
-              Image.network(
-                detail.pic,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: theme.colorScheme.surfaceVariant,
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                },
-                errorBuilder: (_, __, ___) => Container(
-                  color: theme.colorScheme.surfaceVariant,
-                  child: const Icon(Icons.broken_image, size: 64),
-                ),
-              ),
-            Positioned(
-              bottom: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  _formatDuration(detail.duration),
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
+          child: Image.network(
+            detail.pic,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: theme.colorScheme.surfaceVariant,
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            },
+            errorBuilder: (_, __, ___) => Container(
+              color: theme.colorScheme.surfaceVariant,
+              child: const Icon(Icons.broken_image, size: 64),
             ),
-          ],
+          ),
         ),
-      ),
 
         // 标题与元信息
         Padding(
@@ -268,6 +238,30 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               Text(
                 detail.title,
                 style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              // 播放量 · 时长
+              Row(
+                children: [
+                  if (detail.viewCount > 0) ...[
+                    Icon(Icons.play_circle_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text(_formatViewCount(detail.viewCount), style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    )),
+                    const SizedBox(width: 12),
+                  ],
+                  Icon(Icons.access_time, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text(_formatDuration(detail.duration), style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  )),
+                  const SizedBox(width: 12),
+                  Text('画质：$bestQuality', style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  )),
+                ],
               ),
               const SizedBox(height: 8),
               Row(
@@ -325,72 +319,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-
-        const Divider(),
-
-        // 画质选择
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text('画质选择', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                  const Spacer(),
-                  // 显式下拉，给"画质选择"一个一目了然的入口
-                  if (displayFormats.isNotEmpty)
-                    DropdownButton<String>(
-                      value: _selectedFormatId,
-                      isDense: true,
-                      items: displayFormats
-                          .map((f) => DropdownMenuItem(
-                                value: f.formatId,
-                                child: Text(
-                                  f.quality,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value == null) return;
-                        final f = displayFormats.firstWhere((e) => e.formatId == value);
-                        setState(() {
-                          _selectedFormatId = f.formatId;
-                          _selectedQuality = f.quality;
-                        });
-                      },
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: displayFormats.map((f) => ChoiceChip(
-                  label: Text(f.quality, style: const TextStyle(fontSize: 12)),
-                  selected: f.formatId == _selectedFormatId,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() {
-                        _selectedFormatId = f.formatId;
-                        _selectedQuality = f.quality;
-                      });
-                    }
-                  },
-                  visualDensity: VisualDensity.compact,
-                )).toList(),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '当前画质：$bestQuality（部分高画质需登录大会员）',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
               ),
             ],
           ),
@@ -461,5 +389,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  String _formatViewCount(int count) {
+    if (count >= 10000) {
+      final wan = count / 10000;
+      return '${wan.toStringAsFixed(wan >= 100 ? 0 : 1)}万播放';
+    }
+    return '$count 播放';
   }
 }

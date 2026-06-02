@@ -54,6 +54,7 @@ class BiliVideoDetail {
   final List<BiliEpisode> episodes;
   final List<BiliVideoFormat> formats;
   final int pubdate; // Unix 时间戳
+  final int viewCount; // 播放量
 
   BiliVideoDetail({
     required this.bvid,
@@ -67,6 +68,7 @@ class BiliVideoDetail {
     required this.episodes,
     required this.formats,
     this.pubdate = 0,
+    this.viewCount = 0,
   });
 }
 

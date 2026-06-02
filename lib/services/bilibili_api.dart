@@ -221,6 +221,7 @@ class BilibiliApi {
         episodes: episodes,
         formats: formats,
         pubdate: v['pubdate'] as int? ?? 0,
+        viewCount: v['stat']?['view'] as int? ?? 0,
       );
     } catch (e) {
       LogService.error('获取视频详情失败', e);
