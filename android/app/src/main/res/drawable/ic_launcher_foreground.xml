@@ -23,9 +23,9 @@
     <!-- 下载箭头 (向下) -->
     <path
         android:fillColor="#FB7299"
-        android:pathData="M52,48v12l-5,-5l-3,3l10,10l10,-10l-3,-3l-5,5v-12z"/>
+        android:pathData="M52,44v12l-5,-5l-3,3l10,10l10,-10l-3,-3l-5,5v-12z"/>
     <!-- 下载横线 -->
     <path
         android:fillColor="#FB7299"
-        android:pathData="M42,68h24v2.5h-24z"/>
+        android:pathData="M42,66h24v2.5h-24z"/>
 </vector>
