@@ -61,7 +61,7 @@ class _DownloadPageState extends State<DownloadPage> {
                       if (hasFailed)
                         IconButton(
                           icon: const Icon(Icons.refresh),
-                          iconSize: 24,
+                          iconSize: 20,
                           tooltip: '重试全部',
                           onPressed: provider.retryAll,
                           visualDensity: VisualDensity.compact,
@@ -69,7 +69,8 @@ class _DownloadPageState extends State<DownloadPage> {
                       PopupMenuButton<String>(
                         tooltip: '批量清理',
                         icon: const Icon(Icons.cleaning_services_outlined),
-                        iconSize: 24,
+                        iconSize: 20,
+                        visualDensity: VisualDensity.compact,
                         onSelected: (value) {
                           switch (value) {
                             case 'completed':
