@@ -138,6 +138,8 @@ class FileSystemService {
       if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', filePath]);
         return true;
+      } else if (Platform.isAndroid) {
+        return _openOnAndroid(filePath);
       } else {
         final file = File(filePath);
         final exists = await file.exists();
@@ -156,6 +158,56 @@ class FileSystemService {
       LogService.error('打开播放器失败: $filePath', e, stack);
     }
     return false;
+  }
+
+  /// Android: 通过 FileProvider 将 file:// 转为 content:// URI 再调用系统播放器。
+  /// Android 7.0+ 禁止向其他应用暴露 file:// URI（FileUriExposedException），
+  /// 必须使用 content:// URI + FileProvider 授权。
+  Future<bool> _openOnAndroid(String filePath) async {
+    final file = File(filePath);
+    final exists = await file.exists();
+    LogService.info('尝试播放文件: $filePath, 存在: $exists, 大小: ${exists ? await file.length() : 0}');
+
+    if (!exists) {
+      LogService.warning('文件不存在，无法播放: $filePath');
+      return false;
+    }
+
+    // 获取外部存储根目录，与 FileProvider 的 external-files-path 对应
+    final extDir = await getExternalStorageDirectory();
+    if (extDir == null) {
+      LogService.warning('无法获取外部存储目录，无法构造 content URI');
+      return false;
+    }
+
+    // file_paths.xml 中映射了 Movies/ 目录，这里计算相对路径
+    final basePath = '${extDir.path}/Movies/';
+    if (!filePath.startsWith(basePath)) {
+      LogService.warning('文件不在外部存储 Movies 目录下，无法通过 FileProvider 访问: $filePath');
+      return false;
+    }
+
+    final relativePath = filePath.substring(basePath.length);
+    // 编码路径中的中文、空格等特殊字符，确保 content URI 合法
+    final encodedSegments = relativePath
+        .split('/')
+        .map((s) => Uri.encodeComponent(s))
+        .join('/');
+    // 与 AndroidManifest.xml 中 FileProvider 的 authorities 保持一致
+    final contentUri = Uri.parse(
+      'content://com.bilibili.downloader.fileprovider/movies/$encodedSegments',
+    );
+
+    LogService.info('Android content URI: $contentUri');
+    final canLaunch = await canLaunchUrl(contentUri);
+    LogService.info('canLaunchUrl($contentUri): $canLaunch');
+    if (canLaunch) {
+      await launchUrl(contentUri, mode: LaunchMode.externalApplication);
+      return true;
+    } else {
+      LogService.warning('无法打开播放器: canLaunchUrl 返回 false, contentUri=$contentUri');
+      return false;
+    }
   }
 
   /// 合并视频轨与音频轨（无损流复制）

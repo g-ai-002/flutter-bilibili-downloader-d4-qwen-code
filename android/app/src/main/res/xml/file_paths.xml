@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 映射 getExternalFilesDir(null)/Movies/ 目录，用于视频播放 -->
+    <external-files-path name="movies" path="Movies/" />
+</paths>
