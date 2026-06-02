@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'ffmpeg_platform.dart';
 import '../models/video_metadata.dart';
 import 'package:path_provider/path_provider.dart';
@@ -160,9 +161,10 @@ class FileSystemService {
     return false;
   }
 
-  /// Android: 通过 FileProvider 将 file:// 转为 content:// URI 再调用系统播放器。
-  /// Android 7.0+ 禁止向其他应用暴露 file:// URI（FileUriExposedException），
-  /// 必须使用 content:// URI + FileProvider 授权。
+  /// Android: 通过 FileProvider 将 file:// 转为 content:// URI，
+  /// 再利用 MethodChannel 创建带 MIME type 的 Intent 调用系统播放器。
+  /// url_launcher 的 launchUrl 不显式设置 MIME type，
+  /// 导致 Android 无法正确匹配视频播放器应用。
   Future<bool> _openOnAndroid(String filePath) async {
     final file = File(filePath);
     final exists = await file.exists();
@@ -194,15 +196,36 @@ class FileSystemService {
         .map((s) => Uri.encodeComponent(s))
         .join('/');
     // 与 AndroidManifest.xml 中 FileProvider 的 authorities 保持一致
-    final contentUri = Uri.parse(
-      'content://com.bilibili.downloader.fileprovider/movies/$encodedSegments',
-    );
+    final contentUri = 'content://com.bilibili.downloader.fileprovider/movies/$encodedSegments';
 
     LogService.info('Android content URI: $contentUri');
-    final canLaunch = await canLaunchUrl(contentUri);
-    LogService.info('canLaunchUrl($contentUri): $canLaunch');
+
+    // 通过原生通道创建带 video/* MIME type 的 Intent
+    try {
+      final result = await const MethodChannel('com.bilibili.downloader/player')
+          .invokeMethod<bool>('openVideo', {'uri': contentUri});
+      if (result == true) {
+        LogService.info('已调起系统播放器');
+        return true;
+      }
+    } on MissingPluginException {
+      LogService.warning('播放器原生通道未注册，回退到 url_launcher');
+      return _openOnAndroidFallback(contentUri);
+    } on PlatformException catch (e) {
+      LogService.warning('打开播放器失败: ${e.code} - ${e.message}');
+      return false;
+    }
+
+    return false;
+  }
+
+  /// 回退方案：使用 url_launcher（无显式 MIME type）
+  Future<bool> _openOnAndroidFallback(String contentUri) async {
+    final uri = Uri.parse(contentUri);
+    final canLaunch = await canLaunchUrl(uri);
+    LogService.info('canLaunchUrl($uri): $canLaunch');
     if (canLaunch) {
-      await launchUrl(contentUri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
       return true;
     } else {
       LogService.warning('无法打开播放器: canLaunchUrl 返回 false, contentUri=$contentUri');
