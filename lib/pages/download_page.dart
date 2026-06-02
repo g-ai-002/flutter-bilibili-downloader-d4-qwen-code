@@ -40,11 +40,40 @@ class _DownloadPageState extends State<DownloadPage> {
       appBar: AppBar(
         titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.only(left: 12, right: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
-              const Text('下载管理'),
-              const Spacer(),
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: '搜索下载任务...',
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    ),
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    isDense: true,
+                  ),
+                  textInputAction: TextInputAction.search,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              const SizedBox(width: 12),
               Consumer<DownloadProvider>(
                 builder: (context, provider, _) {
                   final hasFailed = provider.failedJobs.isNotEmpty;
@@ -128,86 +157,49 @@ class _DownloadPageState extends State<DownloadPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // 搜索栏
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: '搜索下载任务...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                isDense: true,
+      body: Consumer<DownloadProvider>(
+        builder: (context, provider, _) {
+          final jobs = _filteredJobs(provider.jobs);
+          if (provider.jobs.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.download_outlined,
+                      size: 64,
+                      color: theme.colorScheme.primary.withOpacity(0.5)),
+                  const SizedBox(height: 16),
+                  Text('暂无下载任务', style: theme.textTheme.bodyLarge),
+                  const SizedBox(height: 8),
+                  Text('搜索视频并添加到下载队列',
+                      style: theme.textTheme.bodySmall),
+                ],
               ),
-              onChanged: (value) => setState(() => _searchQuery = value),
-            ),
-          ),
-          // 列表
-          Expanded(
-            child: Consumer<DownloadProvider>(
-              builder: (context, provider, _) {
-                final jobs = _filteredJobs(provider.jobs);
-                if (provider.jobs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.download_outlined,
-                            size: 64,
-                            color:
-                                theme.colorScheme.primary.withOpacity(0.5)),
-                        const SizedBox(height: 16),
-                        Text('暂无下载任务', style: theme.textTheme.bodyLarge),
-                        const SizedBox(height: 8),
-                        Text('搜索视频并添加到下载队列',
-                            style: theme.textTheme.bodySmall),
-                      ],
-                    ),
-                  );
-                }
-                if (jobs.isEmpty && _searchQuery.isNotEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.search_off,
-                            size: 48,
-                            color:
-                                theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(height: 16),
-                        Text('未找到匹配的下载任务',
-                            style: theme.textTheme.bodyLarge),
-                      ],
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: jobs.length,
-                  itemBuilder: (context, index) {
-                    final job = jobs[index];
-                    return _DownloadJobCard(key: ValueKey(job.id), job: job);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+            );
+          }
+          if (jobs.isEmpty && _searchQuery.isNotEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.search_off,
+                      size: 48, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(height: 16),
+                  Text('未找到匹配的下载任务',
+                      style: theme.textTheme.bodyLarge),
+                ],
+              ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: jobs.length,
+            itemBuilder: (context, index) {
+              final job = jobs[index];
+              return _DownloadJobCard(key: ValueKey(job.id), job: job);
+            },
+          );
+        },
       ),
     );
   }
