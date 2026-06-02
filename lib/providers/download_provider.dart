@@ -24,22 +24,7 @@ class DownloadProvider extends ChangeNotifier {
   Future<void> initService(DownloadService service) async {
     _service = service;
 
-    // 加载持久化的下载任务
-    try {
-      final storage = await StorageService.instance;
-      final persisted = await storage.loadDownloadJobs();
-      if (persisted.isNotEmpty) {
-        // 恢复任务到下载服务（包括续传排队中的任务）
-        service.restoreJobs(persisted);
-        _jobs = service.jobs;
-        notifyListeners();
-      }
-    } catch (e) {
-      LogService.error('加载下载历史失败', e);
-    }
-
-    _initialized = true;
-
+    // 立即注册 stream 监听，避免异步加载期间 addJob 丢失
     service.jobStream.listen((job) {
       final index = _jobs.indexWhere((j) => j.id == job.id);
       if (index >= 0) {
@@ -48,9 +33,25 @@ class DownloadProvider extends ChangeNotifier {
         _jobs.insert(0, job);
       }
       notifyListeners();
-      // 持久化保存
       _persistJobs();
     });
+
+    // 加载持久化的下载任务
+    try {
+      final storage = await StorageService.instance;
+      final persisted = await storage.loadDownloadJobs();
+      if (persisted.isNotEmpty) {
+        // 恢复任务到下载服务（含续传排队任务，会触发 stream 事件）
+        service.restoreJobs(persisted);
+        // 同步未通过 stream 发出的任务（已完成/失败/取消）
+        _jobs = List<DownloadJob>.from(service.jobs);
+        notifyListeners();
+      }
+    } catch (e) {
+      LogService.error('加载下载历史失败', e);
+    }
+
+    _initialized = true;
   }
 
   /// 持久化保存下载任务
