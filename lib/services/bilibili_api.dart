@@ -148,6 +148,7 @@ class BilibiliApi {
         'keyword': keyword,
         'page': page.toString(),
         'page_size': pageSize.toString(),
+        'order': 'pubdate',
       };
       final signed = _wbiImgUrl != null && _wbiSubUrl != null
           ? WbiSign.sign(params, _wbiImgUrl!, _wbiSubUrl!)
@@ -214,6 +215,8 @@ class BilibiliApi {
         pic: _normalizePic(v['pic'] as String? ?? ''),
         desc: v['desc'] as String? ?? '',
         uploader: v['owner']['name'] as String? ?? '',
+        uploaderMid: v['owner']['mid'] as int? ?? 0,
+        uploaderFace: _normalizePic(v['owner']['face'] as String? ?? ''),
         duration: v['duration'] as int? ?? 0,
         episodes: episodes,
         formats: formats,

@@ -46,7 +46,9 @@ class _SearchPageState extends State<SearchPage> {
   Future<void> _loadSearchHistory() async {
     final storage = await StorageService.instance;
     final history = await storage.getSearchHistory();
+    final keyword = storage.searchKeyword;
     if (mounted) {
+      _searchController.text = keyword;
       setState(() => _searchHistory = history);
     }
   }
@@ -62,8 +64,9 @@ class _SearchPageState extends State<SearchPage> {
       provider.searchUploaders(keyword);
     }
 
-    // 更新搜索历史
+    // 持久化搜索关键字 & 更新搜索历史
     final storage = await StorageService.instance;
+    storage.searchKeyword = keyword;
     await storage.addSearchHistory(keyword);
     if (!mounted) return;
     setState(() {
@@ -88,17 +91,14 @@ class _SearchPageState extends State<SearchPage> {
         leading: Consumer<SettingsProvider>(
           builder: (context, settings, _) {
             final user = settings.userInfo;
-            return Padding(
-              padding: const EdgeInsets.all(8),
-              child: user != null && user.face.isNotEmpty
-                  ? CircleAvatar(
-                      backgroundImage: NetworkImage(user.face),
-                    )
-                  : CircleAvatar(
-                      backgroundColor: theme.colorScheme.surfaceVariant,
-                      child: Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant),
-                    ),
-            );
+            return user != null && user.face.isNotEmpty
+                ? CircleAvatar(
+                    backgroundImage: NetworkImage(user.face),
+                  )
+                : CircleAvatar(
+                    backgroundColor: theme.colorScheme.surfaceVariant,
+                    child: Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant),
+                  );
           },
         ),
         title: TextField(
@@ -266,7 +266,7 @@ class _SearchPageState extends State<SearchPage> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => UploaderVideosPage(uploader: uploader),
+                  builder: (_) => UploaderVideosPage.fromUploader(uploader),
                 ),
               ),
               child: Padding(
@@ -414,6 +414,8 @@ class _VideoCard extends StatelessWidget {
                   width: 120,
                   height: 75,
                   fit: BoxFit.cover,
+                  cacheWidth: 240,
+                  cacheHeight: 150,
                   errorBuilder: (_, __, ___) => Container(
                     width: 120,
                     height: 75,

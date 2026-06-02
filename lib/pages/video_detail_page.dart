@@ -5,6 +5,7 @@ import '../providers/search_provider.dart';
 import '../providers/download_provider.dart';
 import '../providers/settings_provider.dart';
 import '../utils/constants.dart';
+import 'uploader_videos_page.dart';
 
 class VideoDetailPage extends StatefulWidget {
   final String bvid;
@@ -188,6 +189,16 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               width: double.infinity,
               height: 200,
               fit: BoxFit.cover,
+              cacheWidth: 800,
+              cacheHeight: 400,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200,
+                  color: theme.colorScheme.surfaceVariant,
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              },
               errorBuilder: (_, __, ___) => Container(
                 height: 200,
                 color: theme.colorScheme.surfaceVariant,
@@ -225,9 +236,33 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.person, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 4),
-                  Text(detail.uploader, style: theme.textTheme.bodyMedium),
+                  GestureDetector(
+                    onTap: detail.uploaderMid > 0
+                        ? () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UploaderVideosPage(
+                                  mid: detail.uploaderMid,
+                                  name: detail.uploader,
+                                  face: detail.uploaderFace,
+                                ),
+                              ),
+                            )
+                        : null,
+                    child: Row(
+                      children: [
+                        Icon(Icons.person, size: 16, color: theme.colorScheme.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          detail.uploader,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const Spacer(),
                   Icon(Icons.videocam, size: 16, color: theme.colorScheme.onSurfaceVariant),
                   const SizedBox(width: 4),

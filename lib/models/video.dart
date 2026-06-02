@@ -48,6 +48,8 @@ class BiliVideoDetail {
   final String pic;
   final String desc;
   final String uploader;
+  final int uploaderMid;
+  final String uploaderFace;
   final int duration;
   final List<BiliEpisode> episodes;
   final List<BiliVideoFormat> formats;
@@ -59,6 +61,8 @@ class BiliVideoDetail {
     required this.pic,
     required this.desc,
     required this.uploader,
+    this.uploaderMid = 0,
+    this.uploaderFace = '',
     required this.duration,
     required this.episodes,
     required this.formats,

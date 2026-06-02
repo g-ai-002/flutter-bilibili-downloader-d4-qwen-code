@@ -5,25 +5,53 @@ import '../providers/search_provider.dart';
 import '../services/log_service.dart';
 import 'video_detail_page.dart';
 
-/// UP 主视频列表页
+/// UP 主视频列表页（支持分页加载）
 class UploaderVideosPage extends StatefulWidget {
-  final BiliUploader uploader;
+  final int mid;
+  final String name;
+  final String face;
 
-  const UploaderVideosPage({super.key, required this.uploader});
+  /// 从已有 BiliUploader 构造
+  factory UploaderVideosPage.fromUploader(BiliUploader uploader) {
+    return UploaderVideosPage(
+      mid: uploader.mid,
+      name: uploader.name,
+      face: uploader.face,
+    );
+  }
+
+  const UploaderVideosPage({
+    super.key,
+    required this.mid,
+    required this.name,
+    this.face = '',
+  });
 
   @override
   State<UploaderVideosPage> createState() => _UploaderVideosPageState();
 }
 
 class _UploaderVideosPageState extends State<UploaderVideosPage> {
+  final _scrollController = ScrollController();
   List<BiliVideo> _videos = [];
   bool _loading = true;
+  bool _loadingMore = false;
+  bool _hasMore = true;
+  int _page = 1;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _load();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
   }
 
   Future<void> _load() async {
@@ -36,11 +64,13 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
       return;
     }
     try {
-      final list = await api.getUploaderVideos(widget.uploader.mid);
+      final list = await api.getUploaderVideos(widget.mid, page: 1);
       if (!mounted) return;
       setState(() {
         _videos = list;
         _loading = false;
+        _page = 1;
+        _hasMore = list.length >= 30;
       });
     } catch (e) {
       LogService.error('加载 UP 主视频列表失败', e);
@@ -52,20 +82,52 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
     }
   }
 
+  Future<void> _loadMore() async {
+    if (_loadingMore || !_hasMore) return;
+    final api = context.read<SearchProvider>().api;
+    if (api == null) return;
+    _loadingMore = true;
+    setState(() {});
+
+    try {
+      final more = await api.getUploaderVideos(widget.mid, page: _page + 1);
+      if (!mounted) return;
+      setState(() {
+        if (more.isEmpty) {
+          _hasMore = false;
+        } else {
+          _videos.addAll(more);
+          _page++;
+          _hasMore = more.length >= 30;
+        }
+        _loadingMore = false;
+      });
+    } catch (e) {
+      LogService.error('加载更多 UP 主视频失败', e);
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final uploader = widget.uploader;
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundImage: uploader.face.isNotEmpty
-                  ? NetworkImage(uploader.face)
+              backgroundImage: widget.face.isNotEmpty
+                  ? NetworkImage(widget.face)
                   : null,
-              child: uploader.face.isEmpty ? const Icon(Icons.person, size: 16) : null,
+              child: widget.face.isEmpty ? const Icon(Icons.person, size: 16) : null,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -74,17 +136,10 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    uploader.name,
+                    widget.name,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '粉丝 ${uploader.fans}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
                   ),
                 ],
               ),
@@ -139,9 +194,16 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(8),
-        itemCount: _videos.length,
+        itemCount: _videos.length + (_hasMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index >= _videos.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
           final v = _videos[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

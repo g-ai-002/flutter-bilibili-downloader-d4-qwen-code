@@ -89,6 +89,16 @@ class StorageService {
   String get preferredQuality => _p.getString(AppConstants.prefKeyQuality) ?? '4K';
   set preferredQuality(String value) => _p.setString(AppConstants.prefKeyQuality, value);
 
+  // --- 搜索关键字持久化 ---
+  String get searchKeyword => _p.getString('search_keyword') ?? '';
+  set searchKeyword(String value) {
+    if (value.isNotEmpty) {
+      _p.setString('search_keyword', value);
+    } else {
+      _p.remove('search_keyword');
+    }
+  }
+
   // --- 搜索历史 ---
   Future<List<String>> getSearchHistory() async {
     final json = _p.getString('search_history');

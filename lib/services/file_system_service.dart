@@ -2,6 +2,7 @@ import 'dart:io';
 import 'ffmpeg_platform.dart';
 import '../models/video_metadata.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'log_service.dart';
 
 /// 文件系统相关辅助服务：
@@ -137,21 +138,12 @@ class FileSystemService {
       if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', filePath]);
         return true;
-      } else if (Platform.isAndroid) {
-        final escapedPath = filePath.replaceAll('\\', '/');
-        await Process.run('am', [
-          'start',
-          '-a', 'android.intent.action.VIEW',
-          '-d', 'file://$escapedPath',
-          '-t', 'video/*',
-        ]);
-        return true;
-      } else if (Platform.isMacOS) {
-        await Process.run('open', [filePath]);
-        return true;
-      } else if (Platform.isLinux) {
-        await Process.run('xdg-open', [filePath]);
-        return true;
+      } else {
+        final uri = Uri.file(filePath);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return true;
+        }
       }
     } catch (e) {
       LogService.error('打开播放器失败: $filePath', e);
