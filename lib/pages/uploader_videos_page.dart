@@ -195,15 +195,17 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
                               Text(v.duration, style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               )),
-                              if (v.pubdate.isNotEmpty) ...[
-                                const SizedBox(width: 12),
+                            ],
+                          ),
+                          if (v.pubdate.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
                                 Icon(Icons.calendar_today, size: 12, color: theme.colorScheme.onSurfaceVariant),
-                                const SizedBox(width: 2),
+                                const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
                                     v.pubdate,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                       fontSize: 11,
@@ -211,8 +213,8 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
                                   ),
                                 ),
                               ],
-                            ],
-                          ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

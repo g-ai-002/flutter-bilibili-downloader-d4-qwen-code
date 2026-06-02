@@ -257,12 +257,12 @@ class _DownloadJobCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                       child: Image.network(
                         job.pic!,
-                        width: 64,
-                        height: 40,
+                        width: 120,
+                        height: 75,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          width: 64,
-                          height: 40,
+                          width: 120,
+                          height: 75,
                           color: theme.colorScheme.surfaceVariant,
                           child: Icon(Icons.broken_image, size: 16, color: theme.colorScheme.onSurfaceVariant),
                         ),
@@ -277,7 +277,7 @@ class _DownloadJobCard extends StatelessWidget {
                     children: [
                       Text(
                         job.videoName,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w600),
@@ -474,6 +474,23 @@ class _DownloadJobCard extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                               content: Text('当前平台不支持打开文件管理器')),
+                        );
+                      }
+                    },
+                  ),
+                if (isCompleted &&
+                    job.filePath != null &&
+                    job.filePath!.isNotEmpty)
+                  TextButton.icon(
+                    icon: const Icon(Icons.play_circle_outline, size: 16),
+                    label: const Text('播放'),
+                    onPressed: () async {
+                      final ok = await FileSystemService.instance
+                          .openWithSystemPlayer(job.filePath!);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('无法打开系统播放器')),
                         );
                       }
                     },

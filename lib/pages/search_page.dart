@@ -20,6 +20,7 @@ enum SearchType { video, uploader }
 class _SearchPageState extends State<SearchPage> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
+  final _scrollController = ScrollController();
   List<String> _searchHistory = [];
   SearchType _searchType = SearchType.video;
 
@@ -27,6 +28,19 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _loadSearchHistory();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      final provider = context.read<SearchProvider>();
+      if (_searchType == SearchType.video) {
+        provider.loadMore();
+      } else {
+        provider.loadMoreUploaders();
+      }
+    }
   }
 
   Future<void> _loadSearchHistory() async {
@@ -62,6 +76,7 @@ class _SearchPageState extends State<SearchPage> {
   void dispose() {
     _searchController.dispose();
     _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -89,21 +104,31 @@ class _SearchPageState extends State<SearchPage> {
         title: TextField(
           controller: _searchController,
           focusNode: _focusNode,
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: '搜索 Bilibili 视频...',
-            filled: true,
-            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            hintStyle: TextStyle(
+              fontSize: 14,
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                    },
+                  )
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
             ),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () => _search(_searchController.text),
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            isDense: true,
           ),
           textInputAction: TextInputAction.search,
+          onChanged: (_) => setState(() {}),
           onSubmitted: _search,
         ),
         actions: [
@@ -133,6 +158,10 @@ class _SearchPageState extends State<SearchPage> {
                   selected: {_searchType},
                   onSelectionChanged: (selected) {
                     setState(() => _searchType = selected.first);
+                    // 切换搜索类型时，如果搜索框有内容则重新搜索
+                    if (_searchController.text.trim().isNotEmpty) {
+                      _search(_searchController.text);
+                    }
                   },
                   style: ButtonStyle(
                     visualDensity: VisualDensity.compact,
@@ -148,10 +177,10 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: Consumer<SearchProvider>(
               builder: (context, provider, _) {
-                if (provider.isLoading) {
+                if (provider.isLoading && provider.results.isEmpty && provider.uploaderResults.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (provider.error != null) {
+                if (provider.error != null && provider.results.isEmpty && provider.uploaderResults.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -164,10 +193,10 @@ class _SearchPageState extends State<SearchPage> {
                   );
                 }
                 if (_searchType == SearchType.uploader && provider.uploaderResults.isNotEmpty) {
-                  return _buildUploaderResultsList(provider.uploaderResults);
+                  return _buildUploaderResultsList(provider);
                 }
                 if (provider.results.isNotEmpty) {
-                  return _buildResultsList(provider.results);
+                  return _buildResultsList(provider);
                 }
                 if (_searchHistory.isNotEmpty) {
                   return _buildSearchHistory();
@@ -181,17 +210,23 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildResultsList(List<BiliVideo> results) {
+  Widget _buildResultsList(SearchProvider provider) {
     return RefreshIndicator(
       onRefresh: () async {
-        final provider = context.read<SearchProvider>();
         await provider.search(provider.keyword);
       },
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(8),
-        itemCount: results.length,
+        itemCount: provider.results.length + (provider.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
-          final video = results[index];
+          if (index >= provider.results.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final video = provider.results[index];
           return _VideoCard(
             video: video,
             onTap: () => Navigator.push(
@@ -206,18 +241,24 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildUploaderResultsList(List<BiliUploader> uploaders) {
+  Widget _buildUploaderResultsList(SearchProvider provider) {
     final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: () async {
-        final provider = context.read<SearchProvider>();
         await provider.searchUploaders(provider.keyword);
       },
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(8),
-        itemCount: uploaders.length,
+        itemCount: provider.uploaderResults.length + (provider.hasMoreUploaders ? 1 : 0),
         itemBuilder: (context, index) {
-          final uploader = uploaders[index];
+          if (index >= provider.uploaderResults.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final uploader = provider.uploaderResults[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             clipBehavior: Clip.antiAlias,
@@ -319,7 +360,10 @@ class _SearchPageState extends State<SearchPage> {
                     setState(() => _searchHistory.remove(keyword));
                   },
                 ),
-                onTap: () => _search(keyword),
+                onTap: () {
+                  _searchController.text = keyword;
+                  _search(keyword);
+                },
               );
             },
           ),
@@ -420,15 +464,17 @@ class _VideoCard extends StatelessWidget {
                         Text(video.duration, style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         )),
-                        if (video.pubdate.isNotEmpty) ...[
-                          const SizedBox(width: 12),
+                      ],
+                    ),
+                    if (video.pubdate.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
                           Icon(Icons.calendar_today, size: 12, color: theme.colorScheme.onSurfaceVariant),
-                          const SizedBox(width: 2),
-                          Expanded(
+                          const SizedBox(width: 4),
+                          Flexible(
                             child: Text(
                               video.pubdate,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                                 fontSize: 11,
@@ -436,8 +482,8 @@ class _VideoCard extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ],
-                    ),
+                      ),
+                    ],
                   ],
                 ),
               ),

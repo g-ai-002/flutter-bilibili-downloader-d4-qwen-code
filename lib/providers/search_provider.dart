@@ -12,6 +12,10 @@ class SearchProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   String _keyword = '';
+  int _currentPage = 1;
+  bool _hasMore = true;
+  int _uploaderPage = 1;
+  bool _hasMoreUploaders = true;
 
   BilibiliApi? get api => _api;
   List<BiliVideo> get results => _results;
@@ -20,6 +24,8 @@ class SearchProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get keyword => _keyword;
+  bool get hasMore => _hasMore;
+  bool get hasMoreUploaders => _hasMoreUploaders;
 
   void initApi(BilibiliApi api) {
     _api = api;
@@ -33,12 +39,14 @@ class SearchProvider extends ChangeNotifier {
   Future<void> search(String keyword, {int page = 1}) async {
     if (_api == null) return;
     _keyword = keyword;
+    _currentPage = page;
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
       _results = await _api!.search(keyword, page: page);
+      _hasMore = _results.length >= 20;
     } catch (e) {
       _error = '搜索失败: $e';
       LogService.error('搜索失败', e);
@@ -48,18 +56,69 @@ class SearchProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 加载更多视频搜索结果
+  Future<void> loadMore() async {
+    if (_api == null || !_hasMore || _isLoading) return;
+    _currentPage++;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final more = await _api!.search(_keyword, page: _currentPage);
+      if (more.isEmpty) {
+        _hasMore = false;
+      } else {
+        _results = [..._results, ...more];
+        _hasMore = more.length >= 20;
+      }
+    } catch (e) {
+      _currentPage--;
+      LogService.error('加载更多失败', e);
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
   /// 搜索 UP 主
-  Future<void> searchUploaders(String keyword) async {
+  Future<void> searchUploaders(String keyword, {int page = 1}) async {
     if (_api == null) return;
+    _keyword = keyword;
+    _uploaderPage = page;
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _uploaderResults = await _api!.searchUploaders(keyword);
+      _uploaderResults = await _api!.searchUploaders(keyword, page: page);
+      _hasMoreUploaders = _uploaderResults.length >= 20;
     } catch (e) {
       _error = '搜索 UP 主失败: $e';
       LogService.error('搜索 UP 主失败', e);
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  /// 加载更多 UP 主搜索结果
+  Future<void> loadMoreUploaders() async {
+    if (_api == null || !_hasMoreUploaders || _isLoading) return;
+    _uploaderPage++;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final more = await _api!.searchUploaders(_keyword, page: _uploaderPage);
+      if (more.isEmpty) {
+        _hasMoreUploaders = false;
+      } else {
+        _uploaderResults = [..._uploaderResults, ...more];
+        _hasMoreUploaders = more.length >= 20;
+      }
+    } catch (e) {
+      _uploaderPage--;
+      LogService.error('加载更多 UP 主失败', e);
     }
 
     _isLoading = false;
@@ -116,6 +175,10 @@ class SearchProvider extends ChangeNotifier {
     _uploaderResults = [];
     _detail = null;
     _error = null;
+    _currentPage = 1;
+    _hasMore = true;
+    _uploaderPage = 1;
+    _hasMoreUploaders = true;
     notifyListeners();
   }
 }

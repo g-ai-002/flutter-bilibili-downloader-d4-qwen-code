@@ -131,6 +131,34 @@ class FileSystemService {
     return false;
   }
 
+  /// 使用系统默认播放器打开视频文件
+  Future<bool> openWithSystemPlayer(String filePath) async {
+    try {
+      if (Platform.isWindows) {
+        await Process.run('cmd', ['/c', 'start', '', filePath]);
+        return true;
+      } else if (Platform.isAndroid) {
+        final escapedPath = filePath.replaceAll('\\', '/');
+        await Process.run('am', [
+          'start',
+          '-a', 'android.intent.action.VIEW',
+          '-d', 'file://$escapedPath',
+          '-t', 'video/*',
+        ]);
+        return true;
+      } else if (Platform.isMacOS) {
+        await Process.run('open', [filePath]);
+        return true;
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [filePath]);
+        return true;
+      }
+    } catch (e) {
+      LogService.error('打开播放器失败: $filePath', e);
+    }
+    return false;
+  }
+
   /// 合并视频轨与音频轨（无损流复制）
   /// 委托给平台特定实现（ffmpeg_platform.dart）。
   /// 成功返回输出路径，失败返回 null
