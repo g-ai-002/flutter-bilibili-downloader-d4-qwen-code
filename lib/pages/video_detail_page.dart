@@ -23,24 +23,36 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   @override
   void initState() {
     super.initState();
-    _loadDetail();
+    // 延迟到首帧之后发起加载，确保 Consumer 已挂载并注册了 listener，
+    // 避免 notifyListeners 在 listener 注册前被调用而导致 UI 永不刷新。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadDetail();
+    });
   }
 
   void _loadDetail() {
     final provider = context.read<SearchProvider>();
+    // 重置画质选择，避免不同视频间残留上一个视频的画质设置
+    _selectedFormatId = null;
+    _selectedQuality = null;
     // 清除旧数据，避免显示上一个视频的残留内容
     provider.clearDetail();
     provider.loadDetail(widget.bvid);
   }
 
-  /// 根据优先级选择最佳画质（基于 quality int 而非中文描述，避免 contains 误匹配）
-  void _selectBestQuality(BiliVideoDetail detail, SettingsProvider settings) {
-    // 如果 formats 为空，填充默认画质选项
+  /// 根据优先级计算最佳画质，返回 (formatId, quality)。
+  /// 纯计算，无副作用，可在 build 阶段安全调用。
+  ({String formatId, String quality}) _computeBestQuality(
+    BiliVideoDetail detail,
+    SettingsProvider settings,
+  ) {
     final formats = detail.formats.isEmpty
         ? _defaultFormats()
         : detail.formats;
 
-    if (formats.isEmpty) return;
+    if (formats.isEmpty) {
+      return (formatId: '80', quality: '1080P');
+    }
 
     final preferredIds = _preferredQualityIds(settings.preferredQuality);
     final orderedIds = <int>[
@@ -72,12 +84,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       }
     }
 
-    if (_selectedFormatId != chosen!.formatId || _selectedQuality != chosen!.quality) {
-      setState(() {
-        _selectedFormatId = chosen!.formatId;
-        _selectedQuality = chosen!.quality;
-      });
-    }
+    return (formatId: chosen!.formatId, quality: chosen!.quality);
   }
 
   /// 默认画质列表（API 返回空时的兜底选项）
@@ -196,15 +203,17 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   Widget _buildDetail(BiliVideoDetail detail) {
     final theme = Theme.of(context);
-    final settings = context.watch<SettingsProvider>();
+    final settings = context.read<SettingsProvider>();
 
-    // 初始化画质选择
+    // 初始化画质选择（纯计算，无 setState，避免在 build 阶段触发二次重建）
     if (_selectedFormatId == null) {
-      _selectBestQuality(detail, settings);
+      final best = _computeBestQuality(detail, settings);
+      _selectedFormatId = best.formatId;
+      _selectedQuality = best.quality;
     }
 
-    final bestFormatId = _selectedFormatId ?? '80';
-    final bestQuality = _selectedQuality ?? '1080P';
+    final bestFormatId = _selectedFormatId!;
+    final bestQuality = _selectedQuality!;
     final pubdateText = _formatPubdateText(detail.pubdate);
     final displayFormats = detail.formats.isEmpty ? _defaultFormats() : detail.formats;
 

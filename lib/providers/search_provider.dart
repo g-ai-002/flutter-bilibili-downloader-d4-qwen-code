@@ -135,6 +135,11 @@ class SearchProvider extends ChangeNotifier {
 
     try {
       _detail = await _api!.detail(bvid);
+      // detail() 内部 catch 异常后返回 null，但不会向外抛异常，
+      // 此处显式检测 null 并将错误信息透传给 UI，避免无限加载骨架屏。
+      if (_detail == null && _error == null) {
+        _error = '获取视频详情失败：服务端返回异常，请稍后重试';
+      }
     } catch (e) {
       _error = '获取详情失败: $e';
       LogService.error('获取详情失败', e);
