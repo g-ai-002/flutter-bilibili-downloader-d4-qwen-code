@@ -38,83 +38,94 @@ class _DownloadPageState extends State<DownloadPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('下载管理'),
-        actions: [
-          Consumer<DownloadProvider>(
-            builder: (context, provider, _) {
-              final hasFailed = provider.failedJobs.isNotEmpty;
-              final hasCompleted = provider.completedJobs.isNotEmpty;
-              final hasCanceled = provider.jobs
-                  .where((j) => j.status == DownloadStatus.canceled)
-                  .isNotEmpty;
-              final hasQueued = provider.jobs
-                  .where((j) => j.status == DownloadStatus.queued)
-                  .isNotEmpty;
-              return Row(
-                children: [
-                  if (hasFailed)
-                    IconButton(
-                      icon: const Icon(Icons.refresh),
-                      tooltip: '重试全部',
-                      onPressed: provider.retryAll,
-                    ),
-                  PopupMenuButton<String>(
-                    tooltip: '批量清理',
-                    icon: const Icon(Icons.cleaning_services_outlined),
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'completed':
-                          provider.clearCompleted();
-                          break;
-                        case 'failed':
-                          provider.clearFailed();
-                          break;
-                        case 'canceled':
-                          provider.clearCanceled();
-                          break;
-                        case 'queued':
-                          provider.clearQueued();
-                          break;
-                        case 'all':
-                          provider.clearCompleted();
-                          provider.clearFailed();
-                          provider.clearCanceled();
-                          provider.clearQueued();
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      if (hasCompleted)
-                        const PopupMenuItem(
-                          value: 'completed',
-                          child: Text('清除已完成任务'),
-                        ),
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 12, right: 4),
+          child: Row(
+            children: [
+              const Text('下载管理'),
+              const Spacer(),
+              Consumer<DownloadProvider>(
+                builder: (context, provider, _) {
+                  final hasFailed = provider.failedJobs.isNotEmpty;
+                  final hasCompleted = provider.completedJobs.isNotEmpty;
+                  final hasCanceled = provider.jobs
+                      .where((j) => j.status == DownloadStatus.canceled)
+                      .isNotEmpty;
+                  final hasQueued = provider.jobs
+                      .where((j) => j.status == DownloadStatus.queued)
+                      .isNotEmpty;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       if (hasFailed)
-                        const PopupMenuItem(
-                          value: 'failed',
-                          child: Text('清除失败任务'),
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          iconSize: 24,
+                          tooltip: '重试全部',
+                          onPressed: provider.retryAll,
+                          visualDensity: VisualDensity.compact,
                         ),
-                      if (hasCanceled)
-                        const PopupMenuItem(
-                          value: 'canceled',
-                          child: Text('清除已取消任务'),
-                        ),
-                      if (hasQueued)
-                        const PopupMenuItem(
-                          value: 'queued',
-                          child: Text('清除排队中任务'),
-                        ),
-                      const PopupMenuItem(
-                        value: 'all',
-                        child: Text('清除全部'),
+                      PopupMenuButton<String>(
+                        tooltip: '批量清理',
+                        icon: const Icon(Icons.cleaning_services_outlined),
+                        iconSize: 24,
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'completed':
+                              provider.clearCompleted();
+                              break;
+                            case 'failed':
+                              provider.clearFailed();
+                              break;
+                            case 'canceled':
+                              provider.clearCanceled();
+                              break;
+                            case 'queued':
+                              provider.clearQueued();
+                              break;
+                            case 'all':
+                              provider.clearCompleted();
+                              provider.clearFailed();
+                              provider.clearCanceled();
+                              provider.clearQueued();
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          if (hasCompleted)
+                            const PopupMenuItem(
+                              value: 'completed',
+                              child: Text('清除已完成任务'),
+                            ),
+                          if (hasFailed)
+                            const PopupMenuItem(
+                              value: 'failed',
+                              child: Text('清除失败任务'),
+                            ),
+                          if (hasCanceled)
+                            const PopupMenuItem(
+                              value: 'canceled',
+                              child: Text('清除已取消任务'),
+                            ),
+                          if (hasQueued)
+                            const PopupMenuItem(
+                              value: 'queued',
+                              child: Text('清除排队中任务'),
+                            ),
+                          const PopupMenuItem(
+                            value: 'all',
+                            child: Text('清除全部'),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
-              );
-            },
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       body: Column(
         children: [

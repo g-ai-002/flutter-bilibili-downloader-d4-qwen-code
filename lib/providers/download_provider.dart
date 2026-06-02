@@ -54,11 +54,12 @@ class DownloadProvider extends ChangeNotifier {
     _initialized = true;
   }
 
-  /// 持久化保存下载任务
+  /// 持久化保存下载任务（捕获当前列表快照，避免并发读写竞态）
   Future<void> _persistJobs() async {
+    final snapshot = List<DownloadJob>.from(_jobs);
     try {
       final storage = await StorageService.instance;
-      await storage.saveDownloadJobs(_jobs);
+      await storage.saveDownloadJobs(snapshot);
     } catch (e) {
       LogService.error('保存下载历史失败', e);
     }

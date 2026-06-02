@@ -35,18 +35,21 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   /// 根据优先级选择最佳画质（基于 quality int 而非中文描述，避免 contains 误匹配）
   void _selectBestQuality(BiliVideoDetail detail, SettingsProvider settings) {
-    if (detail.formats.isEmpty) return;
+    // 如果 formats 为空，填充默认画质选项
+    final formats = detail.formats.isEmpty
+        ? _defaultFormats()
+        : detail.formats;
 
-    // 用户首选画质（文本）映射到 quality int 列表（一个文本可能对应多个 id）
+    if (formats.isEmpty) return;
+
     final preferredIds = _preferredQualityIds(settings.preferredQuality);
     final orderedIds = <int>[
       ...preferredIds,
       ...AppConstants.qualityIdPriority.where((id) => !preferredIds.contains(id)),
     ];
 
-    // 详情接口返回的 formatId 是 quality int 的字符串形式（80/120 等）
     final available = <int, BiliVideoFormat>{};
-    for (final f in detail.formats) {
+    for (final f in formats) {
       final id = int.tryParse(f.formatId);
       if (id != null) available[id] = f;
     }
@@ -59,14 +62,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       }
     }
 
-    // 兜底：选择最高 quality 的
     if (chosen == null) {
       final sorted = available.entries.toList()
         ..sort((a, b) => b.key.compareTo(a.key));
       if (sorted.isNotEmpty) {
         chosen = sorted.first.value;
       } else {
-        chosen = detail.formats.first;
+        chosen = formats.first;
       }
     }
 
@@ -76,6 +78,18 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         _selectedQuality = chosen!.quality;
       });
     }
+  }
+
+  /// 默认画质列表（API 返回空时的兜底选项）
+  List<BiliVideoFormat> _defaultFormats() {
+    return const [
+      BiliVideoFormat(formatId: '120', ext: 'mp4', quality: '4K', hasVideo: true, hasAudio: true),
+      BiliVideoFormat(formatId: '116', ext: 'mp4', quality: '1080P60', hasVideo: true, hasAudio: true),
+      BiliVideoFormat(formatId: '80', ext: 'mp4', quality: '1080P', hasVideo: true, hasAudio: true),
+      BiliVideoFormat(formatId: '64', ext: 'mp4', quality: '720P', hasVideo: true, hasAudio: true),
+      BiliVideoFormat(formatId: '32', ext: 'mp4', quality: '480P', hasVideo: true, hasAudio: true),
+      BiliVideoFormat(formatId: '16', ext: 'mp4', quality: '360P', hasVideo: true, hasAudio: true),
+    ];
   }
 
   /// 将用户首选画质文本映射为可能的 quality id 列表
@@ -192,33 +206,33 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     final bestFormatId = _selectedFormatId ?? '80';
     final bestQuality = _selectedQuality ?? '1080P';
     final pubdateText = _formatPubdateText(detail.pubdate);
+    final displayFormats = detail.formats.isEmpty ? _defaultFormats() : detail.formats;
 
     return ListView(
       children: [
-        // 封面
-        Stack(
-          children: [
-            Image.network(
-              detail.pic,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-              cacheWidth: 800,
-              cacheHeight: 400,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  height: 200,
+        // 封面（与列表封面比例一致：120:75 = 8:5）
+        AspectRatio(
+          aspectRatio: 120 / 75,
+          child: Stack(
+            children: [
+              Image.network(
+                detail.pic,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                cacheWidth: 800,
+                cacheHeight: 500,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: theme.colorScheme.surfaceVariant,
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder: (_, __, ___) => Container(
                   color: theme.colorScheme.surfaceVariant,
-                  child: const Center(child: CircularProgressIndicator()),
-                );
-              },
-              errorBuilder: (_, __, ___) => Container(
-                height: 200,
-                color: theme.colorScheme.surfaceVariant,
-                child: const Icon(Icons.broken_image, size: 64),
+                  child: const Icon(Icons.broken_image, size: 64),
+                ),
               ),
-            ),
             Positioned(
               bottom: 8,
               right: 8,
@@ -236,6 +250,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             ),
           ],
         ),
+      ),
 
         // 标题与元信息
         Padding(
@@ -321,11 +336,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   Text('画质选择', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                   const Spacer(),
                   // 显式下拉，给"画质选择"一个一目了然的入口
-                  if (detail.formats.isNotEmpty)
+                  if (displayFormats.isNotEmpty)
                     DropdownButton<String>(
                       value: _selectedFormatId,
                       isDense: true,
-                      items: detail.formats
+                      items: displayFormats
                           .map((f) => DropdownMenuItem(
                                 value: f.formatId,
                                 child: Text(
@@ -336,7 +351,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        final f = detail.formats.firstWhere((e) => e.formatId == value);
+                        final f = displayFormats.firstWhere((e) => e.formatId == value);
                         setState(() {
                           _selectedFormatId = f.formatId;
                           _selectedQuality = f.quality;
@@ -349,7 +364,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: detail.formats.map((f) => ChoiceChip(
+                children: displayFormats.map((f) => ChoiceChip(
                   label: Text(f.quality, style: const TextStyle(fontSize: 12)),
                   selected: f.formatId == _selectedFormatId,
                   onSelected: (selected) {
