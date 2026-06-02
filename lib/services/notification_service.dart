@@ -48,7 +48,7 @@ class NotificationService {
         macOS: iosSettings,
         linux: linuxSettings,
       );
-      await _plugin.initialize(initSettings);
+      await _plugin.initialize(settings: initSettings);
       _available = true;
     } catch (e, st) {
       LogService.error('通知服务初始化失败', e, st);
@@ -84,10 +84,10 @@ class NotificationService {
         linux: LinuxNotificationDetails(),
       );
       await _plugin.show(
-        _notificationId++,
-        '下载完成',
-        '$episodeName 已下载完成',
-        details,
+        id: _notificationId++,
+        title: '下载完成',
+        body: '$episodeName 已下载完成',
+        notificationDetails: details,
       );
     } catch (e) {
       LogService.error('发送通知失败', e);
