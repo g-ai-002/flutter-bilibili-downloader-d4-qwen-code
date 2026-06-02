@@ -206,10 +206,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     final bestQuality = best.quality;
     final pubdateText = _formatPubdateText(detail.pubdate);
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return ListView(
+      cacheExtent: 100000,
+      children: [
           // 封面
           AspectRatio(
             aspectRatio: 120 / 75,
@@ -363,8 +362,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 },
               ),
             ),
-        ],
-      ),
+      ],
     );
   }
 
