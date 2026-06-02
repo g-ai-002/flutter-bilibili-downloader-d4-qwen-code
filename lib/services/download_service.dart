@@ -147,7 +147,7 @@ class DownloadService {
       // 解析下载完成的视频文件元数据
       final finalPath = job.filePath;
       if (finalPath != null && finalPath.isNotEmpty) {
-        _fillMetadata(job, finalPath);
+        await _fillMetadata(job, finalPath);
       }
 
       NotificationService.instance
