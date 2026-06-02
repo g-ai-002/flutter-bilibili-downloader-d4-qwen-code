@@ -7,25 +7,21 @@
     <!-- TV 屏幕 -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M30,41h48v30h-48z"/>
-    <!-- TV 底座 -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M48,71h12v5h-12z"/>
+        android:pathData="M30,45h48v30h-48z"/>
     <!-- TV 天线左 -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M42,41l-6,-10h6l3,6z"/>
+        android:pathData="M42,45l-6,-10h6l3,6z"/>
     <!-- TV 天线右 -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M66,41l6,-10h-6l-3,6z"/>
+        android:pathData="M66,45l6,-10h-6l-3,6z"/>
     <!-- 下载箭头 (向下) -->
     <path
         android:fillColor="#FB7299"
-        android:pathData="M52,44v12l-5,-5l-3,3l10,10l10,-10l-3,-3l-5,5v-12z"/>
+        android:pathData="M52,48v12l-5,-5l-3,3l10,10l10,-10l-3,-3l-5,5v-12z"/>
     <!-- 下载横线 -->
     <path
         android:fillColor="#FB7299"
-        android:pathData="M42,66h24v2.5h-24z"/>
+        android:pathData="M42,70h24v2.5h-24z"/>
 </vector>
