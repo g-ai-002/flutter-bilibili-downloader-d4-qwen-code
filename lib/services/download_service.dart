@@ -18,8 +18,20 @@ class DownloadService {
   int _activeCount = 0;
   final StreamController<DownloadJob> _jobController =
       StreamController<DownloadJob>.broadcast();
+  final Dio _dio = Dio();
+  DateTime _lastProgressEmit = DateTime.fromMillisecondsSinceEpoch(0);
+  static const _progressEmitThrottle = Duration(milliseconds: 250);
 
   DownloadService(this._api);
+
+  /// 节流推送进度到 stream（状态变化不受节流限制）
+  void _emitProgress(DownloadJob job) {
+    final now = DateTime.now();
+    if (now.difference(_lastProgressEmit) >= _progressEmitThrottle) {
+      _lastProgressEmit = now;
+      _jobController.add(job);
+    }
+  }
 
   Stream<DownloadJob> get jobStream => _jobController.stream;
   List<DownloadJob> get jobs => List.unmodifiable(_jobs);
@@ -206,7 +218,7 @@ class DownloadService {
         partLastBytes = partReceived;
         partLastTime = now;
       }
-      _jobController.add(job);
+      _emitProgress(job);
     }
 
     // 下载视频轨
@@ -291,7 +303,7 @@ class DownloadService {
         lastBytes = received;
         lastTime = now;
       }
-      _jobController.add(job);
+      _emitProgress(job);
     });
     job.filePath = videoPath;
   }
@@ -303,7 +315,6 @@ class DownloadService {
     DownloadJob job,
     void Function(int received, int total) onProgress,
   ) async {
-    final dio = Dio();
     final cancelToken = CancelToken();
     _cancelTokens[job.id] = cancelToken;
 
@@ -317,7 +328,7 @@ class DownloadService {
       if (startByte > 0) {
         // 断点续传：使用 HTTP Range 请求从已有字节处继续下载
         LogService.info('断点续传: $path, 已下载 $startByte 字节');
-        final response = await dio.get(
+        final response = await _dio.get(
           url,
           options: Options(
             headers: {
@@ -365,7 +376,7 @@ class DownloadService {
         }
       } else {
         // 全新下载
-        await dio.download(
+        await _dio.download(
           url,
           path,
           options: Options(

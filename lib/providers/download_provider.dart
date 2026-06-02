@@ -11,6 +11,8 @@ class DownloadProvider extends ChangeNotifier {
   bool _initialized = false;
   DateTime _lastNotifyTime = DateTime.fromMillisecondsSinceEpoch(0);
   static const _notifyThrottle = Duration(milliseconds: 200);
+  DateTime _lastPersistTime = DateTime.fromMillisecondsSinceEpoch(0);
+  static const _persistThrottle = Duration(seconds: 2);
 
   DownloadService? get service => _service;
   List<DownloadJob> get jobs => _jobs;
@@ -35,7 +37,7 @@ class DownloadProvider extends ChangeNotifier {
         _jobs.insert(0, job);
       }
       _throttledNotify(job);
-      _persistJobs();
+      _throttledPersist(job);
     });
 
     // 加载持久化的下载任务
@@ -64,6 +66,16 @@ class DownloadProvider extends ChangeNotifier {
       await storage.saveDownloadJobs(snapshot);
     } catch (e) {
       LogService.error('保存下载历史失败', e);
+    }
+  }
+
+  /// 节流持久化：状态变化（非 downloading）立即保存；下载进度中最多每 2 秒保存一次
+  void _throttledPersist(DownloadJob job) {
+    final now = DateTime.now();
+    if (job.status != DownloadStatus.downloading ||
+        now.difference(_lastPersistTime) >= _persistThrottle) {
+      _lastPersistTime = now;
+      _persistJobs();
     }
   }
 
