@@ -228,8 +228,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 detail.pic,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                cacheWidth: 800,
-                cacheHeight: 500,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
