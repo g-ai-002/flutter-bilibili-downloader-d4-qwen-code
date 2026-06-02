@@ -144,14 +144,14 @@ class DownloadService {
       job.progress = 100;
       job.finishedAt = DateTime.now();
 
-      // 解析下载完成的视频文件元数据
-      final finalPath = job.filePath;
-      if (finalPath != null && finalPath.isNotEmpty) {
-        await _fillMetadata(job, finalPath);
-      }
-
       NotificationService.instance
           .showDownloadComplete(job.videoName, job.episodeName);
+
+      // 异步解析视频元数据（不阻塞下载完成通知和 UI 刷新）
+      final finalPath = job.filePath;
+      if (finalPath != null && finalPath.isNotEmpty) {
+        _fillMetadataAndNotify(job, finalPath);
+      }
     } catch (e) {
       await _handleDownloadError(job, e);
     }
@@ -465,8 +465,8 @@ class DownloadService {
     return name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
   }
 
-  /// 填充下载完成视频的元数据（分辨率、帧率、编码等）
-  Future<void> _fillMetadata(DownloadJob job, String filePath) async {
+  /// 异步填充元数据并通知 UI 刷新（在下载完成后独立执行，不阻塞主流程）
+  Future<void> _fillMetadataAndNotify(DownloadJob job, String filePath) async {
     try {
       final metadata = await FileSystemService.instance.probeMedia(filePath);
       if (metadata == null) return;
@@ -476,6 +476,8 @@ class DownloadService {
       job.fps = metadata.fps;
       job.videoCodec = metadata.videoCodec;
       job.audioCodec = metadata.audioCodec;
+      // 元数据就绪后推一次更新，触发 UI 刷新和持久化
+      _jobController.add(job);
     } catch (e) {
       LogService.warning('获取视频元数据失败: ${job.videoName} | $e');
     }

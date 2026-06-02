@@ -2,6 +2,7 @@
 /// 不依赖 ffmpeg_kit_extended_flutter，确保 Windows 构建无需该包。
 library ffmpeg_windows;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import '../models/video_metadata.dart';
@@ -28,16 +29,20 @@ Future<String?> _resolveFfmpeg() async {
       return _ffmpegPath;
     }
     // 2) PATH
-    final result = await Process.run(
-      Platform.isWindows ? 'where' : 'which',
-      ['ffmpeg'],
-    );
-    if (result.exitCode == 0) {
-      final out = (result.stdout?.toString() ?? '').trim();
-      if (out.isNotEmpty) {
-        _ffmpegPath = out.split(RegExp(r'[\r\n]+')).first.trim();
-        return _ffmpegPath;
+    try {
+      final result = await Process.run(
+        Platform.isWindows ? 'where' : 'which',
+        ['ffmpeg'],
+      ).timeout(const Duration(seconds: 5));
+      if (result.exitCode == 0) {
+        final out = (result.stdout?.toString() ?? '').trim();
+        if (out.isNotEmpty) {
+          _ffmpegPath = out.split(RegExp(r'[\r\n]+')).first.trim();
+          return _ffmpegPath;
+        }
       }
+    } on TimeoutException {
+      LogService.warning('where/which ffmpeg 超时');
     }
   } catch (_) {}
   _ffmpegPath = null;
@@ -69,16 +74,17 @@ Future<VideoMetadata?> probeMediaPlatform(String filePath) async {
         ? ['-i', filePath]
         : ['-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', filePath];
 
-    final result = await Process.run(
-      execPath,
-      args,
-      stdoutEncoding: utf8,
-      stderrEncoding: utf8,
-    );
+    try {
+      final result = await Process.run(
+        execPath,
+        args,
+        stdoutEncoding: utf8,
+        stderrEncoding: utf8,
+      ).timeout(const Duration(seconds: 10));
 
-    if (useFfmpeg) {
-      return _parseFfmpegInfo(result.stderr as String?, filePath);
-    }
+      if (useFfmpeg) {
+        return _parseFfmpegInfo(result.stderr as String?, filePath);
+      }
 
     if (result.exitCode != 0) {
       LogService.warning('ffprobe 执行失败: ${result.stderr}');
