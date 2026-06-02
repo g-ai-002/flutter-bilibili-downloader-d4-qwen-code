@@ -95,7 +95,7 @@ class BiliVideoFormat {
   final bool hasVideo;
   final bool hasAudio;
 
-  BiliVideoFormat({
+  const BiliVideoFormat({
     required this.formatId,
     required this.ext,
     required this.quality,
