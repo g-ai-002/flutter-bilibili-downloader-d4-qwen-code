@@ -115,9 +115,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       appBar: AppBar(title: const Text('视频详情')),
       body: Consumer<SearchProvider>(
         builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
           final detail = provider.detail;
           // 确保加载的是当前请求的视频
           if (detail == null || detail.bvid != widget.bvid) {
@@ -139,30 +136,47 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 ),
               );
             }
-            // 详情未加载完成或 bvid 不匹配
-            if (!provider.isLoading && detail == null) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-                    const SizedBox(height: 16),
-                    const Text('无法加载视频详情'),
-                    const SizedBox(height: 16),
-                    FilledButton.tonalIcon(
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('重试'),
-                      onPressed: _loadDetail,
-                    ),
-                  ],
-                ),
-              );
-            }
-            return const Center(child: CircularProgressIndicator());
+            // 加载中显示非阻塞骨架，不遮罩整个界面
+            return _buildLoadingSkeleton();
           }
           return _buildDetail(detail);
         },
       ),
+    );
+  }
+
+  /// 非阻塞加载骨架——不遮罩界面，用户可随时返回
+  Widget _buildLoadingSkeleton() {
+    final theme = Theme.of(context);
+    return ListView(
+      children: [
+        Container(
+          height: 200,
+          color: theme.colorScheme.surfaceVariant,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '正在加载视频信息...',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -88,59 +88,71 @@ class _SearchPageState extends State<SearchPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        leading: Consumer<SettingsProvider>(
-          builder: (context, settings, _) {
-            final user = settings.userInfo;
-            return user != null && user.face.isNotEmpty
-                ? CircleAvatar(
-                    backgroundImage: NetworkImage(user.face),
-                  )
-                : CircleAvatar(
-                    backgroundColor: theme.colorScheme.surfaceVariant,
-                    child: Icon(Icons.person, color: theme.colorScheme.onSurfaceVariant),
-                  );
-          },
-        ),
-        title: TextField(
-          controller: _searchController,
-          focusNode: _focusNode,
-          style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: '搜索 Bilibili 视频...',
-            hintStyle: TextStyle(
-              fontSize: 14,
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
-            ),
-            prefixIcon: const Icon(Icons.search, size: 20),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {});
-                    },
-                  )
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            isDense: true,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              Consumer<SettingsProvider>(
+                builder: (context, settings, _) {
+                  final user = settings.userInfo;
+                  return user != null && user.face.isNotEmpty
+                      ? CircleAvatar(
+                          radius: 16,
+                          backgroundImage: NetworkImage(user.face),
+                        )
+                      : CircleAvatar(
+                          radius: 16,
+                          backgroundColor: theme.colorScheme.surfaceVariant,
+                          child: Icon(Icons.person, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                        );
+                },
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _focusNode,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: '搜索 Bilibili 视频...',
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    ),
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    isDense: true,
+                  ),
+                  textInputAction: TextInputAction.search,
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: _search,
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.qr_code),
+                tooltip: '扫码登录',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                ),
+              ),
+            ],
           ),
-          textInputAction: TextInputAction.search,
-          onChanged: (_) => setState(() {}),
-          onSubmitted: _search,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code),
-            tooltip: '扫码登录',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginPage()),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [

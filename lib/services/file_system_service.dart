@@ -139,14 +139,21 @@ class FileSystemService {
         await Process.run('cmd', ['/c', 'start', '', filePath]);
         return true;
       } else {
+        final file = File(filePath);
+        final exists = await file.exists();
+        LogService.info('尝试播放文件: $filePath, 存在: $exists, 大小: ${exists ? await file.length() : 0}');
         final uri = Uri.file(filePath);
-        if (await canLaunchUrl(uri)) {
+        final canLaunch = await canLaunchUrl(uri);
+        LogService.info('canLaunchUrl($uri): $canLaunch');
+        if (canLaunch) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
           return true;
+        } else {
+          LogService.warning('无法打开播放器: canLaunchUrl 返回 false, path=$filePath');
         }
       }
-    } catch (e) {
-      LogService.error('打开播放器失败: $filePath', e);
+    } catch (e, stack) {
+      LogService.error('打开播放器失败: $filePath', e, stack);
     }
     return false;
   }
