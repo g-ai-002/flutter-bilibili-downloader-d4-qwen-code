@@ -206,162 +206,165 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     final bestQuality = best.quality;
     final pubdateText = _formatPubdateText(detail.pubdate);
 
-    return ListView(
-      children: [
-        // 封面
-        AspectRatio(
-          aspectRatio: 120 / 75,
-          child: Image.network(
-            detail.pic,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 封面
+          AspectRatio(
+            aspectRatio: 120 / 75,
+            child: Image.network(
+              detail.pic,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  color: theme.colorScheme.surfaceVariant,
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (_, __, ___) => Container(
                 color: theme.colorScheme.surfaceVariant,
-                child: const Center(child: CircularProgressIndicator()),
-              );
-            },
-            errorBuilder: (_, __, ___) => Container(
-              color: theme.colorScheme.surfaceVariant,
-              child: const Icon(Icons.broken_image, size: 64),
+                child: const Icon(Icons.broken_image, size: 64),
+              ),
             ),
           ),
-        ),
 
-        // 标题与元信息
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                detail.title,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              // 播放量 · 时长
-              Row(
-                children: [
-                  if (detail.viewCount > 0) ...[
-                    Icon(Icons.play_circle_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 4),
-                    Text(_formatViewCount(detail.viewCount), style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    )),
-                    const SizedBox(width: 12),
-                  ],
-                  Icon(Icons.access_time, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 4),
-                  Text(_formatDuration(detail.duration), style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  )),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: detail.uploaderMid > 0
-                        ? () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => UploaderVideosPage(
-                                  mid: detail.uploaderMid,
-                                  name: detail.uploader,
-                                  face: detail.uploaderFace,
-                                ),
-                              ),
-                            )
-                        : null,
-                    child: Row(
-                      children: [
-                        Icon(Icons.person, size: 16, color: theme.colorScheme.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          detail.uploader,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.videocam, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 4),
-                  Text('${detail.episodes.length} 集', style: theme.textTheme.bodyMedium),
-                ],
-              ),
-              if (pubdateText.isNotEmpty) ...[
-                const SizedBox(height: 4),
+          // 标题与元信息
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  detail.title,
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                // 播放量 · 时长
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                    if (detail.viewCount > 0) ...[
+                      Icon(Icons.play_circle_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(_formatViewCount(detail.viewCount), style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      )),
+                      const SizedBox(width: 12),
+                    ],
+                    Icon(Icons.access_time, size: 14, color: theme.colorScheme.onSurfaceVariant),
                     const SizedBox(width: 4),
-                    Text('发布时间: $pubdateText', style: theme.textTheme.bodySmall?.copyWith(
+                    Text(_formatDuration(detail.duration), style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     )),
                   ],
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: detail.uploaderMid > 0
+                          ? () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => UploaderVideosPage(
+                                    mid: detail.uploaderMid,
+                                    name: detail.uploader,
+                                    face: detail.uploaderFace,
+                                  ),
+                                ),
+                              )
+                          : null,
+                      child: Row(
+                        children: [
+                          Icon(Icons.person, size: 16, color: theme.colorScheme.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            detail.uploader,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(Icons.videocam, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text('${detail.episodes.length} 集', style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+                if (pubdateText.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text('发布时间: $pubdateText', style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      )),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                Text('简介', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(
+                  detail.desc.isEmpty ? '暂无简介' : detail.desc,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
               ],
-              const SizedBox(height: 12),
-              Text('简介', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
-              Text(
-                detail.desc.isEmpty ? '暂无简介' : detail.desc,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-
-        const Divider(),
-
-        // 分集列表
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            '分集列表 (${detail.episodes.length})',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ),
-
-        ...detail.episodes.map((ep) => ListTile(
-          leading: CircleAvatar(
-            backgroundColor: theme.colorScheme.primaryContainer,
-            child: Text('${ep.page}', style: TextStyle(color: theme.colorScheme.onPrimaryContainer)),
-          ),
-          title: Text(ep.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text('BV: ${ep.bvid}', style: theme.textTheme.bodySmall),
-          trailing: FilledButton.tonalIcon(
-            icon: const Icon(Icons.download, size: 18),
-            label: const Text('下载'),
-            onPressed: () => _startDownload(detail, ep, bestFormatId, bestQuality),
-          ),
-        )),
-
-        // 一键下载全部
-        if (detail.episodes.length > 1)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton.icon(
-              icon: const Icon(Icons.download),
-              label: Text('下载全部 (${detail.episodes.length} 集)'),
-              onPressed: () {
-                for (final ep in detail.episodes) {
-                  _startDownload(detail, ep, bestFormatId, bestQuality);
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('已添加 ${detail.episodes.length} 个下载任务')),
-                );
-              },
             ),
           ),
-      ],
+
+          const Divider(),
+
+          // 分集列表
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              '分集列表 (${detail.episodes.length})',
+              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+
+          ...detail.episodes.map((ep) => ListTile(
+            leading: CircleAvatar(
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Text('${ep.page}', style: TextStyle(color: theme.colorScheme.onPrimaryContainer)),
+            ),
+            title: Text(ep.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text('BV: ${ep.bvid}', style: theme.textTheme.bodySmall),
+            trailing: FilledButton.tonalIcon(
+              icon: const Icon(Icons.download, size: 18),
+              label: const Text('下载'),
+              onPressed: () => _startDownload(detail, ep, bestFormatId, bestQuality),
+            ),
+          )),
+
+          // 一键下载全部
+          if (detail.episodes.length > 1)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: FilledButton.icon(
+                icon: const Icon(Icons.download),
+                label: Text('下载全部 (${detail.episodes.length} 集)'),
+                onPressed: () {
+                  for (final ep in detail.episodes) {
+                    _startDownload(detail, ep, bestFormatId, bestQuality);
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('已添加 ${detail.episodes.length} 个下载任务')),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 
