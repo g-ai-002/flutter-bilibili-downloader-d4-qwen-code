@@ -477,7 +477,7 @@ class DownloadService {
       job.videoCodec = metadata.videoCodec;
       job.audioCodec = metadata.audioCodec;
     } catch (e) {
-      LogService.warning('获取视频元数据失败: ${job.videoName}', e);
+      LogService.warning('获取视频元数据失败: ${job.videoName} | $e');
     }
   }
 }

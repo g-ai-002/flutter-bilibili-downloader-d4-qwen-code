@@ -24,7 +24,7 @@ Future<VideoMetadata?> probeMediaPlatform(String filePath) async {
     if (output == null || output.isEmpty) return null;
     return _parseFfprobeJson(output, filePath);
   } catch (e) {
-    LogService.warning('Android 平台解析媒体信息失败: $filePath', e);
+    LogService.warning('Android 平台解析媒体信息失败: $filePath | $e');
     return null;
   }
 }
