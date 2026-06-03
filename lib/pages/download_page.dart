@@ -85,7 +85,7 @@ class _DownloadPageState extends State<DownloadPage> {
                   onChanged: (value) => setState(() => _searchQuery = value),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 4),
               Consumer<DownloadProvider>(
                 builder: (context, provider, _) {
                   final hasFailed = provider.failedJobs.isNotEmpty;
@@ -102,16 +102,20 @@ class _DownloadPageState extends State<DownloadPage> {
                       if (hasFailed)
                         IconButton(
                           icon: const Icon(Icons.refresh),
-                          iconSize: 20,
+                          iconSize: 24,
                           tooltip: '重试全部',
                           onPressed: provider.retryAll,
                           visualDensity: VisualDensity.compact,
                         ),
-                      PopupMenuButton<String>(
-                        tooltip: '批量清理',
-                        icon: const Icon(Icons.cleaning_services_outlined),
-                        iconSize: 20,
-                        onSelected: (value) {
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: PopupMenuButton<String>(
+                          tooltip: '批量清理',
+                          icon: const Icon(Icons.cleaning_services_outlined),
+                          iconSize: 24,
+                          onSelected: (value) {
                           switch (value) {
                             case 'completed':
                               provider.clearCompleted();
@@ -160,6 +164,7 @@ class _DownloadPageState extends State<DownloadPage> {
                           ),
                         ],
                       ),
+                    ),
                     ],
                   );
                 },

@@ -173,10 +173,12 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 onSubmitted: _search,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 4),
             IconButton(
               icon: const Icon(Icons.qr_code),
+              iconSize: 24,
               tooltip: '扫码登录',
+              visualDensity: VisualDensity.compact,
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -222,13 +224,14 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                   ),
                   unselectedLabelStyle: const TextStyle(fontSize: 13),
                   indicatorSize: TabBarIndicatorSize.label,
-                  indicatorColor: theme.colorScheme.onSurfaceVariant,
+                  indicatorColor: theme.colorScheme.outline,
                   indicatorWeight: 2,
                   dividerColor: Colors.transparent,
                   labelColor: theme.colorScheme.onSurface,
                   unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 ),
                 borderColor: theme.colorScheme.outline,
+                tabBarHeight: 36,
               ),
             ),
           ];
@@ -496,8 +499,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
   final Color borderColor;
+  final double tabBarHeight;
 
-  _TabBarDelegate({required this.tabBar, required this.borderColor});
+  _TabBarDelegate({
+    required this.tabBar,
+    required this.borderColor,
+    this.tabBarHeight = 36,
+  });
 
   @override
   Widget build(
@@ -510,19 +518,24 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         ),
       ),
       alignment: Alignment.topCenter,
-      child: tabBar,
+      child: SizedBox(
+        height: tabBarHeight,
+        child: tabBar,
+      ),
     );
   }
 
   @override
-  double get maxExtent => tabBar.preferredSize.height;
+  double get maxExtent => tabBarHeight;
 
   @override
-  double get minExtent => tabBar.preferredSize.height;
+  double get minExtent => tabBarHeight;
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) =>
-      tabBar != oldDelegate.tabBar || borderColor != oldDelegate.borderColor;
+      tabBar != oldDelegate.tabBar ||
+      borderColor != oldDelegate.borderColor ||
+      tabBarHeight != oldDelegate.tabBarHeight;
 }
 
 class _VideoCard extends StatelessWidget {

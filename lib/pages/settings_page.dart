@@ -68,6 +68,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final settings = context.watch<SettingsProvider>();
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(title: const Text('设置')),
       body: ListView(
         children: [
