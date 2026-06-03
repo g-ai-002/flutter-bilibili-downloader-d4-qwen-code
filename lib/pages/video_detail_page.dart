@@ -134,7 +134,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             final detail = provider.detail;
             if (detail != null && detail.bvid == widget.bvid) {
               return Text(
-                '${detail.title}-${detail.uploader}',
+                '${detail.title} - ${detail.uploader}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               );
