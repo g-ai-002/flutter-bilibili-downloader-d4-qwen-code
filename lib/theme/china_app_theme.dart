@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 ///
 /// 核心口诀：去阴影、灰底白卡、0.5像素线、标题居中、干掉水波纹
 
-// ── 品牌色（B站粉） ──
-const _primaryColor = Color(0xFFFB7299);
+// ── 品牌色（黑） ──
+const _primaryColor = Color(0xFF333333);
 
 // ── 浅色主题色板 ──
 const _lightSurface = Color(0xFFFFFFFF);
@@ -14,7 +14,7 @@ const _lightSurfaceVariant = Color(0xFFF0F1F3);
 const _lightOnSurface = Color(0xFF333333);
 const _lightOnSurfaceVariant = Color(0xFF666666);
 const _lightOutline = Color(0xFFEEEEEE);
-const _lightPrimaryContainer = Color(0xFFFFE0E8);
+const _lightPrimaryContainer = Color(0xFFE0E0E0);
 
 // ── 深色主题色板 ──
 const _darkSurface = Color(0xFF252525);
@@ -30,8 +30,8 @@ ThemeData chinaLightTheme({String? fontFamily}) {
   final colorScheme = const ColorScheme.light(
     primary: _primaryColor,
     onPrimary: Colors.white,
-    primaryContainer: const Color(0xFFFFE0E8),
-    onPrimaryContainer: const Color(0xFF7B1F3D),
+    primaryContainer: const Color(0xFFE0E0E0),
+    onPrimaryContainer: const Color(0xFF1A1A1A),
     secondary: Color(0xFF5C6BC0),
     onSecondary: Colors.white,
     surface: _lightSurface,
@@ -145,10 +145,10 @@ ThemeData chinaLightTheme({String? fontFamily}) {
 /// 深色国内审美主题
 ThemeData chinaDarkTheme({String? fontFamily}) {
   final colorScheme = const ColorScheme.dark(
-    primary: const Color(0xFFFF8AAC),
+    primary: const Color(0xFFCCCCCC),
     onPrimary: const Color(0xFF1A1A1A),
     primaryContainer: _darkPrimaryContainer,
-    onPrimaryContainer: const Color(0xFFFFCDD9),
+    onPrimaryContainer: const Color(0xFFE0E0E0),
     secondary: Color(0xFF7986CB),
     onSecondary: Color(0xFF1A1A1A),
     surface: _darkSurface,
@@ -164,7 +164,7 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
 
   return ThemeData(
     useMaterial3: true,
-    primaryColor: const Color(0xFFFF8AAC),
+    primaryColor: const Color(0xFFCCCCCC),
     scaffoldBackgroundColor: _darkBackground,
     colorScheme: colorScheme,
 
@@ -205,7 +205,7 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 0,
-        backgroundColor: const Color(0xFFFF8AAC),
+        backgroundColor: const Color(0xFFCCCCCC),
         foregroundColor: const Color(0xFF1A1A1A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
@@ -236,7 +236,7 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFFF8AAC), width: 1),
+        borderSide: const BorderSide(color: Color(0xFFCCCCCC), width: 1),
       ),
     ),
 
