@@ -222,9 +222,9 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                   ),
                   unselectedLabelStyle: const TextStyle(fontSize: 13),
                   indicatorSize: TabBarIndicatorSize.label,
-                  indicatorColor: theme.colorScheme.primary,
+                  indicatorColor: theme.colorScheme.onSurfaceVariant,
+                  indicatorWeight: 2,
                   dividerColor: Colors.transparent,
-                  tabAlignment: TabAlignment.center,
                   labelColor: theme.colorScheme.onSurface,
                   unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -382,7 +382,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           }
           final uploader = provider.uploaderResults[index];
           return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => Navigator.push(
@@ -454,7 +454,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       itemBuilder: (context, index) {
         if (index == 0) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -510,6 +510,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
           bottom: BorderSide(color: borderColor, width: 0.5),
         ),
       ),
+      alignment: Alignment.topCenter,
       child: tabBar,
     );
   }
@@ -535,7 +536,7 @@ class _VideoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
