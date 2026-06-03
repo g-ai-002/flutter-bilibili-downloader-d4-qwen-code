@@ -121,23 +121,25 @@ class _HomePageState extends State<HomePage> {
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: theme.colorScheme.primary,
-        unselectedItemColor: theme.colorScheme.onSurfaceVariant,
-        backgroundColor: theme.colorScheme.surface,
-        elevation: 0,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
-        items: _destinations
-            .map((d) => BottomNavigationBarItem(
-                  icon: Icon(d.icon),
-                  activeIcon: Icon(d.selectedIcon),
-                  label: d.label,
-                ))
-            .toList(),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: theme.colorScheme.outline, width: 0.5),
+          ),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() => _currentIndex = index);
+          },
+          items: _destinations
+              .map((d) => BottomNavigationBarItem(
+                    icon: Icon(d.icon),
+                    activeIcon: Icon(d.selectedIcon),
+                    label: d.label,
+                  ))
+              .toList(),
+        ),
       ),
     );
   }
@@ -153,19 +155,6 @@ class _HomePageState extends State<HomePage> {
               setState(() => _currentIndex = index);
             },
             labelType: NavigationRailLabelType.all,
-            backgroundColor: Colors.transparent,
-            indicatorColor: theme.colorScheme.primary.withOpacity(0.08),
-            selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),
-            unselectedIconTheme: IconThemeData(color: theme.colorScheme.onSurfaceVariant),
-            selectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 12,
-            ),
             destinations: _destinations
                 .map((d) => NavigationRailDestination(
                       icon: Icon(d.icon),

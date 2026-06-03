@@ -58,7 +58,7 @@ ThemeData chinaLightTheme({String? fontFamily}) {
       fontFamily: fontFamily,
     ),
 
-    // AppBar：去阴影、标题居中、无 M3 蒙版
+    // AppBar：去阴影、标题居中、无 M3 蒙版、0.5px 底部分隔线、紧凑高度
     appBarTheme: const AppBarTheme(
       backgroundColor: _lightSurface,
       foregroundColor: _lightOnSurface,
@@ -66,6 +66,41 @@ ThemeData chinaLightTheme({String? fontFamily}) {
       scrolledUnderElevation: 0,
       centerTitle: true,
       surfaceTintColor: Colors.transparent,
+      toolbarHeight: 44,
+      shape: Border(
+        bottom: BorderSide(color: _lightOutline, width: 0.5),
+      ),
+    ),
+
+    // 底部导航栏：紧凑高度、0.5px 顶部分隔线（由各页面 Container 提供）
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: _lightSurface,
+      selectedItemColor: _primaryColor,
+      unselectedItemColor: _lightOnSurfaceVariant,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+      selectedLabelStyle: TextStyle(fontSize: 11),
+      unselectedLabelStyle: TextStyle(fontSize: 11),
+      selectedIconTheme: IconThemeData(size: 20),
+      unselectedIconTheme: IconThemeData(size: 20),
+    ),
+
+    // 侧边导航栏：紧凑尺寸
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: Colors.transparent,
+      selectedIconTheme: const IconThemeData(color: _primaryColor, size: 20),
+      unselectedIconTheme:
+          const IconThemeData(color: _lightOnSurfaceVariant, size: 20),
+      selectedLabelTextStyle: const TextStyle(
+        color: _primaryColor,
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelTextStyle: const TextStyle(
+        color: _lightOnSurfaceVariant,
+        fontSize: 11,
+      ),
+      indicatorColor: _primaryColor.withOpacity(0.08),
     ),
 
     // 分割线：0.5px 极细线
@@ -181,6 +216,42 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
       scrolledUnderElevation: 0,
       centerTitle: true,
       surfaceTintColor: Colors.transparent,
+      toolbarHeight: 44,
+      shape: Border(
+        bottom: BorderSide(color: _darkOutline, width: 0.5),
+      ),
+    ),
+
+    // 底部导航栏：紧凑高度、0.5px 顶部分隔线（由各页面 Container 提供）
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: _darkSurface,
+      selectedItemColor: Color(0xFFCCCCCC),
+      unselectedItemColor: _darkOnSurfaceVariant,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+      selectedLabelStyle: TextStyle(fontSize: 11),
+      unselectedLabelStyle: TextStyle(fontSize: 11),
+      selectedIconTheme: IconThemeData(size: 20),
+      unselectedIconTheme: IconThemeData(size: 20),
+    ),
+
+    // 侧边导航栏：紧凑尺寸
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: Colors.transparent,
+      selectedIconTheme:
+          const IconThemeData(color: Color(0xFFCCCCCC), size: 20),
+      unselectedIconTheme:
+          const IconThemeData(color: _darkOnSurfaceVariant, size: 20),
+      selectedLabelTextStyle: const TextStyle(
+        color: Color(0xFFCCCCCC),
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelTextStyle: const TextStyle(
+        color: _darkOnSurfaceVariant,
+        fontSize: 11,
+      ),
+      indicatorColor: const Color(0xFF7B1F3D),
     ),
 
     dividerTheme: const DividerThemeData(

@@ -66,7 +66,7 @@ class _DownloadPageState extends State<DownloadPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     isDense: true,
                   ),
                   textInputAction: TextInputAction.search,

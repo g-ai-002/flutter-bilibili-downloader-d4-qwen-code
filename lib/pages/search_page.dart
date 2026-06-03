@@ -122,14 +122,19 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               floating: true,
               snap: true,
               pinned: false,
+              toolbarHeight: 44,
               titleSpacing: 0,
+              shape: Border(
+                bottom:
+                    BorderSide(color: theme.colorScheme.outline, width: 0.5),
+              ),
               title: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 48,
-                      height: 48,
+                      width: 40,
+                      height: 40,
                       child: Center(
                         child: Consumer<SettingsProvider>(
                           builder: (context, settings, _) {
@@ -185,7 +190,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                 : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 8),
+                                horizontal: 8, vertical: 4),
                             isDense: true,
                           ),
                           textInputAction: TextInputAction.search,
