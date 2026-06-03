@@ -34,16 +34,16 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.bilibili.downloader"
     compileSdk 36
-    ndkVersion "25.1.8937393"
+    ndkVersion "29.0.14206865"
 
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '21'
     }
 
     sourceSets {

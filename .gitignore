@@ -1,4 +1,5 @@
 # Flutter
+.flutter-plugins-dependencies
 .dart_tool/
 .packages
 build/
@@ -46,3 +47,7 @@ token
 # System
 .DS_Store
 Thumbs.db
+**/GeneratedPluginRegistrant.java
+**/gradle-wrapper.jar
+**/gradlew
+**/gradlew.bat
