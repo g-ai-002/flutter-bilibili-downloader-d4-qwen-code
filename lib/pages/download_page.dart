@@ -106,6 +106,8 @@ class _DownloadPageState extends State<DownloadPage> {
                           tooltip: '重试全部',
                           onPressed: provider.retryAll,
                           visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 0),
+                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                         ),
                       Theme(
                         data: Theme.of(context).copyWith(
@@ -115,6 +117,7 @@ class _DownloadPageState extends State<DownloadPage> {
                           tooltip: '批量清理',
                           icon: const Icon(Icons.cleaning_services_outlined),
                           iconSize: 24,
+                          padding: const EdgeInsets.symmetric(horizontal: 0),
                           onSelected: (value) {
                           switch (value) {
                             case 'completed':
