@@ -37,6 +37,7 @@ class _DownloadPageState extends State<DownloadPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         titleSpacing: 0,
         title: Padding(

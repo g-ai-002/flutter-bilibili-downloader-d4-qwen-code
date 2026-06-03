@@ -190,7 +190,9 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       body: NestedScrollView(
+        physics: const ClampingScrollPhysics(),
         floatHeaderSlivers: false,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
@@ -231,6 +233,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           ];
         },
         body: TabBarView(
+          physics: const NeverScrollableScrollPhysics(),
           controller: _tabController,
           children: [
             _buildVideoTab(),

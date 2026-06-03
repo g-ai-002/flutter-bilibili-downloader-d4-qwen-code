@@ -128,6 +128,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Consumer<SearchProvider>(
           builder: (context, provider, _) {

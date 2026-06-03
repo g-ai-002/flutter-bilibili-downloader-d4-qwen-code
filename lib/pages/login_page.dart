@@ -96,6 +96,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(title: const Text('Bilibili 扫码登录')),
       body: Center(
         child: Padding(

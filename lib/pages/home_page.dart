@@ -117,6 +117,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildNarrowLayout(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -154,6 +155,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildWideLayout(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       body: Row(
         children: [
           NavigationRail(
