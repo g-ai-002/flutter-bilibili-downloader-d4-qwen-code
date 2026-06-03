@@ -161,27 +161,25 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
+                          color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: theme.colorScheme.outline, width: 0.5),
                         ),
                         child: TextField(
                           controller: _searchController,
                           focusNode: _focusNode,
-                          style: const TextStyle(fontSize: 14),
+                          style: const TextStyle(fontSize: 13),
                           decoration: InputDecoration(
                             hintText: '搜索...',
                             hintStyle: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: theme.colorScheme.onSurfaceVariant
                                   .withOpacity(0.6),
                             ),
                             prefixIcon:
-                                const Icon(Icons.search, size: 20),
+                                const Icon(Icons.search, size: 18),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 18),
+                                    icon: const Icon(Icons.clear, size: 16),
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() {});
@@ -190,7 +188,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                 : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                                horizontal: 8, vertical: 6),
                             isDense: true,
                           ),
                           textInputAction: TextInputAction.search,

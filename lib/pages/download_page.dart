@@ -46,17 +46,19 @@ class _DownloadPageState extends State<DownloadPage> {
               Expanded(
                 child: TextField(
                   controller: _searchController,
-                  style: const TextStyle(fontSize: 14),
+                  style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
                     hintText: '搜索下载任务...',
                     hintStyle: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
                     ),
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerHighest,
+                    prefixIcon: const Icon(Icons.search, size: 18),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
+                            icon: const Icon(Icons.clear, size: 16),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
@@ -64,9 +66,18 @@ class _DownloadPageState extends State<DownloadPage> {
                           )
                         : null,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     isDense: true,
                   ),
                   textInputAction: TextInputAction.search,
