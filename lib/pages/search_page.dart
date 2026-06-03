@@ -117,35 +117,71 @@ class _SearchPageState extends State<SearchPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  focusNode: _focusNode,
-                  style: const TextStyle(fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: '搜索 Bilibili 视频...',
-                    hintStyle: TextStyle(
-                      fontSize: 14,
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
-                    ),
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {});
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    isDense: true,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.colorScheme.outline, width: 0.5),
                   ),
-                  textInputAction: TextInputAction.search,
-                  onChanged: (_) => setState(() {}),
-                  onSubmitted: _search,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showTypeMenu(context),
+                        child: Container(
+                          padding: const EdgeInsets.only(left: 10, right: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _searchType == SearchType.video ? '视频' : 'UP主',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              Icon(Icons.arrow_drop_down, size: 16, color: theme.colorScheme.primary),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 18,
+                        color: theme.colorScheme.outline,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _focusNode,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: '搜索...',
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                            ),
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, size: 18),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.search,
+                          onChanged: (_) => setState(() {}),
+                          onSubmitted: _search,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -161,43 +197,10 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // 视频/UP主选择
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              children: [
-                const Spacer(),
-                SegmentedButton<SearchType>(
-                  segments: const [
-                    ButtonSegment(value: SearchType.video, label: Text('视频', style: TextStyle(fontSize: 12))),
-                    ButtonSegment(value: SearchType.uploader, label: Text('UP主', style: TextStyle(fontSize: 12))),
-                  ],
-                  selected: {_searchType},
-                  onSelectionChanged: (selected) {
-                    setState(() => _searchType = selected.first);
-                    // 切换搜索类型时，如果搜索框有内容则重新搜索
-                    if (_searchController.text.trim().isNotEmpty) {
-                      _search(_searchController.text);
-                    }
-                  },
-                  style: ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-                const Spacer(),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          // 搜索结果/历史/空状态
-          Expanded(
-            child: Consumer<SearchProvider>(
-              builder: (context, provider, _) {
-                if (provider.isLoading && provider.results.isEmpty && provider.uploaderResults.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+      body: Consumer<SearchProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading && provider.results.isEmpty && provider.uploaderResults.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
                 }
                 if (provider.error != null && provider.results.isEmpty && provider.uploaderResults.isEmpty) {
                   return Center(
@@ -224,9 +227,32 @@ class _SearchPageState extends State<SearchPage> {
               },
             ),
           ),
-        ],
-      ),
     );
+  }
+
+  void _showTypeMenu(BuildContext context) {
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    final Offset offset = box.localToGlobal(Offset.zero);
+    showMenu<SearchType>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + box.size.height + 4,
+        offset.dx + box.size.width,
+        offset.dy + box.size.height + 4,
+      ),
+      items: const [
+        PopupMenuItem(value: SearchType.video, child: Text('视频')),
+        PopupMenuItem(value: SearchType.uploader, child: Text('UP主')),
+      ],
+    ).then((value) {
+      if (value != null && value != _searchType) {
+        setState(() => _searchType = value);
+        if (_searchController.text.trim().isNotEmpty) {
+          _search(_searchController.text);
+        }
+      }
+    });
   }
 
   Widget _buildResultsList(SearchProvider provider) {
