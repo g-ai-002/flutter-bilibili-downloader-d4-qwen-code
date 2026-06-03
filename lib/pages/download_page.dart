@@ -66,19 +66,20 @@ class _DownloadPageState extends State<DownloadPage> {
                           )
                         : null,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                     isDense: true,
+                    constraints: const BoxConstraints(maxHeight: 34),
                   ),
                   textInputAction: TextInputAction.search,
                   onChanged: (value) => setState(() => _searchQuery = value),
