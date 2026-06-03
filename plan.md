@@ -123,6 +123,19 @@
   - [x] 更新版本号到 0.2.36
 - **注意**: v0.2.41 中 Windows 重新回到原生 ffmpeg 调用（Process.run），恢复 resolveFfmpeg() 和 CI ffmpeg 捆绑
 
+### v0.4.0 (MINOR)
+- **状态**: 开发中 🔧
+- **目标**: UI 国内审美改造 — 去阴影、灰底白卡、0.5px 极细线、标题居中、去水波纹
+- **任务**:
+  - [x] 创建 `lib/theme/china_app_theme.dart` — 浅色/深色国内审美全局主题
+  - [x] `main.dart` 集成新主题 + 沉浸式状态栏
+  - [x] 底部导航从 NavigationBar 切换为 BottomNavigationBar（纯净图标+文字变色）
+  - [x] NavigationRail 去背景色 + 0.5px VerticalDivider
+  - [x] Card/Divider/AppBar/按钮 全局去阴影 + 0.5px 分割线
+  - [x] 去除全局水波纹效果（splashColor/highlightColor=transparent）
+  - [x] 输入框 0.5px 细边框 + 小圆角
+  - [x] 版本号升至 0.4.0
+
 ### v0.2.41 (PATCH)
 - **状态**: 开发中 🔧
 - **目标**: Windows/Android 双平台依赖分离管理 — Windows 使用原生 ffmpeg (Process.run)，Android 使用 ffmpeg_kit_extended_flutter

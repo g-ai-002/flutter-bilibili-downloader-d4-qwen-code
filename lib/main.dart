@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -11,6 +12,7 @@ import 'services/ffmpeg_platform.dart';
 import 'services/log_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
+import 'theme/china_app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,15 @@ void main() async {
   // 预加载设置，确保 Cookies 等配置在应用启动时已就绪
   final settings = SettingsProvider();
   await settings.load();
+
+  // 沉浸式状态栏：透明背景 + 深色图标
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.white,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
 
   runApp(BilibiliDownloaderApp(preloadedSettings: settings));
 }
@@ -51,18 +62,8 @@ class BilibiliDownloaderApp extends StatelessWidget {
           return MaterialApp(
             title: 'B站视频下载',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorSchemeSeed: const Color(0xFF00A1D6),
-              useMaterial3: true,
-              brightness: Brightness.light,
-              fontFamily: defaultFontFamily,
-            ),
-            darkTheme: ThemeData(
-              colorSchemeSeed: const Color(0xFF00A1D6),
-              useMaterial3: true,
-              brightness: Brightness.dark,
-              fontFamily: defaultFontFamily,
-            ),
+            theme: chinaLightTheme(fontFamily: defaultFontFamily),
+            darkTheme: chinaDarkTheme(fontFamily: defaultFontFamily),
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,

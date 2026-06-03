@@ -115,20 +115,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNarrowLayout(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: theme.colorScheme.primary,
+        unselectedItemColor: theme.colorScheme.onSurfaceVariant,
+        backgroundColor: theme.colorScheme.surface,
+        elevation: 0,
+        currentIndex: _currentIndex,
+        onTap: (index) {
           setState(() => _currentIndex = index);
         },
-        destinations: _destinations
-            .map((d) => NavigationDestination(
+        items: _destinations
+            .map((d) => BottomNavigationBarItem(
                   icon: Icon(d.icon),
-                  selectedIcon: Icon(d.selectedIcon),
+                  activeIcon: Icon(d.selectedIcon),
                   label: d.label,
                 ))
             .toList(),
@@ -147,7 +153,19 @@ class _HomePageState extends State<HomePage> {
               setState(() => _currentIndex = index);
             },
             labelType: NavigationRailLabelType.all,
-            backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            backgroundColor: Colors.transparent,
+            indicatorColor: theme.colorScheme.primary.withOpacity(0.08),
+            selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),
+            unselectedIconTheme: IconThemeData(color: theme.colorScheme.onSurfaceVariant),
+            selectedLabelTextStyle: TextStyle(
+              color: theme.colorScheme.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelTextStyle: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
             destinations: _destinations
                 .map((d) => NavigationRailDestination(
                       icon: Icon(d.icon),
@@ -156,7 +174,11 @@ class _HomePageState extends State<HomePage> {
                     ))
                 .toList(),
           ),
-          const VerticalDivider(thickness: 1, width: 1),
+          VerticalDivider(
+            thickness: 0.5,
+            width: 0.5,
+            color: theme.colorScheme.outline,
+          ),
           Expanded(
             child: IndexedStack(
               index: _currentIndex,
