@@ -273,8 +273,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         if (provider.error != null && provider.uploaderResults.isEmpty) {
           return _buildErrorWidget(provider.error!);
         }
-        if (_searchType == SearchType.uploader &&
-            provider.uploaderResults.isNotEmpty) {
+        if (provider.uploaderResults.isNotEmpty) {
           return RefreshIndicator(
             onRefresh: () => provider.searchUploaders(provider.keyword),
             child: _buildUploaderList(provider),
@@ -516,10 +515,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 40;
+  double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  double get minExtent => 40;
+  double get minExtent => tabBar.preferredSize.height;
 
   @override
   bool shouldRebuild(_TabBarDelegate oldDelegate) =>
