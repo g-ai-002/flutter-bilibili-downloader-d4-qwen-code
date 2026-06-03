@@ -54,7 +54,7 @@ class _DownloadPageState extends State<DownloadPage> {
                       color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
                     ),
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHighest,
+                    fillColor: theme.colorScheme.surfaceVariant,
                     prefixIcon: const Icon(Icons.search, size: 18),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
