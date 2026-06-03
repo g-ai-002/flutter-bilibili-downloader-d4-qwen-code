@@ -79,10 +79,10 @@ ThemeData chinaLightTheme({String? fontFamily}) {
       unselectedItemColor: _lightOnSurfaceVariant,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
-      selectedLabelStyle: TextStyle(fontSize: 11),
-      unselectedLabelStyle: TextStyle(fontSize: 11),
-      selectedIconTheme: IconThemeData(size: 20),
-      unselectedIconTheme: IconThemeData(size: 20),
+      selectedLabelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      unselectedLabelStyle: TextStyle(fontSize: 13),
+      selectedIconTheme: IconThemeData(size: 24),
+      unselectedIconTheme: IconThemeData(size: 24),
     ),
 
     // 侧边导航栏：紧凑尺寸
@@ -229,10 +229,10 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
       unselectedItemColor: _darkOnSurfaceVariant,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
-      selectedLabelStyle: TextStyle(fontSize: 11),
-      unselectedLabelStyle: TextStyle(fontSize: 11),
-      selectedIconTheme: IconThemeData(size: 20),
-      unselectedIconTheme: IconThemeData(size: 20),
+      selectedLabelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      unselectedLabelStyle: TextStyle(fontSize: 13),
+      selectedIconTheme: IconThemeData(size: 24),
+      unselectedIconTheme: IconThemeData(size: 24),
     ),
 
     // 侧边导航栏：紧凑尺寸

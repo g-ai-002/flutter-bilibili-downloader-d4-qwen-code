@@ -20,7 +20,6 @@ enum SearchType { video, uploader }
 class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
-  final _scrollController = ScrollController();
   late final TabController _tabController;
   List<String> _searchHistory = [];
 
@@ -29,7 +28,6 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadSearchHistory();
-    _scrollController.addListener(_onScroll);
     _tabController.addListener(_onTabChanged);
   }
 
@@ -46,18 +44,6 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     final keyword = _searchController.text.trim();
     if (keyword.isNotEmpty) {
       _search(keyword);
-    }
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      final provider = context.read<SearchProvider>();
-      if (_searchType == SearchType.video) {
-        provider.loadMore();
-      } else {
-        provider.loadMoreUploaders();
-      }
     }
   }
 
@@ -96,327 +82,375 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   void dispose() {
     _searchController.dispose();
     _focusNode.dispose();
-    _scrollController.dispose();
     _tabController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  PreferredSizeWidget _buildSearchBox() {
     final theme = Theme.of(context);
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          final provider = context.read<SearchProvider>();
-          if (_searchType == SearchType.video) {
-            await provider.search(provider.keyword);
-          } else {
-            await provider.searchUploaders(provider.keyword);
-          }
-        },
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              floating: true,
-              snap: true,
-              pinned: false,
-              toolbarHeight: 44,
-              titleSpacing: 0,
-              shape: Border(
-                bottom:
-                    BorderSide(color: theme.colorScheme.outline, width: 0.5),
-              ),
-              title: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Center(
-                        child: Consumer<SettingsProvider>(
-                          builder: (context, settings, _) {
-                            final user = settings.userInfo;
-                            return user != null && user.face.isNotEmpty
-                                ? CircleAvatar(
-                                    radius: 16,
-                                    backgroundImage: NetworkImage(user.face),
-                                  )
-                                : CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor:
-                                        theme.colorScheme.surfaceVariant,
-                                    child: Icon(Icons.person,
-                                        size: 18,
-                                        color: theme
-                                            .colorScheme.onSurfaceVariant),
-                                  );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        focusNode: _focusNode,
-                        style: const TextStyle(fontSize: 13),
-                        decoration: InputDecoration(
-                          hintText: '搜索...',
-                          hintStyle: TextStyle(
-                            fontSize: 13,
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withOpacity(0.6),
-                          ),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceVariant,
-                          prefixIcon:
-                              const Icon(Icons.search, size: 18),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, size: 16),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {});
-                                  },
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 0),
-                          isDense: true,
-                          constraints: const BoxConstraints(maxHeight: 34),
-                        ),
-                        textInputAction: TextInputAction.search,
-                        onChanged: (_) => setState(() {}),
-                        onSubmitted: _search,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    IconButton(
-                      icon: const Icon(Icons.qr_code),
-                      tooltip: '扫码登录',
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const LoginPage()),
-                      ),
-                    ),
-                  ],
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(44),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border(
+            bottom: BorderSide(color: theme.colorScheme.outline, width: 0.5),
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Consumer<SettingsProvider>(
+                  builder: (context, settings, _) {
+                    final user = settings.userInfo;
+                    return user != null && user.face.isNotEmpty
+                        ? CircleAvatar(
+                            radius: 16,
+                            backgroundImage: NetworkImage(user.face),
+                          )
+                        : CircleAvatar(
+                            radius: 16,
+                            backgroundColor:
+                                theme.colorScheme.surfaceVariant,
+                            child: Icon(Icons.person,
+                                size: 18,
+                                color: theme
+                                    .colorScheme.onSurfaceVariant),
+                          );
+                  },
                 ),
               ),
-              bottom: TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: '视频'),
-                  Tab(text: 'UP主'),
-                ],
-                labelStyle: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: const TextStyle(fontSize: 14),
-                indicatorSize: TabBarIndicatorSize.label,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _focusNode,
+                style: const TextStyle(fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: '搜索...',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant
+                        .withOpacity(0.6),
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceVariant,
+                  prefixIcon:
+                      const Icon(Icons.search, size: 18),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 16),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 0),
+                  isDense: true,
+                  constraints: const BoxConstraints(maxHeight: 34),
+                ),
+                textInputAction: TextInputAction.search,
+                onChanged: (_) => setState(() {}),
+                onSubmitted: _search,
               ),
             ),
-            // 内容区域
-            ..._buildContent(theme),
+            const SizedBox(width: 12),
+            IconButton(
+              icon: const Icon(Icons.qr_code),
+              tooltip: '扫码登录',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const LoginPage()),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  List<Widget> _buildContent(ThemeData theme) {
-    return [
-      Consumer<SearchProvider>(
-        builder: (context, provider, _) {
-          // 加载中
-          if (provider.isLoading &&
-              provider.results.isEmpty &&
-              provider.uploaderResults.isEmpty) {
-            return const SliverFillRemaining(
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: NestedScrollView(
+        floatHeaderSlivers: true,
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              pinned: true,
+              toolbarHeight: 44,
+              titleSpacing: 0,
+              backgroundColor: theme.colorScheme.surface,
+              surfaceTintColor: Colors.transparent,
+              automaticallyImplyLeading: false,
+              title: _buildSearchBox(),
+            ),
+            SliverPersistentHeader(
+              pinned: false,
+              floating: true,
+              delegate: _TabBarDelegate(
+                tabBar: TabBar(
+                  controller: _tabController,
+                  tabs: const [
+                    Tab(text: '视频'),
+                    Tab(text: 'UP主'),
+                  ],
+                  labelStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelStyle: const TextStyle(fontSize: 13),
+                  indicatorSize: TabBarIndicatorSize.label,
+                  indicatorColor: theme.colorScheme.primary,
+                  dividerColor: Colors.transparent,
+                  tabAlignment: TabAlignment.center,
+                  labelColor: theme.colorScheme.onSurface,
+                  unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                ),
+                borderColor: theme.colorScheme.outline,
+              ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildVideoTab(),
+            _buildUploaderTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoTab() {
+    return Consumer<SearchProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading && provider.results.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (provider.error != null && provider.results.isEmpty) {
+          return _buildErrorWidget(provider.error!);
+        }
+        if (provider.results.isNotEmpty) {
+          return RefreshIndicator(
+            onRefresh: () => provider.search(provider.keyword),
+            child: _buildVideoList(provider),
+          );
+        }
+        return _buildPreSearchContent();
+      },
+    );
+  }
+
+  Widget _buildUploaderTab() {
+    return Consumer<SearchProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading && provider.uploaderResults.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (provider.error != null && provider.uploaderResults.isEmpty) {
+          return _buildErrorWidget(provider.error!);
+        }
+        if (_searchType == SearchType.uploader &&
+            provider.uploaderResults.isNotEmpty) {
+          return RefreshIndicator(
+            onRefresh: () => provider.searchUploaders(provider.keyword),
+            child: _buildUploaderList(provider),
+          );
+        }
+        return _buildPreSearchContent();
+      },
+    );
+  }
+
+  Widget _buildPreSearchContent() {
+    if (_searchHistory.isNotEmpty) {
+      return _buildSearchHistoryList();
+    }
+    return _buildEmptyState();
+  }
+
+  Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.search,
+              size: 64,
+              color: theme.colorScheme.primary.withOpacity(0.5)),
+          const SizedBox(height: 16),
+          Text('搜索你想下载的 Bilibili 视频',
+              style: theme.textTheme.bodyLarge),
+          const SizedBox(height: 8),
+          Text('支持搜索视频标题和 UP 主',
+              style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(String error) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline,
+              size: 48, color: theme.colorScheme.error),
+          const SizedBox(height: 16),
+          Text(error, style: theme.textTheme.bodyLarge),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoList(SearchProvider provider) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.pixels >=
+            notification.metrics.maxScrollExtent - 200) {
+          provider.loadMore();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        itemCount: provider.results.length + (provider.hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= provider.results.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             );
           }
-
-          // 错误
-          if (provider.error != null &&
-              provider.results.isEmpty &&
-              provider.uploaderResults.isEmpty) {
-            return SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.error_outline,
-                        size: 48, color: theme.colorScheme.error),
-                    const SizedBox(height: 16),
-                    Text(provider.error!,
-                        style: theme.textTheme.bodyLarge),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // UP主搜索结果
-          if (_searchType == SearchType.uploader &&
-              provider.uploaderResults.isNotEmpty) {
-            return _buildUploaderSliverList(provider, theme);
-          }
-
-          // 视频搜索结果
-          if (_searchType == SearchType.video &&
-              provider.results.isNotEmpty) {
-            return _buildVideoSliverList(provider, theme);
-          }
-
-          // 搜索历史
-          if (_searchHistory.isNotEmpty) {
-            return _buildSearchHistorySliverList(theme);
-          }
-
-          // 空状态
-          return SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.search,
-                      size: 64,
-                      color: theme.colorScheme.primary.withOpacity(0.5)),
-                  const SizedBox(height: 16),
-                  Text('搜索你想下载的 Bilibili 视频',
-                      style: theme.textTheme.bodyLarge),
-                  const SizedBox(height: 8),
-                  Text('支持搜索视频标题和 UP 主',
-                      style: theme.textTheme.bodySmall),
-                ],
+          final video = provider.results[index];
+          return _VideoCard(
+            video: video,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => VideoDetailPage(bvid: video.bvid),
               ),
             ),
           );
         },
       ),
-    ];
-  }
-
-  SliverList _buildVideoSliverList(
-      SearchProvider provider, ThemeData theme) {
-    return SliverList.builder(
-      itemCount: provider.results.length + (provider.hasMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= provider.results.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final video = provider.results[index];
-        return _VideoCard(
-          video: video,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => VideoDetailPage(bvid: video.bvid),
-            ),
-          ),
-        );
-      },
     );
   }
 
-  SliverList _buildUploaderSliverList(
-      SearchProvider provider, ThemeData theme) {
-    return SliverList.builder(
-      itemCount:
-          provider.uploaderResults.length + (provider.hasMoreUploaders ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= provider.uploaderResults.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
+  Widget _buildUploaderList(SearchProvider provider) {
+    final theme = Theme.of(context);
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.pixels >=
+            notification.metrics.maxScrollExtent - 200) {
+          provider.loadMoreUploaders();
         }
-        final uploader = provider.uploaderResults[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => UploaderVideosPage.fromUploader(uploader),
+        return false;
+      },
+      child: ListView.builder(
+        itemCount: provider.uploaderResults.length +
+            (provider.hasMoreUploaders ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= provider.uploaderResults.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final uploader = provider.uploaderResults[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      UploaderVideosPage.fromUploader(uploader),
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundImage: NetworkImage(uploader.face),
-                    child: uploader.face.isEmpty
-                        ? Icon(Icons.person,
-                            color: theme.colorScheme.onSurfaceVariant)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          uploader.name,
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '粉丝: ${uploader.fans}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        if (uploader.sign.isNotEmpty) ...[
-                          const SizedBox(height: 2),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: NetworkImage(uploader.face),
+                      child: uploader.face.isEmpty
+                          ? Icon(Icons.person,
+                              color: theme.colorScheme.onSurfaceVariant)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            uploader.sign,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            uploader.name,
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '粉丝: ${uploader.fans}',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
+                          if (uploader.sign.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              uploader.sign,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  Icon(Icons.chevron_right,
-                      color: theme.colorScheme.onSurfaceVariant),
-                ],
+                    Icon(Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  SliverList _buildSearchHistorySliverList(ThemeData theme) {
-    return SliverList.builder(
-      itemCount: _searchHistory.length + 1, // +1 for header
+  Widget _buildSearchHistoryList() {
+    final theme = Theme.of(context);
+    return ListView.builder(
+      itemCount: _searchHistory.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return Padding(
@@ -458,6 +492,37 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       },
     );
   }
+}
+
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+  final Color borderColor;
+
+  _TabBarDelegate({required this.tabBar, required this.borderColor});
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: borderColor, width: 0.5),
+        ),
+      ),
+      child: tabBar,
+    );
+  }
+
+  @override
+  double get maxExtent => 40;
+
+  @override
+  double get minExtent => 40;
+
+  @override
+  bool shouldRebuild(_TabBarDelegate oldDelegate) =>
+      tabBar != oldDelegate.tabBar || borderColor != oldDelegate.borderColor;
 }
 
 class _VideoCard extends StatelessWidget {

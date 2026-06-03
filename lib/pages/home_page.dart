@@ -132,6 +132,13 @@ class _HomePageState extends State<HomePage> {
           onTap: (index) {
             setState(() => _currentIndex = index);
           },
+          selectedIconTheme: const IconThemeData(size: 24),
+          unselectedIconTheme: const IconThemeData(size: 24),
+          selectedLabelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: const TextStyle(fontSize: 13),
           items: _destinations
               .map((d) => BottomNavigationBarItem(
                     icon: Icon(d.icon),
