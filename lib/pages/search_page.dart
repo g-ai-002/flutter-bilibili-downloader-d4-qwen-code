@@ -159,42 +159,50 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          focusNode: _focusNode,
-                          style: const TextStyle(fontSize: 13),
-                          decoration: InputDecoration(
-                            hintText: '搜索...',
-                            hintStyle: TextStyle(
-                              fontSize: 13,
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withOpacity(0.6),
-                            ),
-                            prefixIcon:
-                                const Icon(Icons.search, size: 18),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 16),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {});
-                                    },
-                                  )
-                                : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 6),
-                            isDense: true,
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _focusNode,
+                        style: const TextStyle(fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: '搜索...',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withOpacity(0.6),
                           ),
-                          textInputAction: TextInputAction.search,
-                          onChanged: (_) => setState(() {}),
-                          onSubmitted: _search,
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant,
+                          prefixIcon:
+                              const Icon(Icons.search, size: 18),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {});
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 0),
+                          isDense: true,
+                          constraints: const BoxConstraints(maxHeight: 34),
                         ),
+                        textInputAction: TextInputAction.search,
+                        onChanged: (_) => setState(() {}),
+                        onSubmitted: _search,
                       ),
                     ),
                     const SizedBox(width: 12),
