@@ -326,8 +326,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 const SizedBox(height: 4),
                 Text(
                   detail.desc.isEmpty ? '暂无简介' : detail.desc,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],

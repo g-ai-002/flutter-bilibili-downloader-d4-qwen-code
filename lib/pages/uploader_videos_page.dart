@@ -188,10 +188,11 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
     }
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.builder(
+      child: ListView.separated(
         controller: _scrollController,
-        padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.zero,
         itemCount: _videos.length + (_hasMore ? 1 : 0),
+        separatorBuilder: (_, __) => const Divider(height: 0.5, thickness: 0.5),
         itemBuilder: (context, index) {
           if (index >= _videos.length) {
             return const Padding(
@@ -200,83 +201,79 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
             );
           }
           final v = _videos[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => VideoDetailPage(bvid: v.bvid)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        v.pic,
+          return InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => VideoDetailPage(bvid: v.bvid)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      v.pic,
+                      width: 120,
+                      height: 75,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
                         width: 120,
                         height: 75,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          width: 120,
-                          height: 75,
-                          color: theme.colorScheme.surfaceVariant,
-                          child: const Icon(Icons.broken_image),
-                        ),
+                        color: theme.colorScheme.surfaceVariant,
+                        child: const Icon(Icons.broken_image),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            v.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 4),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          v.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.play_circle_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(v.viewCount, style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            )),
+                            const SizedBox(width: 12),
+                            Icon(Icons.access_time, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(v.duration, style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            )),
+                          ],
+                        ),
+                        if (v.pubdate.isNotEmpty) ...[
+                          const SizedBox(height: 2),
                           Row(
                             children: [
-                              Icon(Icons.play_circle_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                              Icon(Icons.calendar_today, size: 12, color: theme.colorScheme.onSurfaceVariant),
                               const SizedBox(width: 4),
-                              Text(v.viewCount, style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              )),
-                              const SizedBox(width: 12),
-                              Icon(Icons.access_time, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                              const SizedBox(width: 4),
-                              Text(v.duration, style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              )),
-                            ],
-                          ),
-                          if (v.pubdate.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Icon(Icons.calendar_today, size: 12, color: theme.colorScheme.onSurfaceVariant),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    v.pubdate,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontSize: 11,
-                                    ),
+                              Flexible(
+                                child: Text(
+                                  v.pubdate,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           );

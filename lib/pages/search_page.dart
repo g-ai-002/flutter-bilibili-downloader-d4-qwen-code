@@ -91,12 +91,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     return PreferredSize(
       preferredSize: const Size.fromHeight(44),
       child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(
-            bottom: BorderSide(color: theme.colorScheme.outline, width: 0.5),
-          ),
-        ),
+        color: theme.colorScheme.surface,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Row(
           children: [
@@ -196,7 +191,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     final theme = Theme.of(context);
     return Scaffold(
       body: NestedScrollView(
-        floatHeaderSlivers: true,
+        floatHeaderSlivers: false,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
@@ -209,8 +204,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
               title: _buildSearchBox(),
             ),
             SliverPersistentHeader(
-              pinned: false,
-              floating: true,
+              pinned: true,
               delegate: _TabBarDelegate(
                 tabBar: TabBar(
                   controller: _tabController,
@@ -250,6 +244,9 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget _buildVideoTab() {
     return Consumer<SearchProvider>(
       builder: (context, provider, _) {
+        if (_searchController.text.trim().isEmpty) {
+          return _buildPreSearchContent();
+        }
         if (provider.isLoading && provider.results.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -270,6 +267,9 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget _buildUploaderTab() {
     return Consumer<SearchProvider>(
       builder: (context, provider, _) {
+        if (_searchController.text.trim().isEmpty) {
+          return _buildPreSearchContent();
+        }
         if (provider.isLoading && provider.uploaderResults.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -338,8 +338,9 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         }
         return false;
       },
-      child: ListView.builder(
+      child: ListView.separated(
         itemCount: provider.results.length + (provider.hasMore ? 1 : 0),
+        separatorBuilder: (_, __) => const Divider(height: 0.5, thickness: 0.5),
         itemBuilder: (context, index) {
           if (index >= provider.results.length) {
             return const Padding(
@@ -372,9 +373,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         }
         return false;
       },
-      child: ListView.builder(
+      child: ListView.separated(
         itemCount: provider.uploaderResults.length +
             (provider.hasMoreUploaders ? 1 : 0),
+        separatorBuilder: (_, __) => const Divider(height: 0.5, thickness: 0.5),
         itemBuilder: (context, index) {
           if (index >= provider.uploaderResults.length) {
             return const Padding(
@@ -383,64 +385,60 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             );
           }
           final uploader = provider.uploaderResults[index];
-          return Card(
-            margin: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      UploaderVideosPage.fromUploader(uploader),
-                ),
+          return InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    UploaderVideosPage.fromUploader(uploader),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundImage: NetworkImage(uploader.face),
-                      child: uploader.face.isEmpty
-                          ? Icon(Icons.person,
-                              color: theme.colorScheme.onSurfaceVariant)
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            uploader.name,
-                            style: theme.textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundImage: NetworkImage(uploader.face),
+                    child: uploader.face.isEmpty
+                        ? Icon(Icons.person,
+                            color: theme.colorScheme.onSurfaceVariant)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          uploader.name,
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '粉丝: ${uploader.fans}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          const SizedBox(height: 4),
+                        ),
+                        if (uploader.sign.isNotEmpty) ...[
+                          const SizedBox(height: 2),
                           Text(
-                            '粉丝: ${uploader.fans}',
+                            uploader.sign,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
-                          if (uploader.sign.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              uploader.sign,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     ),
-                    Icon(Icons.chevron_right,
-                        color: theme.colorScheme.onSurfaceVariant),
-                  ],
-                ),
+                  ),
+                  Icon(Icons.chevron_right,
+                      color: theme.colorScheme.onSurfaceVariant),
+                ],
               ),
             ),
           );
@@ -547,110 +545,106 @@ class _VideoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  video.pic,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                video.pic,
+                width: 120,
+                height: 75,
+                fit: BoxFit.cover,
+                cacheWidth: 240,
+                cacheHeight: 150,
+                errorBuilder: (_, __, ___) => Container(
                   width: 120,
                   height: 75,
-                  fit: BoxFit.cover,
-                  cacheWidth: 240,
-                  cacheHeight: 150,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 120,
-                    height: 75,
-                    color: theme.colorScheme.surfaceVariant,
-                    child: const Icon(Icons.broken_image),
-                  ),
+                  color: theme.colorScheme.surfaceVariant,
+                  child: const Icon(Icons.broken_image),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      video.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 4),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    video.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.person,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          video.uploader,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.play_circle_outline,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(video.viewCount,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )),
+                      const SizedBox(width: 12),
+                      Icon(Icons.access_time,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(video.duration,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )),
+                    ],
+                  ),
+                  if (video.pubdate.isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.person,
-                            size: 14,
+                        Icon(Icons.calendar_today,
+                            size: 12,
                             color: theme.colorScheme.onSurfaceVariant),
                         const SizedBox(width: 4),
-                        Expanded(
+                        Flexible(
                           child: Text(
-                            video.uploader,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            video.pubdate,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 11,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(Icons.play_circle_outline,
-                            size: 14,
-                            color: theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text(video.viewCount,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            )),
-                        const SizedBox(width: 12),
-                        Icon(Icons.access_time,
-                            size: 14,
-                            color: theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text(video.duration,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            )),
-                      ],
-                    ),
-                    if (video.pubdate.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 12,
-                              color: theme.colorScheme.onSurfaceVariant),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              video.pubdate,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

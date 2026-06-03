@@ -210,9 +210,10 @@ class _DownloadPageState extends State<DownloadPage> {
               ),
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
+          return ListView.separated(
+            padding: EdgeInsets.zero,
             itemCount: jobs.length,
+            separatorBuilder: (_, __) => const Divider(height: 0.5, thickness: 0.5),
             itemBuilder: (context, index) {
               final job = jobs[index];
               return _DownloadJobCard(key: ValueKey(job.id), job: job);
@@ -263,12 +264,10 @@ class _DownloadJobCard extends StatelessWidget {
         break;
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -540,8 +539,7 @@ class _DownloadJobCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildMetadataRow(
