@@ -224,8 +224,7 @@ class _SearchPageState extends State<SearchPage> {
                   return _buildSearchHistory();
                 }
                 return _buildEmptyState();
-              },
-            ),
+            },
           ),
     );
   }
