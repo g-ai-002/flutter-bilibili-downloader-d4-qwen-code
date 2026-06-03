@@ -12,7 +12,7 @@ const _lightSurface = Color(0xFFFFFFFF);
 const _lightBackground = Color(0xFFF5F6F8);
 const _lightSurfaceVariant = Color(0xFFF0F1F3);
 const _lightOnSurface = Color(0xFF333333);
-const _lightOnSurfaceVariant = Color(0xFF999999);
+const _lightOnSurfaceVariant = Color(0xFF666666);
 const _lightOutline = Color(0xFFEEEEEE);
 const _lightPrimaryContainer = Color(0xFFFFE0E8);
 
@@ -21,7 +21,7 @@ const _darkSurface = Color(0xFF252525);
 const _darkBackground = Color(0xFF1A1A1A);
 const _darkSurfaceVariant = Color(0xFF333333);
 const _darkOnSurface = Color(0xFFE0E0E0);
-const _darkOnSurfaceVariant = Color(0xFF999999);
+const _darkOnSurfaceVariant = Color(0xFFAAAAAA);
 const _darkOutline = Color(0xFF3A3A3A);
 const _darkPrimaryContainer = Color(0xFF7B1F3D);
 
@@ -77,7 +77,7 @@ ThemeData chinaLightTheme({String? fontFamily}) {
 
     // 列表项
     listTileTheme: const ListTileThemeData(
-      iconColor: Color(0xFF666666),
+      iconColor: Color(0xFF555555),
       textColor: _lightOnSurface,
       contentPadding: EdgeInsets.symmetric(horizontal: 16),
     ),
