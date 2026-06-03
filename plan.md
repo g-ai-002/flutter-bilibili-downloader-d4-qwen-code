@@ -124,7 +124,7 @@
 - **注意**: v0.2.41 中 Windows 重新回到原生 ffmpeg 调用（Process.run），恢复 resolveFfmpeg() 和 CI ffmpeg 捆绑
 
 ### v0.4.0 (MINOR)
-- **状态**: 开发中 🔧
+- **状态**: 已发布 ✅
 - **目标**: UI 国内审美改造 — 去阴影、灰底白卡、0.5px 极细线、标题居中、去水波纹
 - **任务**:
   - [x] 创建 `lib/theme/china_app_theme.dart` — 浅色/深色国内审美全局主题
@@ -136,8 +136,15 @@
   - [x] 输入框 0.5px 细边框 + 小圆角
   - [x] 版本号升至 0.4.0
 
-### v0.2.41 (PATCH)
+### v0.4.1 (PATCH)
 - **状态**: 开发中 🔧
+- **目标**: 主题色修正为 B 站粉 (#FB7299)
+- **任务**:
+  - [x] 主题色从 B 站蓝改为 B 站粉，同步更新浅色/深色 colorScheme 相关色板
+  - [x] 更新版本号到 0.4.1
+
+### v0.2.41 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: Windows/Android 双平台依赖分离管理 — Windows 使用原生 ffmpeg (Process.run)，Android 使用 ffmpeg_kit_extended_flutter
 - **任务**:
   - [x] 创建 pubspec_android.yaml（含 ffmpeg_kit_extended_flutter）和 pubspec_windows.yaml（不含）
