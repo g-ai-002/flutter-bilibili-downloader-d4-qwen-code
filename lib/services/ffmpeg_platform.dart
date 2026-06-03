@@ -84,7 +84,6 @@ Future<VideoMetadata?> probeMediaPlatform(String filePath) async {
   }
 }
 
-/// 从 ffmpeg -i 的 stderr 输出解析元数据
 VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
   if (stderr == null || stderr.isEmpty) return null;
   try {
@@ -94,6 +93,7 @@ VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
     String? videoCodec;
     String? audioCodec;
     int? fileSize;
+    int? durationSeconds;
 
     final lines = stderr.split(RegExp(r'[\r\n]+'));
     for (final line in lines) {
@@ -106,6 +106,8 @@ VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
       } else if (line.contains('Stream #') && line.contains('Audio:')) {
         // 例: Stream #0:1: Audio: aac (mp4a / 0x6134706D), 44100 Hz, stereo
         audioCodec = _extractCodec(line, 'Audio:');
+      } else if (line.contains('Duration:') && durationSeconds == null) {
+        durationSeconds = _extractDuration(line);
       }
     }
 
@@ -116,7 +118,7 @@ VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
       }
     }
 
-    if (width == null && videoCodec == null && audioCodec == null) return null;
+    if (width == null && videoCodec == null && audioCodec == null && durationSeconds == null) return null;
 
     return VideoMetadata(
       width: width,
@@ -125,6 +127,7 @@ VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
       videoCodec: videoCodec,
       audioCodec: audioCodec,
       fileSize: fileSize,
+      durationSeconds: durationSeconds,
     );
   } catch (e) {
     LogService.error('解析 ffmpeg -i 输出失败', e);
@@ -154,6 +157,16 @@ double? _extractFps(String line) {
   final match = RegExp(r'(\d+\.?\d*)\s*fps').firstMatch(line);
   if (match == null) return null;
   return double.tryParse(match.group(1)!);
+}
+
+/// 从 ffmpeg -i 输出的 "Duration: HH:MM:SS.ms" 行提取总秒数
+int? _extractDuration(String line) {
+  final match = RegExp(r'Duration:\s*(\d{1,3}):(\d{2}):(\d{2})\.(\d+)').firstMatch(line);
+  if (match == null) return null;
+  final h = int.tryParse(match.group(1)!) ?? 0;
+  final m = int.tryParse(match.group(2)!) ?? 0;
+  final s = int.tryParse(match.group(3)!) ?? 0;
+  return h * 3600 + m * 60 + s;
 }
 
 Future<String?> mergeAvPlatform({

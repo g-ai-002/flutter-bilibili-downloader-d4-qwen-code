@@ -530,6 +530,9 @@ class _DownloadJobCard extends StatelessWidget {
     DownloadJob job,
   ) {
     final parts = <String>[];
+    if (job.durationSeconds != null && job.durationSeconds! > 0) {
+      parts.add(job.videoDurationText);
+    }
     if (job.fileSize != null && job.fileSize! > 0) {
       parts.add(_formatFileSize(job.fileSize!));
     }

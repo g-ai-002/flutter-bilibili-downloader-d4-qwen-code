@@ -45,6 +45,7 @@ class DownloadService {
     required String formatId,
     required String quality,
     String? pic,
+    int? durationSeconds,
   }) {
     final job = DownloadJob(
       id: '${_nextId++}_${DateTime.now().millisecondsSinceEpoch}',
@@ -55,6 +56,7 @@ class DownloadService {
       formatId: formatId,
       quality: quality,
       pic: pic,
+      durationSeconds: durationSeconds,
     );
     _jobs.insert(0, job);
     _jobController.add(job);
@@ -487,6 +489,9 @@ class DownloadService {
       job.fps = metadata.fps;
       job.videoCodec = metadata.videoCodec;
       job.audioCodec = metadata.audioCodec;
+      if (metadata.durationSeconds != null && (job.durationSeconds == null || job.durationSeconds == 0)) {
+        job.durationSeconds = metadata.durationSeconds;
+      }
       // 元数据就绪后推一次更新，触发 UI 刷新和持久化
       _jobController.add(job);
     } catch (e) {

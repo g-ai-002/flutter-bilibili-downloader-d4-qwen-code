@@ -53,6 +53,7 @@ class DownloadJob {
   double? fps;
   String? videoCodec;
   String? audioCodec;
+  int? durationSeconds;
 
   DownloadJob({
     required this.id,
@@ -83,6 +84,7 @@ class DownloadJob {
     this.fps,
     this.videoCodec,
     this.audioCodec,
+    this.durationSeconds,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -114,6 +116,7 @@ class DownloadJob {
         'fps': fps,
         'videoCodec': videoCodec,
         'audioCodec': audioCodec,
+        'durationSeconds': durationSeconds,
       };
 
   factory DownloadJob.fromJson(Map<String, dynamic> json) {
@@ -157,6 +160,7 @@ class DownloadJob {
       fps: (json['fps'] as num?)?.toDouble(),
       videoCodec: json['videoCodec'] as String?,
       audioCodec: json['audioCodec'] as String?,
+      durationSeconds: json['durationSeconds'] as int?,
     );
   }
 
@@ -165,6 +169,19 @@ class DownloadJob {
     final end = finishedAt ?? DateTime.now();
     final diff = end.difference(startedAt!);
     return _formatDuration(diff);
+  }
+
+  /// 视频本身的时长（如 03:45）
+  String get videoDurationText {
+    if (durationSeconds == null || durationSeconds! <= 0) return '';
+    final m = durationSeconds! ~/ 60;
+    final s = durationSeconds! % 60;
+    if (m >= 60) {
+      final h = m ~/ 60;
+      final rm = m % 60;
+      return '${h.toString().padLeft(2, '0')}:${rm.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   /// 下载阶段用时（排除合并时间）

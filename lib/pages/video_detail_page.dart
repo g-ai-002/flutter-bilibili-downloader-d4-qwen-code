@@ -390,6 +390,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       formatId: formatId,
       quality: quality,
       pic: detail.pic,
+      durationSeconds: detail.duration > 0 ? detail.duration : null,
     );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('已添加下载任务: ${ep.name}')),

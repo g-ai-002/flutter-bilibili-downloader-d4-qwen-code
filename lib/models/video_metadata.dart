@@ -6,6 +6,7 @@ class VideoMetadata {
   final String? videoCodec;
   final String? audioCodec;
   final int? fileSize;
+  final int? durationSeconds;
 
   const VideoMetadata({
     this.width,
@@ -14,5 +15,6 @@ class VideoMetadata {
     this.videoCodec,
     this.audioCodec,
     this.fileSize,
+    this.durationSeconds,
   });
 }

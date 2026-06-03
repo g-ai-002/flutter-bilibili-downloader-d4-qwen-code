@@ -42,11 +42,17 @@ VideoMetadata? _parseFfprobeJson(String jsonStr, String filePath) {
     String? videoCodec;
     String? audioCodec;
     int? fileSize;
+    int? durationSeconds;
 
     if (format != null) {
       final sizeStr = format['size'] as String?;
       if (sizeStr != null) {
         fileSize = int.tryParse(sizeStr);
+      }
+      final durStr = format['duration'] as String?;
+      if (durStr != null) {
+        final d = double.tryParse(durStr);
+        if (d != null) durationSeconds = d.round();
       }
     }
     if (fileSize == null) {
@@ -75,7 +81,7 @@ VideoMetadata? _parseFfprobeJson(String jsonStr, String filePath) {
       }
     }
 
-    if (width == null && videoCodec == null && audioCodec == null) return null;
+    if (width == null && videoCodec == null && audioCodec == null && durationSeconds == null) return null;
 
     return VideoMetadata(
       width: width,
@@ -84,6 +90,7 @@ VideoMetadata? _parseFfprobeJson(String jsonStr, String filePath) {
       videoCodec: videoCodec,
       audioCodec: audioCodec,
       fileSize: fileSize,
+      durationSeconds: durationSeconds,
     );
   } catch (e) {
     LogService.error('解析 ffprobe JSON 失败', e);

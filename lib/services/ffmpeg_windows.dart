@@ -83,7 +83,7 @@ Future<VideoMetadata?> probeMediaPlatform(String filePath) async {
 VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
   if (stderr == null || stderr.isEmpty) return null;
   try {
-    int? width, height, fileSize;
+    int? width, height, fileSize, durationSeconds;
     double? fps;
     String? videoCodec, audioCodec;
 
@@ -96,6 +96,8 @@ VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
         fps = _extractFps(line);
       } else if (line.contains('Stream #') && line.contains('Audio:')) {
         audioCodec = _extractCodec(line, 'Audio:');
+      } else if (line.contains('Duration:') && durationSeconds == null) {
+        durationSeconds = _extractDuration(line);
       }
     }
 
@@ -104,11 +106,12 @@ VideoMetadata? _parseFfmpegInfo(String? stderr, String filePath) {
       if (file.existsSync()) fileSize = file.lengthSync();
     }
 
-    if (width == null && videoCodec == null && audioCodec == null) return null;
+    if (width == null && videoCodec == null && audioCodec == null && durationSeconds == null) return null;
 
     return VideoMetadata(
       width: width, height: height, fps: fps,
       videoCodec: videoCodec, audioCodec: audioCodec, fileSize: fileSize,
+      durationSeconds: durationSeconds,
     );
   } catch (e) {
     LogService.error('解析 ffmpeg -i 输出失败', e);
@@ -135,6 +138,16 @@ double? _extractFps(String line) {
   final match = RegExp(r'(\d+\.?\d*)\s*fps').firstMatch(line);
   if (match == null) return null;
   return double.tryParse(match.group(1)!);
+}
+
+/// 从 ffmpeg -i 输出的 "Duration: HH:MM:SS.ms" 行提取总秒数
+int? _extractDuration(String line) {
+  final match = RegExp(r'Duration:\s*(\d{1,3}):(\d{2}):(\d{2})\.(\d+)').firstMatch(line);
+  if (match == null) return null;
+  final h = int.tryParse(match.group(1)!) ?? 0;
+  final m = int.tryParse(match.group(2)!) ?? 0;
+  final s = int.tryParse(match.group(3)!) ?? 0;
+  return h * 3600 + m * 60 + s;
 }
 
 Future<String?> mergeAvPlatform({
