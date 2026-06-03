@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 ///
 /// 核心口诀：去阴影、灰底白卡、0.5像素线、标题居中、干掉水波纹
 
-// ── 品牌色（B站蓝） ──
-const _primaryColor = Color(0xFF00A1D6);
+// ── 品牌色（B站粉） ──
+const _primaryColor = Color(0xFFFB7299);
 
 // ── 浅色主题色板 ──
 const _lightSurface = Color(0xFFFFFFFF);
@@ -14,7 +14,7 @@ const _lightSurfaceVariant = Color(0xFFF0F1F3);
 const _lightOnSurface = Color(0xFF333333);
 const _lightOnSurfaceVariant = Color(0xFF999999);
 const _lightOutline = Color(0xFFEEEEEE);
-const _lightPrimaryContainer = Color(0xFFCCEEFA);
+const _lightPrimaryContainer = Color(0xFFFFE0E8);
 
 // ── 深色主题色板 ──
 const _darkSurface = Color(0xFF252525);
@@ -23,15 +23,15 @@ const _darkSurfaceVariant = Color(0xFF333333);
 const _darkOnSurface = Color(0xFFE0E0E0);
 const _darkOnSurfaceVariant = Color(0xFF999999);
 const _darkOutline = Color(0xFF3A3A3A);
-const _darkPrimaryContainer = Color(0xFF004D73);
+const _darkPrimaryContainer = Color(0xFF7B1F3D);
 
 /// 浅色国内审美主题
 ThemeData chinaLightTheme({String? fontFamily}) {
   final colorScheme = const ColorScheme.light(
     primary: _primaryColor,
     onPrimary: Colors.white,
-    primaryContainer: _lightPrimaryContainer,
-    onPrimaryContainer: Color(0xFF005B7F),
+    primaryContainer: const Color(0xFFFFE0E8),
+    onPrimaryContainer: const Color(0xFF7B1F3D),
     secondary: Color(0xFF5C6BC0),
     onSecondary: Colors.white,
     surface: _lightSurface,
@@ -145,10 +145,10 @@ ThemeData chinaLightTheme({String? fontFamily}) {
 /// 深色国内审美主题
 ThemeData chinaDarkTheme({String? fontFamily}) {
   final colorScheme = const ColorScheme.dark(
-    primary: Color(0xFF29B6F6),
-    onPrimary: Color(0xFF1A1A1A),
+    primary: const Color(0xFFFF8AAC),
+    onPrimary: const Color(0xFF1A1A1A),
     primaryContainer: _darkPrimaryContainer,
-    onPrimaryContainer: Color(0xFFB3E5FC),
+    onPrimaryContainer: const Color(0xFFFFCDD9),
     secondary: Color(0xFF7986CB),
     onSecondary: Color(0xFF1A1A1A),
     surface: _darkSurface,
@@ -164,7 +164,7 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
 
   return ThemeData(
     useMaterial3: true,
-    primaryColor: const Color(0xFF29B6F6),
+    primaryColor: const Color(0xFFFF8AAC),
     scaffoldBackgroundColor: _darkBackground,
     colorScheme: colorScheme,
 
@@ -205,7 +205,7 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 0,
-        backgroundColor: const Color(0xFF29B6F6),
+        backgroundColor: const Color(0xFFFF8AAC),
         foregroundColor: const Color(0xFF1A1A1A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
@@ -236,7 +236,7 @@ ThemeData chinaDarkTheme({String? fontFamily}) {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF29B6F6), width: 1),
+        borderSide: const BorderSide(color: Color(0xFFFF8AAC), width: 1),
       ),
     ),
 
