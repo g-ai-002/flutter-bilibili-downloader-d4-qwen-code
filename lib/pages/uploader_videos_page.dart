@@ -121,6 +121,7 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
               radius: 16,
@@ -130,18 +131,12 @@ class _UploaderVideosPageState extends State<UploaderVideosPage> {
               child: widget.face.isEmpty ? const Icon(Icons.person, size: 16) : null,
             ),
             const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.name,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+            Flexible(
+              child: Text(
+                widget.name,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

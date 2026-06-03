@@ -9,7 +9,7 @@ const _primaryColor = Color(0xFF333333);
 
 // ── 浅色主题色板 ──
 const _lightSurface = Color(0xFFFFFFFF);
-const _lightBackground = Color(0xFFF5F6F8);
+const _lightBackground = Color(0xFFF8F9FA);
 const _lightSurfaceVariant = Color(0xFFF0F1F3);
 const _lightOnSurface = Color(0xFF333333);
 const _lightOnSurfaceVariant = Color(0xFF666666);

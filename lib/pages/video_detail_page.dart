@@ -128,7 +128,21 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('视频详情')),
+      appBar: AppBar(
+        title: Consumer<SearchProvider>(
+          builder: (context, provider, _) {
+            final detail = provider.detail;
+            if (detail != null && detail.bvid == widget.bvid) {
+              return Text(
+                '${detail.title}-${detail.uploader}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              );
+            }
+            return const Text('视频详情');
+          },
+        ),
+      ),
       body: Consumer<SearchProvider>(
         builder: (context, provider, _) {
           final detail = provider.detail;
@@ -362,6 +376,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 },
               ),
             ),
+          const SizedBox(height: 32),
       ],
     );
   }
