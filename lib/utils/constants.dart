@@ -2,7 +2,7 @@
 
 class AppConstants {
   static const String appName = 'B站视频下载';
-  static const String version = '0.4.19';
+  static const String version = '0.4.20';
 
   // Bilibili API
   static const String bilibiliBaseUrl = 'https://api.bilibili.com';

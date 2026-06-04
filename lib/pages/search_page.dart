@@ -194,6 +194,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           SizedBox(height: MediaQuery.of(context).padding.top),
           _buildSearchBox(),
           Container(
+            height: 32,
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(
@@ -203,14 +204,14 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             child: TabBar(
               controller: _tabController,
               tabs: const [
-                Tab(text: '视频'),
-                Tab(text: 'UP主'),
+                Tab(text: '视频', height: 32),
+                Tab(text: 'UP主', height: 32),
               ],
               labelStyle: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
-              unselectedLabelStyle: const TextStyle(fontSize: 13),
+              unselectedLabelStyle: const TextStyle(fontSize: 12),
               indicatorSize: TabBarIndicatorSize.label,
               indicatorColor: theme.colorScheme.outline,
               indicatorWeight: 2,
@@ -331,6 +332,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         return false;
       },
       child: ListView.separated(
+        padding: EdgeInsets.zero,
         itemCount: provider.results.length + (provider.hasMore ? 1 : 0),
         separatorBuilder: (_, __) => const Divider(height: 0.5, thickness: 0.5),
         itemBuilder: (context, index) {
@@ -366,6 +368,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         return false;
       },
       child: ListView.separated(
+        padding: EdgeInsets.zero,
         itemCount: provider.uploaderResults.length +
             (provider.hasMoreUploaders ? 1 : 0),
         separatorBuilder: (_, __) => const Divider(height: 0.5, thickness: 0.5),
@@ -442,11 +445,12 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget _buildSearchHistoryList() {
     final theme = Theme.of(context);
     return ListView.builder(
+      padding: EdgeInsets.zero,
       itemCount: _searchHistory.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
