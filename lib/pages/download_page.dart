@@ -314,6 +314,17 @@ class _DownloadJobCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
+                      if (job.episodeName != job.videoName) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          job.episodeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                       if (job.uploader != null && job.uploader!.isNotEmpty ||
                           job.pubdate != null && job.pubdate!.isNotEmpty) ...[
                         const SizedBox(height: 4),
@@ -356,17 +367,6 @@ class _DownloadJobCard extends StatelessWidget {
                               ),
                             ],
                           ],
-                        ),
-                      ],
-                      if (job.episodeName != job.videoName) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          job.episodeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
                         ),
                       ],
                     ],
