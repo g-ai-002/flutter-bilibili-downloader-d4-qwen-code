@@ -47,6 +47,8 @@ class DownloadJob {
   int retryCount;
   // 视频元数据
   String? pic; // 封面 URL
+  String? uploader; // UP主名称
+  String? pubdate; // 发布时间
   int? fileSize; // 文件大小（字节）
   int? videoWidth;
   int? videoHeight;
@@ -78,6 +80,8 @@ class DownloadJob {
     this.audioPath,
     this.retryCount = 0,
     this.pic,
+    this.uploader,
+    this.pubdate,
     this.fileSize,
     this.videoWidth,
     this.videoHeight,
@@ -110,6 +114,8 @@ class DownloadJob {
         'audioPath': audioPath,
         'retryCount': retryCount,
         'pic': pic,
+        'uploader': uploader,
+        'pubdate': pubdate,
         'fileSize': fileSize,
         'videoWidth': videoWidth,
         'videoHeight': videoHeight,
@@ -154,6 +160,8 @@ class DownloadJob {
       audioPath: json['audioPath'] as String?,
       retryCount: json['retryCount'] as int? ?? 0,
       pic: json['pic'] as String?,
+      uploader: json['uploader'] as String?,
+      pubdate: json['pubdate'] as String?,
       fileSize: json['fileSize'] as int?,
       videoWidth: json['videoWidth'] as int?,
       videoHeight: json['videoHeight'] as int?,

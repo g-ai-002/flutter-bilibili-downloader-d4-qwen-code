@@ -88,6 +88,8 @@ class DownloadProvider extends ChangeNotifier {
     required String formatId,
     required String quality,
     String? pic,
+    String? uploader,
+    String? pubdate,
     int? durationSeconds,
   }) {
     _service?.addJob(
@@ -98,6 +100,8 @@ class DownloadProvider extends ChangeNotifier {
       formatId: formatId,
       quality: quality,
       pic: pic,
+      uploader: uploader,
+      pubdate: pubdate,
       durationSeconds: durationSeconds,
     );
   }

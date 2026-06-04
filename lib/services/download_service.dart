@@ -45,6 +45,8 @@ class DownloadService {
     required String formatId,
     required String quality,
     String? pic,
+    String? uploader,
+    String? pubdate,
     int? durationSeconds,
   }) {
     final job = DownloadJob(
@@ -56,6 +58,8 @@ class DownloadService {
       formatId: formatId,
       quality: quality,
       pic: pic,
+      uploader: uploader,
+      pubdate: pubdate,
       durationSeconds: durationSeconds,
     );
     _jobs.insert(0, job);

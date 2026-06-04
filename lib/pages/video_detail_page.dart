@@ -389,6 +389,8 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       formatId: formatId,
       quality: quality,
       pic: detail.pic,
+      uploader: detail.uploader,
+      pubdate: _formatPubdateText(detail.pubdate),
       durationSeconds: detail.duration > 0 ? detail.duration : null,
     );
     ScaffoldMessenger.of(context).showSnackBar(

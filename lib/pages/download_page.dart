@@ -270,9 +270,20 @@ class _DownloadJobCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 状态图标 + 状态文本
             Row(
               children: [
-                // 封面缩略图
+                Icon(statusIcon, color: statusColor, size: 16),
+                const SizedBox(width: 4),
+                Text(job.status.label,
+                    style: TextStyle(color: statusColor, fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // 封面 + 视频信息
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 if (job.pic != null && job.pic!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
@@ -292,8 +303,6 @@ class _DownloadJobCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                Icon(statusIcon, color: statusColor, size: 20),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +314,52 @@ class _DownloadJobCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
-                      if (job.episodeName != job.videoName)
+                      if (job.uploader != null && job.uploader!.isNotEmpty ||
+                          job.pubdate != null && job.pubdate!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            if (job.uploader != null && job.uploader!.isNotEmpty) ...[
+                              Icon(Icons.person,
+                                  size: 12,
+                                  color: theme.colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 2),
+                              Flexible(
+                                child: Text(
+                                  job.uploader!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (job.pubdate != null && job.pubdate!.isNotEmpty) ...[
+                              if (job.uploader != null && job.uploader!.isNotEmpty)
+                                const SizedBox(width: 8),
+                              Icon(Icons.calendar_today,
+                                  size: 11,
+                                  color: theme.colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 2),
+                              Flexible(
+                                child: Text(
+                                  job.pubdate!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                      if (job.episodeName != job.videoName) ...[
+                        const SizedBox(height: 2),
                         Text(
                           job.episodeName,
                           maxLines: 1,
@@ -314,11 +368,10 @@ class _DownloadJobCard extends StatelessWidget {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),
-                Text(job.status.label,
-                    style: TextStyle(color: statusColor, fontSize: 12)),
               ],
             ),
             if (isActive || isQueued) ...[
@@ -550,16 +603,16 @@ class _DownloadJobCard extends StatelessWidget {
   ) {
     final parts = <String>[];
     if (job.durationSeconds != null && job.durationSeconds! > 0) {
-      parts.add(job.videoDurationText);
+      parts.add('时长: ${job.videoDurationText}');
     }
     if (job.fileSize != null && job.fileSize! > 0) {
-      parts.add(_formatFileSize(job.fileSize!));
+      parts.add('大小: ${_formatFileSize(job.fileSize!)}');
     }
     if (job.videoWidth != null && job.videoHeight != null) {
-      parts.add('${job.videoWidth}x${job.videoHeight}');
+      parts.add('分辨率: ${job.videoWidth}x${job.videoHeight}');
     }
     if (job.fps != null) {
-      parts.add('${job.fps!.toStringAsFixed(1)} fps');
+      parts.add('帧率: ${job.fps!.toStringAsFixed(1)} fps');
     }
     if (job.videoCodec != null && job.videoCodec!.isNotEmpty) {
       parts.add('视频: ${job.videoCodec}');
