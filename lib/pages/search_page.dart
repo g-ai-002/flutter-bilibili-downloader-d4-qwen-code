@@ -86,102 +86,100 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  PreferredSizeWidget _buildSearchBox() {
+  Widget _buildSearchBox() {
     final theme = Theme.of(context);
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(44),
-      child: Container(
-        color: theme.colorScheme.surface,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: Center(
-                child: Consumer<SettingsProvider>(
-                  builder: (context, settings, _) {
-                    final user = settings.userInfo;
-                    return user != null && user.face.isNotEmpty
-                        ? CircleAvatar(
-                            radius: 16,
-                            backgroundImage: NetworkImage(user.face),
-                          )
-                        : CircleAvatar(
-                            radius: 16,
-                            backgroundColor:
-                                theme.colorScheme.surfaceVariant,
-                            child: Icon(Icons.person,
-                                size: 18,
-                                color: theme
-                                    .colorScheme.onSurfaceVariant),
-                          );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                focusNode: _focusNode,
-                style: const TextStyle(fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: '搜索...',
-                  hintStyle: TextStyle(
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant
-                        .withOpacity(0.6),
-                  ),
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceVariant,
-                  prefixIcon:
-                      const Icon(Icons.search, size: 18),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 16),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
+    return Container(
+      height: 44,
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: Consumer<SettingsProvider>(
+                builder: (context, settings, _) {
+                  final user = settings.userInfo;
+                  return user != null && user.face.isNotEmpty
+                      ? CircleAvatar(
+                          radius: 16,
+                          backgroundImage: NetworkImage(user.face),
                         )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 0),
-                  isDense: true,
-                  constraints: const BoxConstraints(maxHeight: 34),
+                      : CircleAvatar(
+                          radius: 16,
+                          backgroundColor:
+                              theme.colorScheme.surfaceVariant,
+                          child: Icon(Icons.person,
+                              size: 18,
+                              color: theme
+                                  .colorScheme.onSurfaceVariant),
+                        );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              focusNode: _focusNode,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: '搜索...',
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withOpacity(0.6),
                 ),
-                textInputAction: TextInputAction.search,
-                onChanged: (_) => setState(() {}),
-                onSubmitted: _search,
+                filled: true,
+                fillColor: theme.colorScheme.surfaceVariant,
+                prefixIcon:
+                    const Icon(Icons.search, size: 18),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 16),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 0),
+                isDense: true,
+                constraints: const BoxConstraints(maxHeight: 34),
               ),
+              textInputAction: TextInputAction.search,
+              onChanged: (_) => setState(() {}),
+              onSubmitted: _search,
             ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: const Icon(Icons.qr_code),
-              iconSize: 24,
-              tooltip: '扫码登录',
-              visualDensity: VisualDensity.compact,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const LoginPage()),
-              ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            iconSize: 24,
+            tooltip: '扫码登录',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const LoginPage()),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -191,55 +189,46 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: NestedScrollView(
-        physics: const ClampingScrollPhysics(),
-        floatHeaderSlivers: false,
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              pinned: true,
-              toolbarHeight: 44,
-              titleSpacing: 0,
-              backgroundColor: theme.colorScheme.surface,
-              surfaceTintColor: Colors.transparent,
-              automaticallyImplyLeading: false,
-              title: _buildSearchBox(),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                tabBar: TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: '视频'),
-                    Tab(text: 'UP主'),
-                  ],
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(fontSize: 13),
-                  indicatorSize: TabBarIndicatorSize.label,
-                  indicatorColor: theme.colorScheme.outline,
-                  indicatorWeight: 2,
-                  dividerColor: Colors.transparent,
-                  labelColor: theme.colorScheme.onSurface,
-                  unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                ),
-                borderColor: theme.colorScheme.outline,
-                tabBarHeight: 36,
+      body: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
+          _buildSearchBox(),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              border: Border(
+                bottom: BorderSide(color: theme.colorScheme.outline, width: 0.5),
               ),
             ),
-          ];
-        },
-        body: TabBarView(
-          physics: const NeverScrollableScrollPhysics(),
-          controller: _tabController,
-          children: [
-            _buildVideoTab(),
-            _buildUploaderTab(),
-          ],
-        ),
+            child: TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(text: '视频'),
+                Tab(text: 'UP主'),
+              ],
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: const TextStyle(fontSize: 13),
+              indicatorSize: TabBarIndicatorSize.label,
+              indicatorColor: theme.colorScheme.outline,
+              indicatorWeight: 2,
+              dividerColor: Colors.transparent,
+              labelColor: theme.colorScheme.onSurface,
+              unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildVideoTab(),
+                _buildUploaderTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -495,48 +484,6 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       },
     );
   }
-}
-
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
-  final Color borderColor;
-  final double tabBarHeight;
-
-  _TabBarDelegate({
-    required this.tabBar,
-    required this.borderColor,
-    this.tabBarHeight = 36,
-  });
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(color: borderColor, width: 0.5),
-        ),
-      ),
-      alignment: Alignment.topCenter,
-      child: SizedBox(
-        height: tabBarHeight,
-        child: tabBar,
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => tabBarHeight;
-
-  @override
-  double get minExtent => tabBarHeight;
-
-  @override
-  bool shouldRebuild(_TabBarDelegate oldDelegate) =>
-      tabBar != oldDelegate.tabBar ||
-      borderColor != oldDelegate.borderColor ||
-      tabBarHeight != oldDelegate.tabBarHeight;
 }
 
 class _VideoCard extends StatelessWidget {
