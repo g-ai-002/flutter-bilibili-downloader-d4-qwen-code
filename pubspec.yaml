@@ -1,7 +1,7 @@
 name: flutter_bilibili_downloader_d4_qwen_code
 description: Bilibili 视频下载器 - 支持搜索、扫码登录、高清下载
 publish_to: 'none'
-version: 0.4.23
+version: 0.4.24
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
