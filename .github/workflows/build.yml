@@ -83,7 +83,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Android APK
-        run: flutter build apk --release -v --target-platform android-arm64
+        run: flutter build apk --release --target-platform android-arm64
 
       - name: Rename Android APK
         run: |
@@ -146,7 +146,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows
-        run: flutter build windows --release -v
+        run: flutter build windows --release
 
       - name: List build output
         shell: pwsh
