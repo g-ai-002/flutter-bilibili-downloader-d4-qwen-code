@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'providers/search_provider.dart';
 import 'providers/download_provider.dart';
@@ -16,6 +17,23 @@ import 'theme/china_app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Windows 平台：窗口启动时居中显示
+  if (Platform.isWindows) {
+    await windowManager.ensureInitialized();
+    const windowOptions = WindowOptions(
+      size: Size(1200, 800),
+      center: true,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      title: 'B站视频下载',
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
+
   // 提前完成 StorageService 初始化，避免后续多个 Provider 并发
   // 触发 SharedPreferences 异步加载竞态，导致 LateInitializationError。
   await StorageService.instance;
