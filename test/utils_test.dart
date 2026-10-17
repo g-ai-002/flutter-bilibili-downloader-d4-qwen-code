@@ -72,8 +72,8 @@ void main() {
 
       final result = WbiSign.sign(params, imgUrl, subUrl);
 
-      expect(result, containsKey('wts'));
-      expect(result, containsKey('w_rid'));
+      expect(result.containsKey('wts'), isTrue);
+      expect(result.containsKey('w_rid'), isTrue);
       expect(result['w_rid']!.length, 32); // MD5 hex
     });
 
@@ -100,7 +100,7 @@ void main() {
 
       final result = WbiSign.sign(params, imgUrl, subUrl);
 
-      expect(result, containsKey('w_rid'));
+      expect(result.containsKey('w_rid'), isTrue);
       // Special characters should be sanitized
       expect(result['keyword'], 'testvalue');
     });
