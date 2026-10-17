@@ -48,7 +48,7 @@
 | Path Provider (`path_provider`)                             | `2.1.5`   | `2.1.6`              | `2.1.6`              | `2.1.6`              | `pubspec.yaml` / `pubspec_windows.yaml` | 平台目录定位                  | dependencies |
 | Intl (`intl`)                                               | `0.20.3`  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 国际化与日期格式化            | dependencies |
 | Crypto (`crypto`)                                           | `3.0.7`   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 哈希与加密算法                | dependencies |
-| Flutter Local Notifications (`flutter_local_notifications`) | `21.0.0`  | `22.3.2`             | `21.0.0` (已是最新)  | `21.0.0` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 本地通知                      | dependencies |
+| Flutter Local Notifications (`flutter_local_notifications`) | `22.3.2`  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 本地通知                      | dependencies |
 | URL Launcher (`url_launcher`)                               | `6.3.2`   | `6.3.3`              | `6.3.3`              | `6.3.3`              | `pubspec.yaml` / `pubspec_windows.yaml` | 外部链接与应用唤起            | dependencies |
 | FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.5.7`   | `0.6.2`              | `0.6.2`              | `0.5.13`             | `pubspec.yaml`                          | 音视频处理（FFmpeg Kit 扩展） | dependencies |
 | Window Manager (`window_manager`)                           | `0.5.2`   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 桌面窗口管理（Windows）       | dependencies |
