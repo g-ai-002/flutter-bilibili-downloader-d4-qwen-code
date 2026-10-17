@@ -55,8 +55,8 @@ flutter build windows --release
 Windows ZIP，并在对应平台自动创建 Release：
 
 ```bash
-git tag v0.4.26
-git push origin v0.4.26
+git tag v0.4.27
+git push origin v0.4.27
 ```
 
 构建产物的版本号取自 `pubspec.yaml` 的 `version` 字段，标签版本号优先；应用内展示的版本号
@@ -64,7 +64,16 @@ git push origin v0.4.26
 
 ## 版本历史
 
-### v0.4.26 (当前版本)
+### v0.4.27 (当前版本)
+- 新增 Gitea Actions 构建发布流水线，与 GitHub 流水线同构，推送标签自动创建对应平台 Release
+- 新增阿里云 Maven 镜像 init 脚本，供 Gitea 自建 runner 使用
+- 新增 `versions.md` 开源软件版本清单与生成脚本 `.build/query_all_versions.py`
+- 依赖升级：dio 5.11.1、shared_preferences 2.5.6、path_provider 2.1.6、url_launcher 6.3.3
+- 依赖升级：ffmpeg_kit_extended_flutter 0.6.2、flutter_local_notifications 22.3.2、intl 0.20.3、window_manager 0.5.2
+- ffmpeg-kit 补充 Linux 基础包下载地址（本地 Linux 桌面构建用）
+- 修正测试文件包名导入，WBI 签名测试改用 isTrue 断言
+
+### v0.4.26
 - Flutter 升级至 3.47.7，Dart SDK 下限对齐 3.13.5
 - Android 构建链升级：compileSdk/targetSdk 37、NDK 30.0.16248370
 - 阿里云 Maven 镜像补全 google/gradle-plugin 仓库，移除已废弃的 Jetifier

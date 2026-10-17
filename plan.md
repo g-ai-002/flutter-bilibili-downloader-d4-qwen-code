@@ -20,8 +20,21 @@
 
 ## 版本历史
 
-### v0.4.26 (PATCH) — 当前开发版本
-- **状态**: 开发完成 ✅
+### v0.4.27 (PATCH) — 当前开发版本
+- **状态**: 开发中 🔧
+- **目标**: 发布流程与文档完善 + 依赖升级到各自最新补丁版
+- **任务**:
+  - [x] 新增 Gitea Actions 构建发布流水线（.gitea/workflows/build.yml），与 GitHub 流水线同构
+  - [x] 新增阿里云 Maven 镜像 init 脚本（android/gradle/init-aliyun-mirror.gradle），供自建 runner 使用
+  - [x] 新增开源软件版本清单 versions.md 与生成脚本 .build/query_all_versions.py
+  - [x] 依赖升级：dio 5.11.1 / shared_preferences 2.5.6 / path_provider 2.1.6 / url_launcher 6.3.3
+  - [x] 依赖升级：ffmpeg_kit_extended_flutter 0.6.2 / flutter_local_notifications 22.3.2 / intl 0.20.3 / window_manager 0.5.2
+  - [x] ffmpeg-kit 补充 Linux 基础包下载地址（本地 Linux 桌面构建用）
+  - [x] 修正测试文件包名导入，WBI 签名测试改用 isTrue 断言
+  - [x] 版本号升至 0.4.27
+
+### v0.4.26 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: 构建链、组件版本与配置对齐已验证的 flutter-snake 基线
 - **任务**:
   - [x] Flutter 升级至 3.47.7，Dart SDK 下限对齐 3.13.5（pubspec.yaml / pubspec_windows.yaml）
