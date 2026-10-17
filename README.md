@@ -46,6 +46,9 @@ flutter build apk --release
 flutter build windows --release
 ```
 
+各平台产物由 GitHub Actions 与 Gitea Actions 流水线构建；
+`.build/query_all_versions.py` 生成 `versions.md` 开源软件版本清单。
+
 ### 发布
 
 推送 `v*` 标签会触发 GitHub Actions 与 Gitea Actions 双流水线，分别构建 Android APK 与
