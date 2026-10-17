@@ -25,7 +25,7 @@
 - **目标**: 构建链、组件版本与配置对齐已验证的 flutter-snake 基线
 - **任务**:
   - [x] Flutter 升级至 3.47.7，Dart SDK 下限对齐 3.13.5（pubspec.yaml / pubspec_windows.yaml）
-  - [x] Android 构建链升级：compileSdk 37 / targetSdk 37、NDK 30.0.16248370（minSdk 保持 34，遵循 prompt.md 平台要求）
+  - [x] Android 构建链升级：compileSdk 37 / targetSdk 37 / minSdk 35、NDK 30.0.16248370
   - [x] 阿里云 Maven 镜像补全 google / gradle-plugin 仓库，移除已废弃的 Jetifier
   - [x] analysis_options 对齐 flutter-snake 的 lint 规则集
   - [x] GitHub Actions 新增 flutter analyze / flutter test 任务，构建任务等待测试通过

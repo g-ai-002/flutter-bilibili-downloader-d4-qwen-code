@@ -21,7 +21,7 @@ class FileSystemService {
 
   /// 获取下载根目录
   /// - Android: /storage/emulated/0/Android/data/<pkg>/files/Movies/Bilibili
-  ///   使用应用专属外部存储（minSdk 34 无需任何权限），可通过系统文件管理器访问
+  ///   使用应用专属外部存储（minSdk 35 无需任何权限），可通过系统文件管理器访问
   /// - Windows / 其他: <用户文档>/BilibiliDownloader
   Future<Directory> getDownloadRoot() async {
     if (_downloadRoot != null) return _downloadRoot!;

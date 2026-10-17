@@ -22,7 +22,7 @@
 - **状态管理**: Provider
 - **网络请求**: Dio
 - **本地存储**: SharedPreferences
-- **目标平台**: Android (minSdk 34, targetSdk 37), Windows 10+
+- **目标平台**: Android (minSdk 35, targetSdk 37), Windows 10+
 
 ## 快速开始
 
