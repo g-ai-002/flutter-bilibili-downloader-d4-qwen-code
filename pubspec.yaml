@@ -32,3 +32,4 @@ flutter:
 
 ffmpeg_kit_extended_config:
   type: "base"
+  linux: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.10.3-linux/bundle-base-linux-x86_64-shared-lgpl.zip"
