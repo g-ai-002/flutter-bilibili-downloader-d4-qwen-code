@@ -30,6 +30,8 @@
   - [x] analysis_options 对齐 flutter-snake 的 lint 规则集
   - [x] GitHub Actions 新增 flutter analyze / flutter test 任务，构建任务等待测试通过
   - [x] CI 产物版本号改为从 pubspec.yaml 读取，新增构建并发控制
+  - [x] 新增 Gitea Actions 构建与发布工作流（.gitea/workflows/build.yml），与 GitHub 流水线同构
+  - [x] 新增阿里云 Maven 镜像 init 脚本，供 Gitea 自建 runner 使用
   - [x] 版本号升至 0.4.26
 
 ### v0.4.23 (PATCH)

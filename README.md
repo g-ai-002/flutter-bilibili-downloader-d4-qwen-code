@@ -46,6 +46,19 @@ flutter build apk --release
 flutter build windows --release
 ```
 
+### 发布
+
+推送 `v*` 标签会触发 GitHub Actions 与 Gitea Actions 双流水线，分别构建 Android APK 与
+Windows ZIP，并在对应平台自动创建 Release：
+
+```bash
+git tag v0.4.26
+git push origin v0.4.26
+```
+
+构建产物的版本号取自 `pubspec.yaml` 的 `version` 字段，标签版本号优先；应用内展示的版本号
+位于 `lib/utils/constants.dart` 的 `AppConstants.version`，发版时需与 `pubspec.yaml` 同步修改。
+
 ## 版本历史
 
 ### v0.4.26 (当前版本)
