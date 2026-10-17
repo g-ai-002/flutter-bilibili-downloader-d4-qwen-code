@@ -12,14 +12,14 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   provider: 6.1.5+1
-  dio: 5.9.2
-  shared_preferences: 2.5.5
-  path_provider: 2.1.5
+  dio: 5.11.1
+  shared_preferences: 2.5.6
+  path_provider: 2.1.6
   intl: 0.20.3
   crypto: 3.0.7
   flutter_local_notifications: 22.3.2
-  url_launcher: 6.3.2
-  ffmpeg_kit_extended_flutter: 0.5.7
+  url_launcher: 6.3.3
+  ffmpeg_kit_extended_flutter: 0.6.2
   window_manager: 0.5.2
 
 dev_dependencies:
@@ -32,4 +32,4 @@ flutter:
 
 ffmpeg_kit_extended_config:
   type: "base"
-  linux: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.10.3-linux/bundle-base-linux-x86_64-shared-lgpl.zip"
+  linux: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.11.1-linux/bundle-base-linux-x86_64-shared-lgpl.zip"

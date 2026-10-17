@@ -43,14 +43,14 @@
 | 组件                                                        | 当前版本  | MAJOR 最新版本       | MINOR 最新版本       | PATCH 最新版本       | 引用文件                                | 说明                          | 类型         |
 |-------------------------------------------------------------|-----------|----------------------|----------------------|----------------------|-----------------------------------------|-------------------------------|--------------|
 | Provider (`provider`)                                       | `6.1.5+1` | `6.1.5+1` (已是最新) | `6.1.5+1` (已是最新) | `6.1.5+1` (已是最新) | `pubspec.yaml` / `pubspec_windows.yaml` | 状态管理                      | dependencies |
-| Dio (`dio`)                                                 | `5.9.2`   | `5.11.1`             | `5.11.1`             | `5.9.2` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | HTTP 客户端                   | dependencies |
-| Shared Preferences (`shared_preferences`)                   | `2.5.5`   | `2.5.6`              | `2.5.6`              | `2.5.6`              | `pubspec.yaml` / `pubspec_windows.yaml` | 键值本地存储                  | dependencies |
-| Path Provider (`path_provider`)                             | `2.1.5`   | `2.1.6`              | `2.1.6`              | `2.1.6`              | `pubspec.yaml` / `pubspec_windows.yaml` | 平台目录定位                  | dependencies |
+| Dio (`dio`)                                                 | `5.11.1`  | `5.11.1` (已是最新)  | `5.11.1` (已是最新)  | `5.11.1` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | HTTP 客户端                   | dependencies |
+| Shared Preferences (`shared_preferences`)                   | `2.5.6`   | `2.5.6` (已是最新)   | `2.5.6` (已是最新)   | `2.5.6` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 键值本地存储                  | dependencies |
+| Path Provider (`path_provider`)                             | `2.1.6`   | `2.1.6` (已是最新)   | `2.1.6` (已是最新)   | `2.1.6` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 平台目录定位                  | dependencies |
 | Intl (`intl`)                                               | `0.20.3`  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 国际化与日期格式化            | dependencies |
 | Crypto (`crypto`)                                           | `3.0.7`   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 哈希与加密算法                | dependencies |
 | Flutter Local Notifications (`flutter_local_notifications`) | `22.3.2`  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 本地通知                      | dependencies |
-| URL Launcher (`url_launcher`)                               | `6.3.2`   | `6.3.3`              | `6.3.3`              | `6.3.3`              | `pubspec.yaml` / `pubspec_windows.yaml` | 外部链接与应用唤起            | dependencies |
-| FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.5.7`   | `0.6.2`              | `0.6.2`              | `0.5.13`             | `pubspec.yaml`                          | 音视频处理（FFmpeg Kit 扩展） | dependencies |
+| URL Launcher (`url_launcher`)                               | `6.3.3`   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 外部链接与应用唤起            | dependencies |
+| FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.6.2`   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `pubspec.yaml`                          | 音视频处理（FFmpeg Kit 扩展） | dependencies |
 | Window Manager (`window_manager`)                           | `0.5.2`   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 桌面窗口管理（Windows）       | dependencies |
 
 ## 2. Flutter 开发依赖
