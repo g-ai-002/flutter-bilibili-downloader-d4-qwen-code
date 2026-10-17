@@ -17,19 +17,19 @@
 
 ## 技术栈
 
-- **框架**: Flutter 3.44+
-- **语言**: Dart 3.10+
+- **框架**: Flutter 3.47+
+- **语言**: Dart 3.13+
 - **状态管理**: Provider
 - **网络请求**: Dio
 - **本地存储**: SharedPreferences
-- **目标平台**: Android (minSdk 34, targetSdk 36), Windows 10+
+- **目标平台**: Android (minSdk 34, targetSdk 37), Windows 10+
 
 ## 快速开始
 
 ### 环境要求
 
-- Flutter SDK 3.44+
-- Dart SDK 3.10+
+- Flutter SDK 3.47+
+- Dart SDK 3.13+
 - Android Studio (Android 构建)
 - Visual Studio 2022 (Windows 构建)
 
@@ -48,7 +48,13 @@ flutter build windows --release
 
 ## 版本历史
 
-### v0.4.23 (当前版本)
+### v0.4.26 (当前版本)
+- Flutter 升级至 3.47.7，Dart SDK 下限对齐 3.13.5
+- Android 构建链升级：compileSdk/targetSdk 37、NDK 30.0.16248370
+- 阿里云 Maven 镜像补全 google/gradle-plugin 仓库，移除已废弃的 Jetifier
+- CI 新增静态分析与单元测试任务，产物版本号改为从 pubspec.yaml 读取
+
+### v0.4.23
 - 版本号升至 0.4.23
 
 ### v0.4.22

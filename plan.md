@@ -20,8 +20,20 @@
 
 ## 版本历史
 
-### v0.4.23 (PATCH) — 当前开发版本
-- **状态**: 开发中 🔧
+### v0.4.26 (PATCH) — 当前开发版本
+- **状态**: 开发完成 ✅
+- **目标**: 构建链、组件版本与配置对齐已验证的 flutter-snake 基线
+- **任务**:
+  - [x] Flutter 升级至 3.47.7，Dart SDK 下限对齐 3.13.5（pubspec.yaml / pubspec_windows.yaml）
+  - [x] Android 构建链升级：compileSdk 37 / targetSdk 37、NDK 30.0.16248370（minSdk 保持 34，遵循 prompt.md 平台要求）
+  - [x] 阿里云 Maven 镜像补全 google / gradle-plugin 仓库，移除已废弃的 Jetifier
+  - [x] analysis_options 对齐 flutter-snake 的 lint 规则集
+  - [x] GitHub Actions 新增 flutter analyze / flutter test 任务，构建任务等待测试通过
+  - [x] CI 产物版本号改为从 pubspec.yaml 读取，新增构建并发控制
+  - [x] 版本号升至 0.4.26
+
+### v0.4.23 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: 版本号升级
 - **任务**:
   - [x] 版本号升至 0.4.23

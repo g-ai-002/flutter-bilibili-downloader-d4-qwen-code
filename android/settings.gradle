@@ -10,12 +10,13 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        // 仅在本地开发时使用阿里云镜像
         if (System.getenv('USE_ALIYUN_MAVEN') == 'true') {
             maven { url 'https://maven.aliyun.com/repository/public' }
+            maven { url 'https://maven.aliyun.com/repository/google' }
+            maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
         }
-        google()
         mavenCentral()
+        google()
         gradlePluginPortal()
     }
 }

@@ -33,8 +33,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.bilibili.downloader"
-    compileSdk 36
-    ndkVersion "29.0.14206865"
+    compileSdk 37
+    ndkVersion "30.0.16248370"
 
     compileOptions {
         coreLibraryDesugaringEnabled true
@@ -53,7 +53,7 @@ android {
     defaultConfig {
         applicationId "com.bilibili.downloader"
         minSdk 34
-        targetSdk 36
+        targetSdk 37
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         ndk {
