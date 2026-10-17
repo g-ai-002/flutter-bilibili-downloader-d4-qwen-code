@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bilibili_downloader/models/video.dart';
-import 'package:bilibili_downloader/models/download_job.dart';
+import 'package:flutter_bilibili_downloader_d4_qwen_code/models/video.dart';
+import 'package:flutter_bilibili_downloader_d4_qwen_code/models/download_job.dart';
 
 void main() {
   group('BiliVideo', () {

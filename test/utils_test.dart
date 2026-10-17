@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bilibili_downloader/utils/constants.dart';
-import 'package:bilibili_downloader/utils/wbi_sign.dart';
-import 'package:bilibili_downloader/services/bilibili_api.dart';
-import 'package:bilibili_downloader/services/download_service.dart';
+import 'package:flutter_bilibili_downloader_d4_qwen_code/utils/constants.dart';
+import 'package:flutter_bilibili_downloader_d4_qwen_code/utils/wbi_sign.dart';
+import 'package:flutter_bilibili_downloader_d4_qwen_code/services/bilibili_api.dart';
+import 'package:flutter_bilibili_downloader_d4_qwen_code/services/download_service.dart';
 
 void main() {
   group('AppConstants', () {
