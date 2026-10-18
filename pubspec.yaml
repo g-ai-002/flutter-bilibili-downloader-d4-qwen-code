@@ -30,9 +30,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-# ffmpeg-kit 原生库：CI 会把 windows 那条替换为「短名重打包后的本地 fk.zip」并预置解压缓存。
-# 上游 zip 的内部目录名较长，Windows 上 Expand-Archive 会因 MAX_PATH 静默失败（详见 plan.md）。
+# ffmpeg-kit 原生库：三个平台都走 gh-proxy 加速（GitHub Releases 在本网络下偏慢）。
+# CI 会把 android 那条换成本地已校验的 AAR、windows 那条换成短名重打包后的本地 fk.zip
+# （上游 zip 内部目录名较长，Windows 上 Expand-Archive 会因 MAX_PATH 静默失败，详见 plan.md）。
 ffmpeg_kit_extended_config:
   type: "base"
+  android: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.11.1-android/bundle-base-shared-lgpl-release.aar"
   linux: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.11.1-linux/bundle-base-linux-x86_64-shared-lgpl.zip"
   windows: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.11.1-windows/bundle-base-windows-x86_64-shared-lgpl.zip"

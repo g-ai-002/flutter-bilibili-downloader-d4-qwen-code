@@ -19,6 +19,9 @@ env:
   FFMPEG_KIT_WIN_BUNDLE: 'bundle-base-windows-x86_64-shared-lgpl.zip'
   FFMPEG_KIT_WIN_SHA256: 'ac4f7c6893eb2d2a7d9c1c7a08e8cad42105b509d097ce2b2eceabcdcbd7cb47'
   FFMPEG_KIT_DLL_SHA256: '888a15993862950feed714990e459f653b68bbc2ce30da7d4bda8db9a5212c06'
+  # Android 侧同样预取并校验（避免 gh-proxy 不可用 / 覆盖分支跳过校验）
+  FFMPEG_KIT_AAR_NAME: 'bundle-base-shared-lgpl-release.aar'
+  FFMPEG_KIT_AAR_SHA256: 'b214c2aafb20af5416989600826b2b7cb59c8f1572fb78547cc4a222b65134fc'
 
 jobs:
   metadata:
@@ -102,6 +105,40 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
+
+      - name: Prepare ffmpeg-kit Android AAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v${FFMPEG_KIT_BUILDER}-android/${FFMPEG_KIT_AAR_NAME}"
+          mkdir -p ffmpeg-kit-bundle
+          out="ffmpeg-kit-bundle/${FFMPEG_KIT_AAR_NAME}"
+          echo "URL: https://gh-proxy.org/$base"
+          if ! curl -fL --retry 2 --connect-timeout 20 -o "$out" "https://gh-proxy.org/$base"; then
+            echo "⚠️ gh-proxy 拉取失败，回退直连 GitHub"
+            curl -fL --retry 3 --connect-timeout 30 -o "$out" "$base"
+          fi
+          actual=$(sha256sum "$out" | awk '{print $1}')
+          if [ "$actual" != "$FFMPEG_KIT_AAR_SHA256" ]; then
+            echo "❌ AAR sha256 不符：$actual"
+            exit 1
+          fi
+          ls -l "$out"
+          echo "✅ Android AAR 已校验"
+
+      - name: Point ffmpeg-kit config to the local AAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          aar="$PWD/ffmpeg-kit-bundle/${FFMPEG_KIT_AAR_NAME}"
+          awk '!/^  android: /' pubspec.yaml > pubspec.clean.yaml
+          mv pubspec.clean.yaml pubspec.yaml
+          awk -v line="  android: \"$aar\"" \
+            '{ print } /^ffmpeg_kit_extended_config:/ { print line }' \
+            pubspec.yaml > pubspec.patched.yaml
+          mv pubspec.patched.yaml pubspec.yaml
+          grep -n -A5 '^ffmpeg_kit_extended_config:' pubspec.yaml
+          grep -q '^  android: ' pubspec.yaml || { echo "❌ android 覆盖未写入 pubspec.yaml"; exit 1; }
 
       - name: Install dependencies
         run: flutter pub get
