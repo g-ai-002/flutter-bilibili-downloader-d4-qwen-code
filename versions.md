@@ -70,17 +70,17 @@
 
 ## 4. CI 与外部工具
 
-| 组件                                                                 | 当前版本 | 引用文件                                                     | 说明                                                                        |
-|----------------------------------------------------------------------|----------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
-| ffmpeg-kit Windows 原生库 (`bundle-base-windows-x86_64-shared-lgpl`) | `0.11.1` | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | Windows 产物内置的 libffmpegkit.dll（构建期下载 → 短名重打包 → code asset） |
-| actions/checkout                                                     | `v6`     | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | 检出仓库代码                                                                |
-| subosito/flutter-action                                              | `v2`     | `.github/workflows/build.yml`                                | 安装指定版本 Flutter SDK                                                    |
-| actions/setup-java                                                   | `v5`     | `.github/workflows/build.yml`                                | 安装 JDK（Temurin）                                                         |
-| actions/upload-artifact                                              | `v7`     | `.github/workflows/build.yml`                                | 上传构建产物（GitHub）                                                      |
-| actions/download-artifact                                            | `v8`     | `.github/workflows/build.yml`                                | 下载构建产物（GitHub）                                                      |
-| softprops/action-gh-release                                          | `v3`     | `.github/workflows/build.yml`                                | 创建 GitHub Release                                                         |
-| actions/gitea-upload-artifact                                        | `v4`     | `.gitea/workflows/build.yml`                                 | 上传构建产物（Gitea）                                                       |
-| actions/gitea-download-artifact                                      | `v8`     | `.gitea/workflows/build.yml`                                 | 下载构建产物（Gitea）                                                       |
+| 组件                                                                     | 当前版本 | 引用文件                                                     | 说明                                                                             |
+|--------------------------------------------------------------------------|----------|--------------------------------------------------------------|----------------------------------------------------------------------------------|
+| ffmpeg-kit Windows 原生库 (`bundle-base-windows-x86_64-shared-lgpl.zip`) | `0.11.1` | `pubspec.yaml`                                               | Windows 产物内置的 libffmpegkit.dll（构建期由 ffmpeg_kit 钩子下载 → code asset） |
+| actions/checkout                                                         | `v6`     | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | 检出仓库代码                                                                     |
+| subosito/flutter-action                                                  | `v2`     | `.github/workflows/build.yml`                                | 安装指定版本 Flutter SDK                                                         |
+| actions/setup-java                                                       | `v5`     | `.github/workflows/build.yml`                                | 安装 JDK（Temurin）                                                              |
+| actions/upload-artifact                                                  | `v7`     | `.github/workflows/build.yml`                                | 上传构建产物（GitHub）                                                           |
+| actions/download-artifact                                                | `v8`     | `.github/workflows/build.yml`                                | 下载构建产物（GitHub）                                                           |
+| softprops/action-gh-release                                              | `v3`     | `.github/workflows/build.yml`                                | 创建 GitHub Release                                                              |
+| actions/gitea-upload-artifact                                            | `v4`     | `.gitea/workflows/build.yml`                                 | 上传构建产物（Gitea）                                                            |
+| actions/gitea-download-artifact                                          | `v8`     | `.gitea/workflows/build.yml`                                 | 下载构建产物（Gitea）                                                            |
 
 ---
 

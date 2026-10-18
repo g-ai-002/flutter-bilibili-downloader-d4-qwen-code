@@ -5,14 +5,6 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      ffmpeg_kit_windows:
-        description: 'Windows ffmpeg-kit 原生库来源'
-        type: choice
-        options:
-          - repack
-          - upstream
-        default: repack
 
 run-name: 📺 构建 ${{ github.ref_name }}
 
@@ -22,9 +14,6 @@ concurrency:
 
 env:
   APP_NAME: ${{ github.event.repository.name }}
-  # Windows 产物内置的 ffmpeg-kit 原生库：上游 builder 版本与 bundle 文件名
-  FFMPEG_KIT_BUILDER: '0.11.1'
-  FFMPEG_KIT_WIN_BUNDLE: 'bundle-base-windows-x86_64-shared-lgpl.zip'
 
 jobs:
   metadata:
@@ -152,7 +141,6 @@ jobs:
         shell: bash
         run: |
           id
-          echo "ffmpeg-kit windows 模式: ${{ inputs.ffmpeg_kit_windows || 'repack' }}"
           echo "=== Flutter 版本 ==="
           flutter --version
           echo "=== Flutter doctor ==="
@@ -165,61 +153,6 @@ jobs:
       - name: 🏗️ 生成 Windows 平台文件
         shell: bash
         run: flutter create --platforms=windows --project-name ${{ needs.metadata.outputs.project_name }} .
-
-      # 上游 bundle 的内部目录名较长，Windows 上 Expand-Archive 会因 MAX_PATH 静默失败
-      # （详见 plan.md），因此重打包成短名 fk.zip——内部根目录同为 fk，正好满足钩子
-      # 「<extractRoot>/<zip 同名目录>」的回退要求。
-      - name: 📦 准备 ffmpeg-kit Windows 原生库
-        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          url="https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v${FFMPEG_KIT_BUILDER}-windows/${FFMPEG_KIT_WIN_BUNDLE}"
-          mkdir -p ffmpeg-kit-bundle
-          echo "URL: $url"
-          curl -fL --retry 3 --connect-timeout 30 -o "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" "$url"
-          rm -rf ffmpeg-kit-bundle/work
-          powershell.exe -NoProfile -NonInteractive -Command \
-            "Expand-Archive -Path 'ffmpeg-kit-bundle\\$FFMPEG_KIT_WIN_BUNDLE' -DestinationPath 'ffmpeg-kit-bundle\\work' -Force"
-          mv "ffmpeg-kit-bundle/work/${FFMPEG_KIT_WIN_BUNDLE%.zip}" ffmpeg-kit-bundle/work/fk
-          powershell.exe -NoProfile -NonInteractive -Command \
-            "Compress-Archive -Path 'ffmpeg-kit-bundle\\work\\fk' -DestinationPath 'ffmpeg-kit-bundle\\fk.zip' -Force"
-          ls -l ffmpeg-kit-bundle/fk.zip
-          echo "✅ 已生成短名 bundle ffmpeg-kit-bundle/fk.zip"
-
-      # 用绝对路径指向本地短名 bundle：无论钩子把 appRoot 解析成什么都能命中
-      - name: 🔧 让构建钩子使用本地 bundle
-        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          bundle_win=$(cygpath -m "$PWD/ffmpeg-kit-bundle/fk.zip")
-          awk '!/^  windows: /' pubspec.yaml > pubspec.clean.yaml
-          mv pubspec.clean.yaml pubspec.yaml
-          awk -v line="  windows: \"$bundle_win\"" \
-            '{ print } /^ffmpeg_kit_extended_config:/ { print line }' \
-            pubspec.yaml > pubspec.patched.yaml
-          mv pubspec.patched.yaml pubspec.yaml
-          grep -n -A4 '^ffmpeg_kit_extended_config:' pubspec.yaml
-          grep -q '^  windows: ' pubspec.yaml || { echo "❌ windows 覆盖未写入 pubspec.yaml"; exit 1; }
-
-      - name: 📦 重新安装 Windows 依赖
-        shell: bash
-        run: flutter pub get
-
-      # 预置钩子解压缓存，让 prepareExtractedArtifact 直接命中、完全不触发上游解压
-      - name: 🌱 预置 ffmpeg-kit 解压缓存
-        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          root='.dart_tool/hooks_runner/shared/ffmpeg_kit_extended_flutter/build/ffmpeg_kit_cache/windows/fk'
-          rm -rf "$root"
-          mkdir -p "$root/fk/bin"
-          cp ffmpeg-kit-bundle/work/fk/bin/libffmpegkit.dll "$root/fk/bin/"
-          : > "$root/.extract_complete"
-          find "$root" -type f -printf '  %p  %s bytes\n'
-          echo "✅ 已预置 ffmpeg-kit 解压缓存"
 
       - name: 🔨 构建 Windows
         shell: bash

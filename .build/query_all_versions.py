@@ -11,7 +11,7 @@
     - Gradle：https://services.gradle.org/versions/all
 
 「当前版本」：
-    - Flutter 依赖：直接读取 pubspec.yaml；
+    - Flutter 依赖与 ffmpeg-kit 原生库：直接读取 pubspec.yaml；
     - Android 构建链：直接解析 android/ 下的 Gradle 配置；
     - CI 动作：直接解析 .github / .gitea 下的工作流文件。
 """
@@ -208,8 +208,8 @@ def collect_project_info():
         'abi': search(r"abiFilters\s+'([^']+)'", app_gradle),
         'kotlin_stdlib': search(r'kotlin-stdlib:([\d.]+)', app_gradle),
         'desugar': search(r'desugar_jdk_libs:([\d.]+)', app_gradle),
-        'ffmpeg_builder': search(r"FFMPEG_KIT_BUILDER:\s*'([^']+)'", gh_workflow),
-        'ffmpeg_bundle': search(r"FFMPEG_KIT_WIN_BUNDLE:\s*'([^']+)'", gh_workflow),
+        'ffmpeg_builder': search(r'ffmpeg-kit-builders/releases/download/v([\d.]+)-windows/', pubspec),
+        'ffmpeg_bundle': search(r'-windows/([^"\s]+)', pubspec),
     }
 
 
@@ -449,8 +449,8 @@ def build_markdown(info, pub_order, pub_refs, pub_types, pub_latest, build_lates
     lines.append('|------|---------|----------|------|')
     lines.append(
         f'| ffmpeg-kit Windows 原生库 (`{info["ffmpeg_bundle"]}`) | `{info["ffmpeg_builder"]}` | '
-        '`.github/workflows/build.yml` / `.gitea/workflows/build.yml` | '
-        'Windows 产物内置的 libffmpegkit.dll（构建期下载 → 短名重打包 → code asset）|'
+        '`pubspec.yaml` | '
+        'Windows 产物内置的 libffmpegkit.dll（构建期由 ffmpeg_kit 钩子下载 → code asset）|'
     )
     for name, entry in actions.items():
         ref = ' / '.join(f'`{r}`' for r in entry['refs'])

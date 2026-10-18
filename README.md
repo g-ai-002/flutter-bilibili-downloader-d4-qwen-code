@@ -67,7 +67,7 @@ git push origin v0.4.29
 ### v0.4.29 (当前版本)
 - Windows 平台统一改用 `ffmpeg_kit_extended_flutter` 做无损合并，不再内置 `ffmpeg.exe`（产物为 exe + `libffmpegkit.dll`，Windows ZIP 约 81 MB）
 - 删除 `pubspec_windows.yaml` 与 `lib/services/ffmpeg_windows.dart`：双平台共用一份 `pubspec.yaml` 与一个 `lib/services/ffmpeg_platform.dart`（Windows 也走 FFprobeKit / FFmpegKit）
-- 修复上游构建钩子在 Windows 长路径下 `Expand-Archive` 静默失败导致的 `Building native assets failed`：CI 改为「下载 bundle → 重打包成短名 `fk.zip` → 预置钩子解压缓存」
+- 删除 Windows 长路径绕行：实测 runner 上钩子可直接解压上游 bundle，两份工作流移除「短名重打包、覆盖指向本地 bundle、预置解压缓存」三步与 `workflow_dispatch` 的 `ffmpeg_kit_windows` 输入
 - 移除 CI 中的 GyanD `ffmpeg.exe` / `ffprobe.exe` 捆绑步骤
 
 ### v0.4.28
