@@ -5,18 +5,23 @@ name: 验证 Windows 切换 ffmpeg_kit（临时）
 # Android 那份 lib/services/ffmpeg_platform.dart 构建 Windows 产物，
 # 不再执行 build.yml 的「切换 Windows 平台依赖」与「下载并内置 ffmpeg」两步。
 #
-# 第二轮：本地已核实 v0.11.1-windows 的 base bundle 结构是
-#   bundle-base-windows-x86_64-shared-lgpl/bin/libffmpegkit.dll（唯一二进制，无 ffmpeg.exe）
-# 与钩子预期一致，故构建失败原因只能来自钩子自身，本工作流用 -v 抓钩子 stderr。
+# 第一轮：诊断步骤假设 pub 缓存在 %LOCALAPPDATA%，自建 runner 上不存在 → 已修正。
+# 第二轮：本地核实 v0.11.1-windows base bundle = <root>/bin/libffmpegkit.dll（唯一二进制，
+#   无 ffmpeg.exe），与钩子预期一致。
+# 第三轮：拿到钩子 stderr —— 配置与本地 bundle 覆盖都生效，随后抛
+#   PathNotFoundException: Directory listing failed, path =
+#   '...ffmpeg_kit_cache\windows\bundle-...-lgpl\bundle-...-lgpl\*'
+#   即钩子解压后 extractRoot 内没有 zip 的同名目录（等价于解压什么都没产出）。
+#   本机用同一个 zip + 同一句 Expand-Archive、连 339 字符长路径都解压正常，
+#   说明是自建 runner 的 PowerShell 行为差异。
 #
-# 第三轮：钩子 stderr 显示 "Using app configuration from <仓库根>/pubspec.yaml" +
-#   "Using local override path: <绝对路径>" 之后就没有任何输出 —— 而该钩子在 Windows
-#   成功路径上本来就不打日志，说明它大概率已跑成功，失败点在其后的 native assets 打包
-#   环节或另一个包的钩子（hooks_runner 里还有 objective_c）。故本轮 dump 所有包的
-#   钩子 stdout/stderr 与 native_assets 清单，并把诊断打成产物上传。
+# 第四轮（本版）：两手准备
+#   a) 🧪 复刻钩子解压（对照长短路径）—— 记录 wrapper 侧 PowerShell 的真实行为；
+#   b) 🧰🌱 用短名 fk.zip 重打包 + 直接预置钩子的解压缓存（marker .extract_complete）
+#      —— 让 prepareExtractedArtifact 直接命中缓存、完全不触发解压，
+#      从而把「DLL 能否打进产物 + 运行时能否无损合并」这个问题单独验出来。
 #
 # 验证结论出来后，本文件与 tool/verify_ffmpeg_kit_windows_test.dart 可一并删除。
-# 历史背景（v0.2.34 失败 → v0.2.36 统一 → v0.2.41 回退分离）见 plan.md 版本历史。
 #
 # 注意：Gitea 的 shell: bash 带 -e（出错即中止），诊断类命令一律加 `|| true`。
 
@@ -34,8 +39,10 @@ env:
   # 原生库 bundle：与 pubspec.yaml 里 linux 那条保持同一 builder 版本（均为 v0.11.1-*）
   FFMPEG_KIT_BUILDER: '0.11.1'
   FFMPEG_KIT_WIN_BUNDLE: 'bundle-base-windows-x86_64-shared-lgpl.zip'
-  # 取自上游 release v0.11.1-windows 的 asset digest（17144043 字节）
+  # 上游 release v0.11.1-windows 的 asset digest（17144043 字节）
   FFMPEG_KIT_WIN_SHA256: 'ac4f7c6893eb2d2a7d9c1c7a08e8cad42105b509d097ce2b2eceabcdcbd7cb47'
+  # 解开该 zip 后 bin/libffmpegkit.dll 的 sha256（54565256 字节），用于校验重打包内容
+  FFMPEG_KIT_DLL_SHA256: '888a15993862950feed714990e459f653b68bbc2ce30da7d4bda8db9a5212c06'
   FFMPEG_KIT_WIN_MIRROR: 'https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download'
 
 jobs:
@@ -50,7 +57,13 @@ jobs:
       - name: 🩺 诊断 Flutter 环境
         shell: bash
         run: |
+          set +e
           flutter --version
+          which powershell || true
+          cygpath -w "$(which powershell)" 2>/dev/null || true
+          powershell.exe -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString(); $PSHOME' || true
+          which tar unzip || true
+          echo "PWD=$PWD"
           flutter doctor -v || true
 
       - name: 🏷️ 计算项目名
@@ -83,7 +96,6 @@ jobs:
             echo "⚠️ 未找到 $cfg，跳过 builder 版本核对"
             exit 0
           fi
-          # 别猜 pub 缓存位置，直接从 package_config.json 取该包解析后的路径
           root_uri=$(powershell.exe -NoProfile -NonInteractive -Command \
             "(Get-Content -Raw '.dart_tool/package_config.json' | ConvertFrom-Json).packages | Where-Object { \$_.name -eq 'ffmpeg_kit_extended_flutter' } | Select-Object -ExpandProperty rootUri" \
             | tr -d '\r' | awk 'NF { print; exit }')
@@ -98,7 +110,7 @@ jobs:
             echo "⚠️ 未找到 $hook_file，跳过核对"
             exit 0
           fi
-          grep -nE 'String version = |_baseUrlTemplate' "$hook_file" || true
+          grep -nE 'String version = |_extractMarkerFileName|extractRootFor' "$hook_file" || true
           hook_version=$(grep -oE 'String version = "[^"]+"' "$hook_file" \
             | awk 'NR==1' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
           echo "hook builder 版本: ${hook_version:-未知}（本工作流按 $FFMPEG_KIT_BUILDER）"
@@ -134,24 +146,61 @@ jobs:
           fi
           echo "✅ bundle 校验通过（bin/ 内只有一个 libffmpegkit.dll，无 ffmpeg.exe）"
 
-      - name: 🗂️ 查看 bundle 内部结构（诊断）
+      # 对照实验：把钩子里那句 Expand-Archive 原样搬到工作流里跑一遍
+      - name: 🧪 复刻钩子解压（长短路径对照）
         shell: bash
         continue-on-error: true
         run: |
-          powershell.exe -NoProfile -NonInteractive -Command \
-            "Add-Type -AssemblyName System.IO.Compression.FileSystem; \
-             [IO.Compression.ZipFile]::OpenRead((Resolve-Path 'ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE').Path).Entries \
-             | Where-Object { \$_.FullName -notlike '*/include/*' } \
-             | Select-Object -ExpandProperty FullName"
+          set +e
+          shared=".dart_tool/hooks_runner/shared/ffmpeg_kit_extended_flutter/build"
+          up=$(cygpath -m "$PWD/ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE")
+          zipbase="${FFMPEG_KIT_WIN_BUNDLE%.zip}"
+          for variant in "long:$zipbase" "short:fk"; do
+            name="${variant%%:*}"
+            rootdir="${variant##*:}"
+            dest_win=$(cygpath -m "$PWD/$shared/probe_cache/$rootdir.extracting")
+            rm -rf "$shared/probe_cache/$rootdir.extracting"
+            mkdir -p "$shared/probe_cache/$rootdir.extracting"
+            echo "----- $name: 解压到 $dest_win -----"
+            powershell.exe -NoProfile -NonInteractive -Command \
+              "Expand-Archive -Path '$up' -DestinationPath '$dest_win' -Force"
+            echo "powershell 退出码: $?"
+            echo "顶层条目: $(ls -1 "$shared/probe_cache/$rootdir.extracting" 2>/dev/null | tr '\n' ' ')"
+            find "$shared/probe_cache/$rootdir.extracting" -maxdepth 3 -type d 2>/dev/null | awk 'NR<=12'
+          done
+          exit 0
 
-      - name: 🔧 写入 windows 覆盖（绝对路径）
+      - name: 🧰 重打包为短名 bundle（root=fk）
         shell: bash
         run: |
           set -euo pipefail
-          # 用绝对路径：无论钩子把 appRoot 解析成什么，都不会出现 Local override not found
-          bundle_win=$(cygpath -m "$PWD/ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE")
+          work=ffmpeg-kit-bundle/work
+          rm -rf "$work"
+          mkdir -p "$work"
+          powershell.exe -NoProfile -NonInteractive -Command \
+            "Expand-Archive -Path 'ffmpeg-kit-bundle\\$FFMPEG_KIT_WIN_BUNDLE' -DestinationPath 'ffmpeg-kit-bundle\\work' -Force"
+          mv "$work/$FFMPEG_KIT_WIN_BUNDLE" "$work/fk" 2>/dev/null \
+            || mv "$work/${FFMPEG_KIT_WIN_BUNDLE%.zip}" "$work/fk"
+          powershell.exe -NoProfile -NonInteractive -Command \
+            "Compress-Archive -Path 'ffmpeg-kit-bundle\\work\\fk' -DestinationPath 'ffmpeg-kit-bundle\\fk.zip' -Force"
+          powershell.exe -NoProfile -NonInteractive -Command \
+            "Add-Type -AssemblyName System.IO.Compression.FileSystem; \
+             [IO.Compression.ZipFile]::OpenRead((Resolve-Path 'ffmpeg-kit-bundle\\fk.zip').Path).Entries \
+             | Where-Object { \$_.FullName -notlike '*/include/*' } \
+             | ForEach-Object { \$_.FullName + '  ' + \$_.Length }" | awk 'NR<=20'
+          dll_sha=$(sha256sum "$work/fk/bin/libffmpegkit.dll" | awk '{print $1}')
+          echo "libffmpegkit.dll sha256: $dll_sha"
+          [ "$dll_sha" = "$FFMPEG_KIT_DLL_SHA256" ] \
+            || { echo "❌ DLL sha256 与预期不符（$FFMPEG_KIT_DLL_SHA256）"; exit 1; }
+          echo "✅ 短名 bundle 内容校验通过"
+
+      - name: 🔧 写入 windows 覆盖（绝对路径 → fk.zip）
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_win=$(cygpath -m "$PWD/ffmpeg-kit-bundle/fk.zip")
           echo "将写入 windows 覆盖: $bundle_win"
-          [ -f "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" ] || { echo "❌ bundle 文件不存在"; exit 1; }
+          [ -f ffmpeg-kit-bundle/fk.zip ] || { echo "❌ fk.zip 不存在"; exit 1; }
           awk -v line="  windows: \"$bundle_win\"" \
             '{ print } /^ffmpeg_kit_extended_config:/ { print line }' \
             pubspec.yaml > pubspec.patched.yaml
@@ -163,7 +212,23 @@ jobs:
         shell: bash
         run: flutter pub get
 
-      # 诊断优先：这里不因构建失败中止，由下一步统一判定
+      # 直接命中钩子的解压缓存（marker + payload），完全绕开上游解压逻辑
+      - name: 🌱 预置钩子解压缓存
+        shell: bash
+        run: |
+          set -euo pipefail
+          shared='.dart_tool/hooks_runner/shared/ffmpeg_kit_extended_flutter/build'
+          cache="$shared/ffmpeg_kit_cache/windows"
+          root="$cache/fk"
+          rm -rf "$root"
+          mkdir -p "$root/fk/bin"
+          cp ffmpeg-kit-bundle/work/fk/bin/libffmpegkit.dll "$root/fk/bin/"
+          : > "$root/.extract_complete"
+          echo "=== 预置后的缓存树 ==="
+          find "$cache" -maxdepth 4 2>/dev/null | awk 'NR<=20'
+          find "$root" -type f -printf '  %p  %s bytes\n'
+          echo "✅ 已预置 extractRoot=$root（含 marker 与 fk/bin/libffmpegkit.dll）"
+
       - name: 🔨 构建 Windows（verbose，抓钩子日志）
         shell: bash
         continue-on-error: true
@@ -179,23 +244,24 @@ jobs:
           tail -n 80 build-windows.log
           exit 0
 
-      - name: 🧾 收集诊断（所有钩子日志 / native assets / 构建树）
+      - name: 🧾 收集诊断（钩子缓存 / native assets / 产物）
         shell: bash
         continue-on-error: true
         run: |
           set +e
           mkdir -p diag
+          shared='.dart_tool/hooks_runner/shared/ffmpeg_kit_extended_flutter/build'
           {
             echo "构建退出码: $(cat .build_exit 2>/dev/null || echo unknown)"
+            echo "=== 钩子 shared 目录树 ==="
+            find "$shared" -maxdepth 5 2>/dev/null | awk 'NR<=60'
             echo "=== hooks_runner 下的文件 ==="
             find .dart_tool/hooks_runner -maxdepth 3 -type f 2>/dev/null | awk 'NR<=80'
           } | tee diag/summary.txt
-          # 每个包钩子的 stdout/stderr 全文：失败的那个大概率不是 ffmpeg_kit
           for f in $(find .dart_tool/hooks_runner -type f \( -name 'stdout.txt' -o -name 'stderr.txt' \) 2>/dev/null | awk 'NR<=40'); do
             echo "===== $f ====="
             awk 'NR<=200 { print }' "$f"
           done | tee diag/hooks-output.txt
-          # native assets 清单：能看出哪些包成功 emit 了 code asset
           echo "=== native assets 相关文件 ===" | tee diag/native-assets.txt
           find .dart_tool build/windows -maxdepth 8 -type f -iname '*native_asset*' 2>/dev/null \
             | awk 'NR<=40' | tee -a diag/native-assets.txt
@@ -299,7 +365,7 @@ jobs:
       - name: 📋 结论清单
         shell: bash
         run: |
-          echo '1) 构建通过 = 历史上 v0.2.34 的 Windows 构建失败已被上游修掉'
+          echo '1) 构建通过 = 0.6.2 钩子的解压缺陷可用「预置缓存/短名 bundle」绕过'
           echo '2) Release 目录出现 libffmpegkit.dll = code asset 打包链路可用'
           echo '3) 把 verify-windows-ffmpegkit.zip 在真机解压后下载一个 DASH 视频 = 端到端确认'
           echo '   重点看：合并成功、中文/emoji 标题的文件名、日志里的「已合并视频/音频」'
