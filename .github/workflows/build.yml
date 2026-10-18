@@ -1,10 +1,12 @@
-name: Build and Release
+name: 🚀 构建与发布
 
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+
+run-name: 📺 构建 ${{ github.ref_name }}
 
 concurrency:
   group: build-${{ github.sha }}
@@ -18,15 +20,15 @@ env:
 jobs:
   metadata:
     runs-on: ubuntu-latest
-    name: Prepare package metadata
+    name: 📋 准备包元数据
     outputs:
       app_version: ${{ steps.version.outputs.jversion }}
       project_name: ${{ steps.project.outputs.project_name }}
     steps:
-      - name: Checkout code
+      - name: 📥 检出代码
         uses: actions/checkout@v6
 
-      - name: Prepare package version
+      - name: 🔢 解析包版本号
         id: version
         shell: bash
         run: |
@@ -40,75 +42,75 @@ jobs:
             fi
           fi
           echo "jversion=$jversion" >> $GITHUB_OUTPUT
-          echo "Using version: $jversion"
+          echo "📌 使用的版本号: $jversion"
 
-      - name: Compute project name
+      - name: 🏷️ 计算项目名称
         id: project
         shell: bash
         run: |
           projectName=$(echo "${{ env.APP_NAME }}" | tr '-' '_')
           echo "project_name=$projectName" >> $GITHUB_OUTPUT
-          echo "Project name for Flutter: $projectName"
+          echo "📌 Flutter 项目名: $projectName"
 
   test:
     needs: [ metadata ]
     runs-on: ubuntu-latest
-    name: Run Dart tests
+    name: 🧪 运行 Dart 测试
     steps:
-      - name: Checkout code
+      - name: 📥 检出代码
         uses: actions/checkout@v6
 
-      - name: Setup Flutter
+      - name: 🦋 配置 Flutter 环境
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
+      - name: 📦 安装依赖
         run: flutter pub get
 
-      - name: Analyze
+      - name: 🔍 静态分析
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Run tests
+      - name: ✅ 运行测试
         run: flutter test
 
   build-android:
     needs: [ metadata, test ]
     runs-on: ubuntu-latest
-    name: Build Android APK
+    name: 🤖 构建 Android APK
     permissions:
       contents: read
     steps:
-      - name: Checkout code
+      - name: 📥 检出代码
         uses: actions/checkout@v6
 
-      - name: Set up JDK
+      - name: ☕ 配置 JDK
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: 'gradle'
 
-      - name: Setup Flutter
+      - name: 🦋 配置 Flutter 环境
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
 
-      - name: Install dependencies
+      - name: 📦 安装依赖
         run: flutter pub get
 
-      - name: Build Android APK
+      - name: 🔨 构建 Android APK
         run: flutter build apk --release --target-platform android-arm64
 
-      - name: Rename Android APK
+      - name: 📝 重命名 Android APK
         run: |
           mv build/app/outputs/flutter-apk/app-release.apk ./${{ env.APP_NAME }}-${{ needs.metadata.outputs.app_version }}-android-aarch64.apk
 
-      - name: Upload Android artifact
+      - name: ⬆️ 上传 Android 产物
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APP_NAME }}-${{ needs.metadata.outputs.app_version }}-android-aarch64.apk
@@ -118,7 +120,7 @@ jobs:
   build-windows:
     needs: [ metadata, test ]
     runs-on: windows-latest
-    name: Build Windows EXE
+    name: 🪟 构建 Windows EXE
     permissions:
       contents: read
     defaults:
@@ -126,10 +128,10 @@ jobs:
         working-directory: C:\w
         shell: bash
     steps:
-      - name: Checkout code
+      - name: 📥 检出代码
         uses: actions/checkout@v6
 
-      - name: Copy project to a short path
+      - name: 📂 复制工程到短路径
         shell: bash
         working-directory: C:/
         run: |
@@ -138,54 +140,54 @@ jobs:
           rm -rf /c/w
           mkdir -p /c/w
           cp -a "$src"/. /c/w/
-          echo "project copied: $src -> C:\\w"
+          echo "✅ 工程已复制: $src -> C:\\w"
 
-      - name: Set up JDK
+      - name: ☕ 配置 JDK
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: 'gradle'
 
-      - name: Setup Flutter
+      - name: 🦋 配置 Flutter 环境
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
 
-      - name: Print environment info
+      - name: 🩺 诊断构建环境
         run: |
           echo "========================================"
-          echo "  构建环境信息"
+          echo "  🖥️ 构建环境信息"
           echo "========================================"
-          echo "OS: ${RUNNER_OS:-?} / ${PROCESSOR_ARCHITECTURE:-?}"
-          echo "PWD: $(pwd)"
+          echo "🖥️ OS: ${RUNNER_OS:-?} / ${PROCESSOR_ARCHITECTURE:-?}"
+          echo "📂 当前目录: $(pwd)"
           flutter --version
           dart --version
           echo "========================================"
 
-      - name: Install dependencies
+      - name: 📦 安装依赖
         run: flutter pub get
 
-      - name: Generate Windows platform files
+      - name: 🏗️ 生成 Windows 平台文件
         run: flutter create --platforms=windows --project-name ${{ needs.metadata.outputs.project_name }} .
 
-      - name: Build Windows
+      - name: 🔨 构建 Windows
         run: flutter build windows --release
 
-      - name: Dump ffmpeg-kit hook state (on failure)
+      - name: 🧾 失败时导出 ffmpeg-kit 钩子日志
         if: failure()
         run: |
-          echo "=== 钩子 stdout / stderr / output.json ==="
+          echo "=== 🧾 钩子 stdout / stderr / output.json ==="
           find .dart_tool/hooks_runner -type f \( -name stdout.txt -o -name stderr.txt -o -name output.json \) 2>/dev/null | sort | while read -r f; do
             echo "--- $f ($(stat -c%s "$f") bytes) ---"
             head -200 "$f"
           done
-          echo "=== DLL 落点 ==="
+          echo "=== 📦 DLL 落点 ==="
           find .dart_tool/hooks_runner/shared build/windows -name '*.dll' 2>/dev/null | head -20
 
-      - name: List build output
+      - name: 📊 列出构建产物
         run: |
           release_dir='build/windows/x64/runner/Release'
           if [ -d "$release_dir" ]; then
@@ -194,30 +196,30 @@ jobs:
               if [ -f "$f" ]; then
                 size=$(stat -c%s "$f")
                 size_mb=$(awk "BEGIN{printf \"%.2f\", $size/1048576}")
-                echo "  $(basename "$f")  ($size_mb MB)"
+                echo "  📄 $(basename "$f")  ($size_mb MB)"
                 total_bytes=$((total_bytes + size))
               fi
             done
             total_mb=$(awk "BEGIN{printf \"%.2f\", $total_bytes/1048576}")
-            echo "  合计: $total_mb MB"
+            echo "  📊 合计: $total_mb MB"
           else
             echo "❌ 未找到构建输出目录"
             exit 1
           fi
 
-      - name: Create Windows ZIP
+      - name: 🗜️ 打包 Windows ZIP
         shell: pwsh
         run: |
-          Write-Host "创建 ZIP 包..."
+          Write-Host "🗜️ 正在创建 ZIP 包..."
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath windows.zip
           $zipSizeMB = [math]::Round((Get-Item windows.zip).Length / 1MB, 2)
-          Write-Host "ZIP 创建完成: windows.zip ($zipSizeMB MB)"
+          Write-Host "✅ ZIP 创建完成: windows.zip ($zipSizeMB MB)"
 
-      - name: Rename Windows ZIP
+      - name: 📝 重命名 Windows ZIP
         run: |
           mv windows.zip ./${{ env.APP_NAME }}-${{ needs.metadata.outputs.app_version }}-windows-x86_64.zip
 
-      - name: Upload Windows artifact
+      - name: ⬆️ 上传 Windows 产物
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APP_NAME }}-${{ needs.metadata.outputs.app_version }}-windows-x86_64.zip
@@ -225,41 +227,45 @@ jobs:
           retention-days: 1
 
 
-  # ========== 发布到 GitHub Releases ==========
+  # ========== 🚀 发布到 GitHub Releases ==========
   release:
     needs: [ build-android, build-windows ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    name: 🚀 发布 GitHub Release
     permissions:
       contents: write  # ✅ 仅 release job 需要写权限
     environment: release  # ✅ 添加环境保护（可选：要求审批）
 
     steps:
-      - name: Checkout code (for changelog)
+      - name: 📥 检出代码（用于生成更新日志）
         uses: actions/checkout@v6
         with:
           fetch-depth: 0 # ✅ 必须获取完整 tag 历史
 
-      - name: Download all artifacts
+      - name: ⬇️ 下载构建产物
         uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true  # ✅ 简化目录结构
 
-      - name: Generate release notes
+      - name: 📝 生成发布说明
         id: notes
         run: |
           # 获取上一个标签
           current_tag=${GITHUB_REF#refs/tags/}
           prev_tag=$(git tag --sort=-version:refname | grep -v "^$current_tag$" | head -1)
-          
+
           body_content=""
           if [[ -n "$prev_tag" ]]; then
             body_content=$(git log --pretty=format:"* %s (%h)" "$prev_tag".."$current_tag" -- . ":(exclude)docs" ":(exclude).github")
           else
-            body_content="Initial release or no previous tag found."
+            body_content="首次发布。"
           fi
-          
+
+          echo "=== 📝 生成的发布说明 ==="
+          echo "$body_content"
+
           # 写入输出，处理多行字符
           {
             echo "body<<EOF"
@@ -267,7 +273,7 @@ jobs:
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
-      - name: Publish GitHub Release
+      - name: 🚀 发布 GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: artifacts/*

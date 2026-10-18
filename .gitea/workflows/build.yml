@@ -1,4 +1,4 @@
-name: 构建与发布
+name: 🚀 构建与发布
 
 on:
   push:
@@ -83,7 +83,7 @@ jobs:
 
       - name: 🩺 诊断网络与 Flutter 环境
         run: |
-          echo "=== 构建环境变量 ==="
+          echo "=== 🌍 构建环境变量 ==="
           echo "USE_ALIYUN_MAVEN=${USE_ALIYUN_MAVEN:-<未设置>}"
           echo "JAVA_HOME=${JAVA_HOME:-<未设置>}"
           echo "ANDROID_HOME=${ANDROID_HOME:-<未设置>}"
@@ -91,16 +91,16 @@ jobs:
           echo "GRADLE_USER_HOME=${GRADLE_USER_HOME:-<未设置>}"
           echo "http_proxy=${http_proxy:-<未设置>}"
           echo "https_proxy=${https_proxy:-<未设置>}"
-          echo "=== Flutter 版本 ==="
+          echo "=== 🦋 Flutter 版本 ==="
           flutter --version
-          echo "=== Flutter doctor ==="
+          echo "=== 🩺 Flutter doctor ==="
           timeout 10 flutter doctor -v || true
-          echo "=== Flutter 相关环境变量 ==="
+          echo "=== 🌍 Flutter 相关环境变量 ==="
           echo "FLUTTER_STORAGE_BASE_URL=${FLUTTER_STORAGE_BASE_URL:-<未设置>}"
           echo "PUB_HOSTED_URL=${PUB_HOSTED_URL:-<未设置>}"
-          echo "=== 网络连通性检查 ==="
-          curl -sI --connect-timeout 10 https://storage.flutter-io.cn 2>&1 || echo "无法访问 storage.flutter-io.cn"
-          curl -sI --connect-timeout 10 https://storage.googleapis.com 2>&1 || echo "无法访问 storage.googleapis.com"
+          echo "=== 🌐 网络连通性检查 ==="
+          curl -sI --connect-timeout 10 https://storage.flutter-io.cn 2>&1 || echo "❌ 无法访问 storage.flutter-io.cn"
+          curl -sI --connect-timeout 10 https://storage.googleapis.com 2>&1 || echo "❌ 无法访问 storage.googleapis.com"
 
       - name: 🪞 部署阿里云 Maven 镜像脚本
         run: |
@@ -149,16 +149,16 @@ jobs:
           rm -rf /c/w
           mkdir -p /c/w
           cp -a "$src"/. /c/w/
-          echo "工程已复制: $src -> C:\\w"
+          echo "✅ 工程已复制: $src -> C:\\w"
 
       - name: 🩺 诊断 Flutter 环境
         shell: bash
         run: |
-          echo "=== Flutter 版本 ==="
+          echo "=== 🦋 Flutter 版本 ==="
           flutter --version
-          echo "=== Flutter doctor ==="
+          echo "=== 🩺 Flutter doctor ==="
           flutter doctor -v || true
-          echo "=== 相关环境变量 ==="
+          echo "=== 🌍 相关环境变量 ==="
           echo "PUB_HOSTED_URL=${PUB_HOSTED_URL:-<未设置>}"
           echo "FLUTTER_STORAGE_BASE_URL=${FLUTTER_STORAGE_BASE_URL:-<未设置>}"
 
@@ -184,12 +184,12 @@ jobs:
               if [ -f "$f" ]; then
                 size=$(stat -c%s "$f")
                 size_mb=$(awk "BEGIN{printf \"%.2f\", $size/1048576}")
-                echo "  $(basename "$f")  ($size_mb MB)"
+                echo "  📄 $(basename "$f")  ($size_mb MB)"
                 total_bytes=$((total_bytes + size))
               fi
             done
             total_mb=$(awk "BEGIN{printf \"%.2f\", $total_bytes/1048576}")
-            echo "  合计: $total_mb MB"
+            echo "  📊 合计: $total_mb MB"
           else
             echo "❌ 未找到构建输出目录"
             exit 1
@@ -199,7 +199,7 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath windows.zip -Force
-          Write-Host "ZIP 大小: $([math]::Round((Get-Item windows.zip).Length / 1MB, 2)) MB"
+          Write-Host "✅ ZIP 大小: $([math]::Round((Get-Item windows.zip).Length / 1MB, 2)) MB"
 
       - name: 📝 重命名 Windows ZIP
         shell: bash
@@ -248,7 +248,7 @@ jobs:
           else
             echo "首次发布。" > /tmp/release_body.txt
           fi
-          echo "=== 发布说明 ==="
+          echo "=== 📝 发布说明 ==="
           cat /tmp/release_body.txt
 
       - name: 🚀 创建 Gitea Release
