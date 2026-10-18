@@ -9,6 +9,12 @@ name: 验证 Windows 切换 ffmpeg_kit（临时）
 #   bundle-base-windows-x86_64-shared-lgpl/bin/libffmpegkit.dll（唯一二进制，无 ffmpeg.exe）
 # 与钩子预期一致，故构建失败原因只能来自钩子自身，本工作流用 -v 抓钩子 stderr。
 #
+# 第三轮：钩子 stderr 显示 "Using app configuration from <仓库根>/pubspec.yaml" +
+#   "Using local override path: <绝对路径>" 之后就没有任何输出 —— 而该钩子在 Windows
+#   成功路径上本来就不打日志，说明它大概率已跑成功，失败点在其后的 native assets 打包
+#   环节或另一个包的钩子（hooks_runner 里还有 objective_c）。故本轮 dump 所有包的
+#   钩子 stdout/stderr 与 native_assets 清单，并把诊断打成产物上传。
+#
 # 验证结论出来后，本文件与 tool/verify_ffmpeg_kit_windows_test.dart 可一并删除。
 # 历史背景（v0.2.34 失败 → v0.2.36 统一 → v0.2.41 回退分离）见 plan.md 版本历史。
 #
@@ -167,27 +173,72 @@ jobs:
           echo "$?" > .build_exit
           echo "=== 构建退出码: $(cat .build_exit) ==="
           echo "=== 钩子/原生资源相关日志 ==="
-          grep -niE 'ffmpegkit|build hook|build_hooks|native asset|code_asset|code asset|local override|using app configuration|using package-local|no configuration found|downloading http|sha256|failed to|exception' build-windows.log | awk 'NR<=250' || true
+          grep -niE 'ffmpegkit|build hook|build_hooks|native asset|code_asset|code asset|local override|using app configuration|using package-local|no configuration found|downloading http|sha256|failed to|exception|LNK[0-9]|MSB[0-9]|unresolved|objective_c|hooks_runner' build-windows.log | awk 'NR<=300' || true
           echo "=== 日志总行数: $(awk 'END { print NR }' build-windows.log) ==="
           echo "=== 日志尾部 80 行 ==="
           tail -n 80 build-windows.log
           exit 0
 
-      - name: 🔎 汇总钩子日志与产物状态
+      - name: 🧾 收集诊断（所有钩子日志 / native assets / 构建树）
+        shell: bash
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p diag
+          {
+            echo "构建退出码: $(cat .build_exit 2>/dev/null || echo unknown)"
+            echo "=== hooks_runner 下的文件 ==="
+            find .dart_tool/hooks_runner -maxdepth 3 -type f 2>/dev/null | awk 'NR<=80'
+          } | tee diag/summary.txt
+          # 每个包钩子的 stdout/stderr 全文：失败的那个大概率不是 ffmpeg_kit
+          for f in $(find .dart_tool/hooks_runner -type f \( -name 'stdout.txt' -o -name 'stderr.txt' \) 2>/dev/null | awk 'NR<=40'); do
+            echo "===== $f ====="
+            awk 'NR<=200 { print }' "$f"
+          done | tee diag/hooks-output.txt
+          # native assets 清单：能看出哪些包成功 emit 了 code asset
+          echo "=== native assets 相关文件 ===" | tee diag/native-assets.txt
+          find .dart_tool build/windows -maxdepth 8 -type f -iname '*native_asset*' 2>/dev/null \
+            | awk 'NR<=40' | tee -a diag/native-assets.txt
+          for f in $(find .dart_tool build/windows -maxdepth 8 -type f -iname '*native_asset*' 2>/dev/null | awk 'NR<=10'); do
+            echo "===== $f ====="
+            awk 'NR<=150 { print }' "$f"
+          done | tee -a diag/native-assets.txt
+          find build/windows -maxdepth 3 -type d 2>/dev/null | awk 'NR<=80' | tee diag/build-tree.txt
+          if [ -f build-windows.log ]; then
+            size=$(stat -c%s build-windows.log)
+            echo "verbose 日志字节数: $size"
+            if [ "$size" -lt 20971520 ]; then
+              cp build-windows.log diag/build-windows.log.full
+            else
+              tail -n 3000 build-windows.log > diag/build-windows.log.tail
+            fi
+            grep -niE 'ffmpegkit|build hook|build_hooks|native asset|code_asset|code asset|local override|using app configuration|failed|exception|error:|LNK[0-9]|MSB[0-9]|unresolved|objective_c' \
+              build-windows.log | awk 'NR<=500' > diag/build-windows.filtered.txt
+          fi
+          echo "=== diag 目录 ==="
+          ls -l diag
+          exit 0
+
+      - name: 🗜️ 打包诊断
+        shell: bash
+        continue-on-error: true
+        run: |
+          powershell.exe -NoProfile -NonInteractive -Command \
+            "Compress-Archive -Path 'diag\*' -DestinationPath 'verify-windows-diag.zip' -Force"
+
+      - name: ⬆️ 上传诊断包
+        uses: actions/gitea-upload-artifact@v4
+        with:
+          name: verify-windows-diag.zip
+          path: verify-windows-diag.zip
+
+      - name: 🚦 判定产物
         shell: bash
         run: |
           set +e
-          echo "构建退出码: $(cat .build_exit 2>/dev/null || echo unknown)"
-          echo "--- 在 .dart_tool / build 中搜索含 'Build Hook' 的文件 ---"
-          hits=$(timeout 120 grep -rl 'Build Hook' .dart_tool build 2>/dev/null | awk 'NR<=10')
-          echo "${hits:-（没有找到钩子日志文件）}"
-          for f in $hits; do
-            echo "=== $f ==="
-            grep -niE 'build hook' "$f" | awk 'NR<=120'
-          done
           release_dir='build/windows/x64/runner/Release'
           if [ ! -d "$release_dir" ]; then
-            echo "❌ 构建未产出 $release_dir —— 钩子失败仍未解决，请把上面 🔨 步骤的相关日志发回"
+            echo "❌ 构建未产出 $release_dir —— 看上面 🔨 与 🧾 两步输出，或下载 verify-windows-diag.zip"
             exit 1
           fi
           echo "✅ 产物目录存在"
