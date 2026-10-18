@@ -7,6 +7,8 @@ name: 验证 Windows 切换 ffmpeg_kit（临时）
 #
 # 验证结论出来后，本文件与 tool/verify_ffmpeg_kit_windows_test.dart 可一并删除。
 # 历史背景（v0.2.34 失败 → v0.2.36 统一 → v0.2.41 回退分离）见 plan.md 版本历史。
+#
+# 注意：Gitea 的 shell: bash 带 -e（出错即中止），诊断类命令一律加 `|| true`。
 
 on:
   workflow_dispatch:
@@ -45,7 +47,10 @@ jobs:
         id: project
         shell: bash
         run: |
-          projectName=$(echo "$APP_NAME" | tr '-' '_')
+          projectName=$(printf '%s' "$APP_NAME" | tr '-' '_')
+          if [ -z "$projectName" ]; then
+            projectName=$(basename "$PWD" | tr '-' '_')
+          fi
           echo "project_name=$projectName" >> $GITHUB_OUTPUT
           echo "📌 Flutter 项目名: $projectName"
 
@@ -62,23 +67,39 @@ jobs:
       - name: 🔎 确认构建钩子期望的 builder 版本
         shell: bash
         run: |
-          pkg_dir=$(find "$LOCALAPPDATA/Pub/Cache/hosted" -maxdepth 2 -type d \
-            -name 'ffmpeg_kit_extended_flutter-*' | sort | tail -n 1)
-          if [ -z "$pkg_dir" ]; then
-            echo "⚠️ 未在 pub 缓存中找到 ffmpeg_kit_extended_flutter，跳过版本核对"
+          set +e
+          cfg=.dart_tool/package_config.json
+          if [ ! -f "$cfg" ]; then
+            echo "⚠️ 未找到 $cfg，跳过 builder 版本核对"
             exit 0
           fi
+          # 别猜 pub 缓存位置，直接从 package_config.json 取该包解析后的路径
+          root_uri=$(powershell.exe -NoProfile -NonInteractive -Command \
+            "(Get-Content -Raw '.dart_tool/package_config.json' | ConvertFrom-Json).packages | Where-Object { \$_.name -eq 'ffmpeg_kit_extended_flutter' } | Select-Object -ExpandProperty rootUri" \
+            | tr -d '\r' | awk 'NF { print; exit }')
+          if [ -z "$root_uri" ]; then
+            echo "⚠️ package_config.json 内未解析到 ffmpeg_kit_extended_flutter，跳过核对"
+            exit 0
+          fi
+          pkg_dir=$(printf '%s' "$root_uri" | sed 's|^file:///||')
           echo "包目录: $pkg_dir"
-          grep -nE 'String version = |_baseUrlTemplate' "$pkg_dir/hook/build.dart" || true
-          hook_version=$(grep -oE 'String version = "[^"]+"' "$pkg_dir/hook/build.dart" \
-            | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          hook_file="$pkg_dir/hook/build.dart"
+          if [ ! -f "$hook_file" ]; then
+            echo "⚠️ 未找到 $hook_file，跳过核对"
+            exit 0
+          fi
+          grep -nE 'String version = |_baseUrlTemplate' "$hook_file" || true
+          hook_version=$(grep -oE 'String version = "[^"]+"' "$hook_file" \
+            | awk 'NR==1' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
           echo "hook builder 版本: ${hook_version:-未知}（本工作流按 $FFMPEG_KIT_BUILDER）"
           if [ -n "$hook_version" ] && [ "$hook_version" != "$FFMPEG_KIT_BUILDER" ]; then
-            echo "❌ 不一致：请把 env 里的 FFMPEG_KIT_BUILDER 与 FFMPEG_KIT_WIN_SHA256"
-            echo "   换为 v${hook_version}-windows 对应 bundle 的值后重跑"
-            exit 1
+            echo "⚠️ 版本不一致：若构建或合并失败，先把 env 里的 FFMPEG_KIT_BUILDER"
+            echo "   与 FFMPEG_KIT_WIN_SHA256 换成 v${hook_version}-windows 对应 bundle 的值"
+            touch .builder_mismatch
+          else
+            echo "✅ builder 版本一致（或无法判定，已跳过）"
           fi
-          echo "✅ builder 版本一致"
+          exit 0
 
       - name: ⬇️ 预下载 Windows 原生库 bundle 并校验
         shell: bash
@@ -87,8 +108,12 @@ jobs:
           url="$FFMPEG_KIT_WIN_MIRROR/v$FFMPEG_KIT_BUILDER-windows/$FFMPEG_KIT_WIN_BUNDLE"
           mkdir -p ffmpeg-kit-bundle
           echo "URL: $url"
-          curl -fL --retry 3 --connect-timeout 30 \
-            -o "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" "$url"
+          if ! curl -fL --retry 3 --connect-timeout 30 \
+            -o "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" "$url"; then
+            echo "❌ 下载失败。可改用直连地址重试："
+            echo "   https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v$FFMPEG_KIT_BUILDER-windows/$FFMPEG_KIT_WIN_BUNDLE"
+            exit 1
+          fi
           size=$(stat -c%s "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE")
           echo "下载字节数: $size（上游记录为 17144043）"
           actual=$(sha256sum "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" | awk '{print $1}')
@@ -117,6 +142,7 @@ jobs:
             pubspec.yaml > pubspec.patched.yaml
           mv pubspec.patched.yaml pubspec.yaml
           grep -n -A4 '^ffmpeg_kit_extended_config:' pubspec.yaml
+          grep -q '^  windows: ' pubspec.yaml || { echo "❌ windows 覆盖未写入 pubspec.yaml"; exit 1; }
 
       - name: 📦 重新安装依赖
         shell: bash
@@ -145,7 +171,7 @@ jobs:
               'BEGIN{printf "  %s  (%.2f MB)\n", n, s/1048576}'
           done
           awk -v s="$total" 'BEGIN{printf "  合计: %.2f MB（不含 ffmpeg.exe，本次不内置）\n", s/1048576}'
-          main_dll=$(find "$release_dir" -maxdepth 1 -type f -iname '*ffmpegkit*.dll' | head -n 1)
+          main_dll=$(find "$release_dir" -maxdepth 1 -type f -iname '*ffmpegkit*.dll' | awk 'NR==1')
           if [ -z "$main_dll" ]; then
             echo "❌ Release 目录内未找到 libffmpegkit*.dll，code asset 未打进产物"
             echo "--- 在 build/windows 全树中搜索 ---"
@@ -164,7 +190,7 @@ jobs:
           mkdir -p ffmpeg-kit-bundle/extracted
           powershell.exe -NoProfile -NonInteractive -Command \
             "Expand-Archive -Path 'ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE' -DestinationPath 'ffmpeg-kit-bundle/extracted' -Force"
-          cli=$(find ffmpeg-kit-bundle/extracted -type f -iname 'ffmpeg.exe' | head -n 1 || true)
+          cli=$(find ffmpeg-kit-bundle/extracted -type f -iname 'ffmpeg.exe' | awk 'NR==1' || true)
           if [ -z "$cli" ]; then
             echo "ℹ️ bundle 内不含 ffmpeg.exe（正常：FFI 直接用 DLL），本步跳过"
             exit 0
@@ -208,7 +234,11 @@ jobs:
       - name: 📋 结论清单
         shell: bash
         run: |
-          echo "1) 构建通过 = 历史上 v0.2.34 的 Windows 构建失败已被上游修掉"
-          echo "2) Release 目录出现 libffmpegkit*.dll = code asset 打包链路可用"
-          echo "3) 把 verify-windows-ffmpegkit.zip 在真机解压后下载一个 DASH 视频 = 端到端确认"
-          echo "   重点看：合并成功、中文/emoji 标题的文件名、"已合并视频/音频" 日志"
+          echo '1) 构建通过 = 历史上 v0.2.34 的 Windows 构建失败已被上游修掉'
+          echo '2) Release 目录出现 libffmpegkit*.dll = code asset 打包链路可用'
+          echo '3) 把 verify-windows-ffmpegkit.zip 在真机解压后下载一个 DASH 视频 = 端到端确认'
+          echo '   重点看：合并成功、中文/emoji 标题的文件名、日志里的「已合并视频/音频」'
+          if [ -f .builder_mismatch ]; then
+            echo '⚠️ 构建钩子期望的 builder 版本与本工作流 pin 的 0.11.1 不一致，'
+            echo '   请把 URL/哈希换成对应版本后重跑，否则本轮的结论只算参考。'
+          fi
