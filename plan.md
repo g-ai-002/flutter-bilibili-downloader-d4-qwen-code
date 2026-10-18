@@ -20,8 +20,17 @@
 
 ## 版本历史
 
-### v0.4.29 (PATCH) — 当前开发版本
+### v0.4.30 (PATCH) — 当前开发版本
 - **状态**: 开发中 🔧
+- **目标**: 修掉 Android release 包存储读写全挂（R8 把 JNI 查找签名里的 Kotlin 类型改名）
+- **任务**:
+  - [x] 定位根因：解析 v0.4.29 release APK 的 `classes.dex`（脚本直接读 dex 类型表与方法表），`SharedPreferencesApiRegistrar.getAll` 成员本身完好（`flags=0x1`、`static=False`，没被裁剪或静态化），但它与其余 `suspend` 方法的签名都成了 `(..., Ld5;)Ljava/lang/Object;` —— `kotlin.coroutines.Continuation` 被 R8 改名成 `d5`（`CoroutineContext` → `i5`），与 Dart 侧按 `(..., Lkotlin/coroutines/Continuation;)` 的查找对不上，读写一起抛 `NoSuchMethodError`
+  - [x] `android/app/proguard-rules.pro` 新增 `-keep class kotlin.** { *; }`（一并覆盖同样出现在生成签名里的 `kotlin.enums.EnumEntries`、`kotlin.jvm.internal.DefaultConstructorMarker`），文件头背景说明改为「成员被裁剪/静态化 + 签名里的类型被改名」两种失效方式
+  - [x] 版本号升至 0.4.30，同步 README / plan / versions.md / 应用内版本号
+- **注意**: 本机无 Flutter / Android SDK 与 R8，规则未在本地构建验证。验证方式：CI 出新包后解析 `classes.dex` 看 `Lkotlin/coroutines/Continuation;` 是否回到类型表，或真机启动后设置与下载历史能保留
+
+### v0.4.29 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: Windows 统一到 ffmpeg_kit_extended_flutter，去掉内置的 ffmpeg.exe
 - **任务**:
   - [x] 临时验证（`.gitea/workflows/verify-windows-ffmpegkit.yml` 与 `tool/` 自检测试已在验证后删除）：Windows 构建通过、Release 含 `libffmpegkit.dll`、真机 DASH 下载合并正常
