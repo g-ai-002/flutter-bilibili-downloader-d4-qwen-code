@@ -5,6 +5,10 @@ name: 验证 Windows 切换 ffmpeg_kit（临时）
 # Android 那份 lib/services/ffmpeg_platform.dart 构建 Windows 产物，
 # 不再执行 build.yml 的「切换 Windows 平台依赖」与「下载并内置 ffmpeg」两步。
 #
+# 第二轮：本地已核实 v0.11.1-windows 的 base bundle 结构是
+#   bundle-base-windows-x86_64-shared-lgpl/bin/libffmpegkit.dll（唯一二进制，无 ffmpeg.exe）
+# 与钩子预期一致，故构建失败原因只能来自钩子自身，本工作流用 -v 抓钩子 stderr。
+#
 # 验证结论出来后，本文件与 tool/verify_ffmpeg_kit_windows_test.dart 可一并删除。
 # 历史背景（v0.2.34 失败 → v0.2.36 统一 → v0.2.41 回退分离）见 plan.md 版本历史。
 #
@@ -122,7 +126,7 @@ jobs:
             echo "❌ sha256 与上游 release 记录不一致（可能被代理/镜像改写，或版本不匹配）"
             exit 1
           fi
-          echo "✅ bundle 校验通过"
+          echo "✅ bundle 校验通过（bin/ 内只有一个 libffmpegkit.dll，无 ffmpeg.exe）"
 
       - name: 🗂️ 查看 bundle 内部结构（诊断）
         shell: bash
@@ -131,13 +135,18 @@ jobs:
           powershell.exe -NoProfile -NonInteractive -Command \
             "Add-Type -AssemblyName System.IO.Compression.FileSystem; \
              [IO.Compression.ZipFile]::OpenRead((Resolve-Path 'ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE').Path).Entries \
-             | Select-Object -First 40 -ExpandProperty FullName"
+             | Where-Object { \$_.FullName -notlike '*/include/*' } \
+             | Select-Object -ExpandProperty FullName"
 
-      - name: 🔧 让构建钩子使用本地 bundle
+      - name: 🔧 写入 windows 覆盖（绝对路径）
         shell: bash
         run: |
           set -euo pipefail
-          awk -v line="  windows: \"ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE\"" \
+          # 用绝对路径：无论钩子把 appRoot 解析成什么，都不会出现 Local override not found
+          bundle_win=$(cygpath -m "$PWD/ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE")
+          echo "将写入 windows 覆盖: $bundle_win"
+          [ -f "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" ] || { echo "❌ bundle 文件不存在"; exit 1; }
+          awk -v line="  windows: \"$bundle_win\"" \
             '{ print } /^ffmpeg_kit_extended_config:/ { print line }' \
             pubspec.yaml > pubspec.patched.yaml
           mv pubspec.patched.yaml pubspec.yaml
@@ -148,9 +157,40 @@ jobs:
         shell: bash
         run: flutter pub get
 
-      - name: 🔨 构建 Windows（含 ffmpeg_kit）
+      # 诊断优先：这里不因构建失败中止，由下一步统一判定
+      - name: 🔨 构建 Windows（verbose，抓钩子日志）
         shell: bash
-        run: flutter build windows --release
+        continue-on-error: true
+        run: |
+          set +e
+          flutter build windows --release -v > build-windows.log 2>&1
+          echo "$?" > .build_exit
+          echo "=== 构建退出码: $(cat .build_exit) ==="
+          echo "=== 钩子/原生资源相关日志 ==="
+          grep -niE 'ffmpegkit|build hook|build_hooks|native asset|code_asset|code asset|local override|using app configuration|using package-local|no configuration found|downloading http|sha256|failed to|exception' build-windows.log | awk 'NR<=250' || true
+          echo "=== 日志总行数: $(awk 'END { print NR }' build-windows.log) ==="
+          echo "=== 日志尾部 80 行 ==="
+          tail -n 80 build-windows.log
+          exit 0
+
+      - name: 🔎 汇总钩子日志与产物状态
+        shell: bash
+        run: |
+          set +e
+          echo "构建退出码: $(cat .build_exit 2>/dev/null || echo unknown)"
+          echo "--- 在 .dart_tool / build 中搜索含 'Build Hook' 的文件 ---"
+          hits=$(timeout 120 grep -rl 'Build Hook' .dart_tool build 2>/dev/null | awk 'NR<=10')
+          echo "${hits:-（没有找到钩子日志文件）}"
+          for f in $hits; do
+            echo "=== $f ==="
+            grep -niE 'build hook' "$f" | awk 'NR<=120'
+          done
+          release_dir='build/windows/x64/runner/Release'
+          if [ ! -d "$release_dir" ]; then
+            echo "❌ 构建未产出 $release_dir —— 钩子失败仍未解决，请把上面 🔨 步骤的相关日志发回"
+            exit 1
+          fi
+          echo "✅ 产物目录存在"
 
       - name: 🔍 校验产物中的 ffmpeg-kit 原生库
         shell: bash
@@ -182,32 +222,6 @@ jobs:
           echo "✅ 主库: $(basename "$main_dll")；Release 目录 DLL 总数: $dll_count"
           find "$release_dir" -maxdepth 1 -type f -iname '*.dll' -printf '  %f\n' | sort
 
-      - name: 🧪 用 bundle 自带 ffmpeg.exe 验证无损合并（若存在）
-        shell: bash
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          mkdir -p ffmpeg-kit-bundle/extracted
-          powershell.exe -NoProfile -NonInteractive -Command \
-            "Expand-Archive -Path 'ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE' -DestinationPath 'ffmpeg-kit-bundle/extracted' -Force"
-          cli=$(find ffmpeg-kit-bundle/extracted -type f -iname 'ffmpeg.exe' | awk 'NR==1' || true)
-          if [ -z "$cli" ]; then
-            echo "ℹ️ bundle 内不含 ffmpeg.exe（正常：FFI 直接用 DLL），本步跳过"
-            exit 0
-          fi
-          echo "CLI: $cli"
-          mkdir -p ffmpeg-kit-bundle/probe
-          cd ffmpeg-kit-bundle/probe
-          "$cli" -hide_banner -h muxer=mp4 >/dev/null 2>&1 \
-            || { echo "❌ 该 bundle 不含 mp4 复用器"; exit 1; }
-          echo "✅ mp4 复用器可用"
-          "$cli" -hide_banner -f lavfi -i "testsrc=duration=1:size=320x240:rate=10" -c:v mpeg4 -y v.mp4
-          "$cli" -hide_banner -f lavfi -i "sine=duration=1" -c:a aac -y a.m4a
-          "$cli" -hide_banner -y -i v.mp4 -i a.m4a \
-            -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 out.mp4
-          "$cli" -hide_banner -i out.mp4 2>&1 | tail -n 6
-          echo "✅ bundle 自带 ffmpeg 能跑通生产用的无损合并命令"
-
       - name: 🧪 进程内 FFI 自检（flutter test，非致命）
         shell: bash
         continue-on-error: true
@@ -235,7 +249,7 @@ jobs:
         shell: bash
         run: |
           echo '1) 构建通过 = 历史上 v0.2.34 的 Windows 构建失败已被上游修掉'
-          echo '2) Release 目录出现 libffmpegkit*.dll = code asset 打包链路可用'
+          echo '2) Release 目录出现 libffmpegkit.dll = code asset 打包链路可用'
           echo '3) 把 verify-windows-ffmpegkit.zip 在真机解压后下载一个 DASH 视频 = 端到端确认'
           echo '   重点看：合并成功、中文/emoji 标题的文件名、日志里的「已合并视频/音频」'
           if [ -f .builder_mismatch ]; then
