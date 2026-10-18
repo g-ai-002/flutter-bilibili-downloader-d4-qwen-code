@@ -142,12 +142,16 @@ jobs:
       - name: 📥 检出代码
         uses: actions/checkout@v6
 
+      # robocopy 成功也返回 1（0-7 都算成功），而 powershell 步骤会把 $LASTEXITCODE 当步骤退出码，
+      # 所以末尾显式 exit 0，否则步骤被判失败
       - name: 📂 复制工程到短路径
         shell: powershell
         run: |
           if (Test-Path C:\w) { Remove-Item -Recurse -Force C:\w }
           robocopy "$env:GITHUB_WORKSPACE" C:\w /E /NFL /NDL /NJH /NJS /NP | Out-Null
-          if ($LASTEXITCODE -ge 8) { throw "robocopy to C:\w failed: $LASTEXITCODE" }
+          $rc = $LASTEXITCODE
+          if ($rc -ge 8) { throw "robocopy to C:\w failed: $rc" }
+          exit 0
 
       - name: 🩺 诊断 Flutter 环境
         shell: bash
