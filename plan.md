@@ -30,6 +30,7 @@
   - [x] 按用户要求：CI 侧不对上游 bundle / AAR 做 sha256 校验，直接使用下载内容
   - [x] 两份工作流新增 `workflow_dispatch` 输入 `ffmpeg_kit_windows`（`repack` 默认 / `upstream`）：选 `upstream` 时跳过「短名重打包 + 指向本地 bundle + 预置解压缓存」，直接用上游长名 bundle，用于验证 runner 是否已开启长路径；tag 触发（inputs 为空）仍走 `repack`
   - [x] 验证结论：`upstream` 模式下 runner 能直接解压上游长名 bundle，构建与真机合并均正常 → 彻底去掉重打包绕行：两份工作流删除「准备 bundle / 指向本地 bundle / 预置解压缓存」三步、`ffmpeg_kit_windows` 输入与 `FFMPEG_KIT_*` 环境变量；版本清单的 ffmpeg-kit 行改从 `pubspec.yaml` 的下载地址解析
+  - [ ] GitHub 侧 Windows 构建仍失败（只有 `Target build_hooks failed : error : Building native assets failed`，钩子 stdout 被 MSBuild 吞掉）：已确认托管 runner 本就开启长路径（`LongPathsEnabled: 1 -> 1`）、bundle 已下载并解压成功（缓存内有 `.extract_complete` 与 `bin\libffmpegkit.dll`），失败在解压之后；另发现同一次运行里 Windows 解析到 `hooks 2.0.2` / `record_use 0.6.0`，Linux 解析到 `hooks 2.2.0` / `record_use 1.1.1`（`code_assets` 两端均为 1.2.1）→ 已加失败诊断（打印 hooks_runner 下 `stdout.txt` / `stderr.txt` / `output.json`）并把 `pub get` 提到 `flutter create` 之前与 Gitea 同序
   - [x] 合并依赖：删除 `pubspec_windows.yaml`，改为 `pubspec.yaml` 的 `ffmpeg_kit_extended_config.windows`
   - [x] 合并实现：删除 `lib/services/ffmpeg_windows.dart`，`ffmpeg_platform.dart` 双平台共用
   - [x] 两份 CI 工作流去掉「切换 Windows 平台依赖」与「下载并内置 ffmpeg」两步
