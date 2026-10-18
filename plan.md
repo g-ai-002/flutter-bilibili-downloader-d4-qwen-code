@@ -22,11 +22,12 @@
 
 ### v0.4.28 (PATCH) — 当前开发版本
 - **状态**: 开发中 🔧
-- **目标**: 修复 Android 启动卡在启动画面（启动阶段插件初始化无兜底）+ 加固 release 混淆规则
+- **目标**: 修复 Android 启动卡在启动画面（根因：release 混淆吃掉 JNI 调用成员）+ 启动阶段加兜底
 - **任务**:
+  - [x] 定位根因：shared_preferences_android 2.5.0 改为 Pigeon JNI 实现，Dart 侧按类名+签名反射调用 Kotlin suspend 方法；release 下 R8 把这些成员裁剪/静态化，报 `NoSuchMethodError: no non-static method "L...SharedPreferencesApiRegistrar;.getAll(...)"`，启动时 `StorageService` 初始化失败导致卡在启动画面
   - [x] main.dart 启动步骤（本地存储 / 日志 / 通知 / ffmpeg / 设置）统一加 10s 超时与 try/catch，失败只记录日志并降级继续，保证能进入主界面
   - [x] 启动步骤成功/失败写入应用日志（设置页可查看），日志服务不可用时用 debugPrint 兜底输出到 logcat
-  - [x] android/app/proguard-rules.pro 补充 JNI（package:jni / jni_flutter）与通知插件模型类的 keep 规则
+  - [x] android/app/proguard-rules.pro 保留 `io.flutter.plugins.**`（含 JNI 调用入口）与 `com.github.dart_lang.jni(._flutter).**`，不加 allowoptimization/allowshrinking 以禁止 R8 静态化
   - [x] 版本号升至 0.4.28
 
 ### v0.4.27 (PATCH)

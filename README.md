@@ -65,9 +65,10 @@ git push origin v0.4.28
 ## 版本历史
 
 ### v0.4.28 (当前版本)
-- 修复 Android 启动卡在启动画面：启动阶段的插件初始化（本地存储 / 日志 / 通知 / ffmpeg）统一加超时与兜底，任一步失败或超时都只记录日志并降级继续，保证能进入主界面
+- 修复 Android 启动卡在启动画面：根因是 `shared_preferences_android` 2.5.0 改用 Pigeon JNI 实现，Dart 侧按类名+方法签名反射调用 Kotlin 方法，而 release 构建的 R8 把这些成员裁剪/静态化，运行时抛 `NoSuchMethodError: no non-static method`
+- `android/app/proguard-rules.pro` 保留 `io.flutter.plugins.**` 与 `com.github.dart_lang.jni(._flutter).**`（不放开优化/裁剪，避免 R8 静态化），修复 release 包上存储读写全部失败的问题
+- 启动阶段的插件初始化（本地存储 / 日志 / 通知 / ffmpeg）统一加 10s 超时与兜底：任一步失败或超时都只记录日志并降级继续，保证能进入主界面
 - 启动步骤的成功/失败写入应用日志（设置页可查看），日志服务自身不可用时用 debugPrint 兜底输出到 logcat
-- 补充 ProGuard keep 规则：保留 path_provider 新版 JNI 实现（package:jni / jni_flutter）与通知插件模型类，避免 release 构建被 R8 裁剪
 
 ### v0.4.27
 - 新增 Gitea Actions 构建发布流水线，与 GitHub 流水线同构，推送标签自动创建对应平台 Release
