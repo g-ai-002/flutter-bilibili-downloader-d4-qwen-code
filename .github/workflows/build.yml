@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      ffmpeg_kit_windows:
+        description: 'Windows ffmpeg-kit 原生库来源'
+        type: choice
+        options:
+          - repack
+          - upstream
+        default: repack
 
 concurrency:
   group: build-${{ github.sha }}
@@ -151,6 +159,7 @@ jobs:
           Write-Host "OS: $($env:OS) $($env:PROCESSOR_ARCHITECTURE)"
           Write-Host "USERPROFILE: $env:USERPROFILE"
           Write-Host "PWD: $(Get-Location)"
+          Write-Host "ffmpeg-kit windows 模式: ${{ inputs.ffmpeg_kit_windows || 'repack' }}"
           flutter --version
           dart --version
           Write-Host "========================================"
@@ -162,6 +171,7 @@ jobs:
       # MAX_PATH 静默失败（详见 plan.md），因此下载后重打包成短名 fk.zip——内部根目录同为
       # fk，正好满足钩子「<extractRoot>/<zip 同名目录>」的回退要求。
       - name: Prepare ffmpeg-kit Windows bundle
+        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -180,6 +190,7 @@ jobs:
 
       # 用绝对路径指向本地短名 bundle：无论钩子把 appRoot 解析成什么都能命中
       - name: Point ffmpeg-kit config to the local bundle
+        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -198,6 +209,7 @@ jobs:
 
       # 预置钩子解压缓存，让 prepareExtractedArtifact 直接命中、完全不触发上游解压
       - name: Seed ffmpeg-kit hook cache
+        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
         shell: bash
         run: |
           set -euo pipefail

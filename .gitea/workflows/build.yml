@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      ffmpeg_kit_windows:
+        description: 'Windows ffmpeg-kit 原生库来源'
+        type: choice
+        options:
+          - repack
+          - upstream
+        default: repack
 
 run-name: 📺 构建 ${{ github.ref_name }}
 
@@ -144,6 +152,7 @@ jobs:
         shell: bash
         run: |
           id
+          echo "ffmpeg-kit windows 模式: ${{ inputs.ffmpeg_kit_windows || 'repack' }}"
           echo "=== Flutter 版本 ==="
           flutter --version
           echo "=== Flutter doctor ==="
@@ -161,6 +170,7 @@ jobs:
       # （详见 plan.md），因此重打包成短名 fk.zip——内部根目录同为 fk，正好满足钩子
       # 「<extractRoot>/<zip 同名目录>」的回退要求。
       - name: 📦 准备 ffmpeg-kit Windows 原生库
+        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -179,6 +189,7 @@ jobs:
 
       # 用绝对路径指向本地短名 bundle：无论钩子把 appRoot 解析成什么都能命中
       - name: 🔧 让构建钩子使用本地 bundle
+        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -198,6 +209,7 @@ jobs:
 
       # 预置钩子解压缓存，让 prepareExtractedArtifact 直接命中、完全不触发上游解压
       - name: 🌱 预置 ffmpeg-kit 解压缓存
+        if: ${{ inputs.ffmpeg_kit_windows != 'upstream' }}
         shell: bash
         run: |
           set -euo pipefail
