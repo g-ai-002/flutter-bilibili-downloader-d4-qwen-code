@@ -121,29 +121,24 @@ jobs:
     name: Build Windows EXE
     permissions:
       contents: read
-    # runner 的工作区把仓库名重复两遍（D:\a\<repo>\<repo>）：ffmpeg-kit 钩子解压后的目录会到
-    # 258 字符、libffmpegkit.dll 275 字符，Dart 在 Windows 上列不了超 MAX_PATH 的目录
-    # （PathNotFoundException），所以把工程复制到盘根短目录 C:\w 再构建，见 plan.md。
     defaults:
       run:
         working-directory: C:\w
+        shell: bash
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # actions/checkout 的 path 只能落在 $GITHUB_WORKSPACE 内，因此自己拷贝到盘根短目录。
-      # 注意 robocopy 成功也返回 1（0-7 都算成功），而 pwsh 步骤会把 $LASTEXITCODE 当步骤退出码，
-      # 所以末尾必须显式 exit 0，否则步骤被判失败、后续构建全跳过。
       - name: Copy project to a short path
-        shell: pwsh
-        working-directory: ${{ github.workspace }}
+        shell: bash
+        working-directory: C:/
         run: |
-          if (Test-Path C:\w) { Remove-Item -Recurse -Force C:\w }
-          robocopy "$env:GITHUB_WORKSPACE" C:\w /E /NFL /NDL /NJH /NJS /NP | Out-Null
-          $rc = $LASTEXITCODE
-          if ($rc -ge 8) { throw "robocopy to C:\w failed: $rc" }
-          Write-Host "project copied: $env:GITHUB_WORKSPACE -> C:\w (robocopy exit $rc)"
-          exit 0
+          set -euo pipefail
+          src=$(cygpath -u "$GITHUB_WORKSPACE")
+          rm -rf /c/w
+          mkdir -p /c/w
+          cp -a "$src"/. /c/w/
+          echo "project copied: $src -> C:\\w"
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -160,19 +155,16 @@ jobs:
           cache: true
 
       - name: Print environment info
-        shell: pwsh
         run: |
-          Write-Host "========================================"
-          Write-Host "  构建环境信息"
-          Write-Host "========================================"
-          Write-Host "OS: $($env:OS) $($env:PROCESSOR_ARCHITECTURE)"
-          Write-Host "USERPROFILE: $env:USERPROFILE"
-          Write-Host "PWD: $(Get-Location)"
+          echo "========================================"
+          echo "  构建环境信息"
+          echo "========================================"
+          echo "OS: ${RUNNER_OS:-?} / ${PROCESSOR_ARCHITECTURE:-?}"
+          echo "PWD: $(pwd)"
           flutter --version
           dart --version
-          Write-Host "========================================"
+          echo "========================================"
 
-      # 先解析依赖再生成平台文件：与 Gitea 侧同序（flutter create 内部也会跑 pub get）
       - name: Install dependencies
         run: flutter pub get
 
@@ -182,42 +174,36 @@ jobs:
       - name: Build Windows
         run: flutter build windows --release
 
-      # 钩子的报错被 MSBuild 吞成一行，失败时把钩子自己的 stdout/stderr 留进日志
       - name: Dump ffmpeg-kit hook state (on failure)
         if: failure()
-        shell: pwsh
         run: |
-          Write-Host "=== 钩子 stdout / stderr / output.json ==="
-          Get-ChildItem -Recurse -Force -File .dart_tool\hooks_runner -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -in @('stdout.txt', 'stderr.txt', 'output.json') } |
-            Sort-Object FullName |
-            ForEach-Object {
-              Write-Host "--- $($_.FullName.Replace("$PWD\", '')) ($($_.Length) bytes) ---"
-              Get-Content -LiteralPath $_.FullName -TotalCount 200 -ErrorAction SilentlyContinue
-            }
-          Write-Host "=== DLL 落点 ==="
-          Get-ChildItem -Recurse -Force -Filter *.dll -Path .dart_tool\hooks_runner\shared, build\windows -ErrorAction SilentlyContinue |
-            Select-Object -First 20 |
-            ForEach-Object { '{0,10}  {1}' -f $_.Length, $_.FullName.Replace("$PWD\", '') }
+          echo "=== 钩子 stdout / stderr / output.json ==="
+          find .dart_tool/hooks_runner -type f \( -name stdout.txt -o -name stderr.txt -o -name output.json \) 2>/dev/null | sort | while read -r f; do
+            echo "--- $f ($(stat -c%s "$f") bytes) ---"
+            head -200 "$f"
+          done
+          echo "=== DLL 落点 ==="
+          find .dart_tool/hooks_runner/shared build/windows -name '*.dll' 2>/dev/null | head -20
 
       - name: List build output
-        shell: pwsh
         run: |
-          $releaseDir = 'build\windows\x64\runner\Release'
-          Write-Host "========================================"
-          Write-Host "  构建产物列表: $releaseDir"
-          Write-Host "========================================"
-          if (Test-Path $releaseDir) {
-            Get-ChildItem $releaseDir | ForEach-Object {
-              $sizeMB = [math]::Round($_.Length / 1MB, 2)
-              Write-Host "  $($_.Name)  ($sizeMB MB)"
-            }
-            $totalMB = [math]::Round((Get-ChildItem $releaseDir | Measure-Object Length -Sum).Sum / 1MB, 2)
-            Write-Host "  总大小: $totalMB MB"
-          } else {
-            Write-Host "  [目录不存在]"
-          }
-          Write-Host "========================================"
+          release_dir='build/windows/x64/runner/Release'
+          if [ -d "$release_dir" ]; then
+            total_bytes=0
+            for f in "$release_dir"/*; do
+              if [ -f "$f" ]; then
+                size=$(stat -c%s "$f")
+                size_mb=$(awk "BEGIN{printf \"%.2f\", $size/1048576}")
+                echo "  $(basename "$f")  ($size_mb MB)"
+                total_bytes=$((total_bytes + size))
+              fi
+            done
+            total_mb=$(awk "BEGIN{printf \"%.2f\", $total_bytes/1048576}")
+            echo "  合计: $total_mb MB"
+          else
+            echo "❌ 未找到构建输出目录"
+            exit 1
+          fi
 
       - name: Create Windows ZIP
         shell: pwsh
