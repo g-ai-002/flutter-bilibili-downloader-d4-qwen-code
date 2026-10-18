@@ -1,7 +1,7 @@
 name: flutter_bilibili_downloader_d4_qwen_code
 description: Bilibili 视频下载器 - 支持搜索、扫码登录、高清下载
 publish_to: 'none'
-version: 0.4.28
+version: 0.4.29
 
 environment:
   sdk: '>=3.13.5 <4.0.0'
@@ -30,6 +30,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+# ffmpeg-kit 原生库：CI 会把 windows 那条替换为「短名重打包后的本地 fk.zip」并预置解压缓存。
+# 上游 zip 的内部目录名较长，Windows 上 Expand-Archive 会因 MAX_PATH 静默失败（详见 plan.md）。
 ffmpeg_kit_extended_config:
   type: "base"
   linux: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.11.1-linux/bundle-base-linux-x86_64-shared-lgpl.zip"
+  windows: "https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v0.11.1-windows/bundle-base-windows-x86_64-shared-lgpl.zip"

@@ -20,8 +20,22 @@
 
 ## 版本历史
 
-### v0.4.28 (PATCH) — 当前开发版本
+### v0.4.29 (PATCH) — 当前开发版本
 - **状态**: 开发中 🔧
+- **目标**: Windows 统一到 ffmpeg_kit_extended_flutter，去掉内置的 ffmpeg.exe
+- **任务**:
+  - [x] 临时验证（`.gitea/workflows/verify-windows-ffmpegkit.yml` 与 `tool/` 自检测试已在验证后删除）：Windows 构建通过、Release 含 `libffmpegkit.dll`、真机 DASH 下载合并正常
+  - [x] 定位上游缺陷：0.6.2 钩子 `_extractFile` 用 `powershell Expand-Archive`，目标路径超过 MAX_PATH 时静默失败（退出码 0、什么都没解出），随后 `_handleDownloadedFile` 找不到 `<extractRoot>/<zip 同名目录>` 抛 `PathNotFoundException`；外层只报 `Target build_hooks failed : Building native assets failed`
+  - [x] 绕行落进 CI：下载上游 bundle → sha256 校验 → 重打包成短名 `fk.zip`（内部根目录同为 `fk`，兼顾钩子的同名目录回退）→ `windows:` 覆盖指向本地绝对路径 → 预置钩子解压缓存（`.extract_complete` + `fk/bin/libffmpegkit.dll`，并用 DLL 的 sha256 二次校验）
+  - [x] 合并依赖：删除 `pubspec_windows.yaml`，改为 `pubspec.yaml` 的 `ffmpeg_kit_extended_config.windows`
+  - [x] 合并实现：删除 `lib/services/ffmpeg_windows.dart`，`ffmpeg_platform.dart` 双平台共用
+  - [x] 两份 CI 工作流去掉「切换 Windows 平台依赖」与「下载并内置 ffmpeg」两步
+  - [x] 文档与清单同步（README / plan / versions.md / `.build/query_all_versions.py`）
+  - [x] 版本号升至 0.4.29
+- **注意**: Windows 上 ffmpeg 变进程内 FFI，坏输入可能带走整个应用（原来的独立进程方案不会）
+
+### v0.4.28 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: 修复 Android 启动卡在启动画面（根因：release 混淆吃掉 JNI 调用成员）+ 启动阶段加兜底
 - **任务**:
   - [x] 定位根因：shared_preferences_android 2.5.0 改为 Pigeon JNI 实现，Dart 侧按类名+签名反射调用 Kotlin suspend 方法；release 下 R8 把这些成员裁剪/静态化，报 `NoSuchMethodError: no non-static method "L...SharedPreferencesApiRegistrar;.getAll(...)"`，启动时 `StorageService` 初始化失败导致卡在启动画面

@@ -14,7 +14,11 @@ concurrency:
 
 env:
   APP_NAME: ${{ github.event.repository.name }}
-  FFMPEG_VERSION: '8.1.1'
+  # Windows 产物内置的 ffmpeg-kit 原生库：上游 builder 版本、bundle 文件名与两个校验值
+  FFMPEG_KIT_BUILDER: '0.11.1'
+  FFMPEG_KIT_WIN_BUNDLE: 'bundle-base-windows-x86_64-shared-lgpl.zip'
+  FFMPEG_KIT_WIN_SHA256: 'ac4f7c6893eb2d2a7d9c1c7a08e8cad42105b509d097ce2b2eceabcdcbd7cb47'
+  FFMPEG_KIT_DLL_SHA256: '888a15993862950feed714990e459f653b68bbc2ce30da7d4bda8db9a5212c06'
 
 jobs:
   metadata:
@@ -155,16 +159,67 @@ jobs:
         shell: bash
         run: flutter create --platforms=windows --project-name ${{ needs.metadata.outputs.project_name }} .
 
-      - name: 🔀 切换 Windows 平台依赖
+      # 上游 bundle 的内部目录名较长，Windows 上 Expand-Archive 会因 MAX_PATH 静默失败
+      # （详见 plan.md），因此重打包成短名 fk.zip——内部根目录同为 fk，正好满足钩子
+      # 「<extractRoot>/<zip 同名目录>」的回退要求。
+      - name: 📦 准备 ffmpeg-kit Windows 原生库
         shell: bash
         run: |
-          cp pubspec_windows.yaml pubspec.yaml
-          cp lib/services/ffmpeg_windows.dart lib/services/ffmpeg_platform.dart
-          echo "✅ 已切换为 Windows 平台依赖（无 ffmpeg_kit）"
+          set -euo pipefail
+          url="https://gh-proxy.org/https://github.com/akashskypatel/ffmpeg-kit-builders/releases/download/v${FFMPEG_KIT_BUILDER}-windows/${FFMPEG_KIT_WIN_BUNDLE}"
+          mkdir -p ffmpeg-kit-bundle
+          echo "URL: $url"
+          curl -fL --retry 3 --connect-timeout 30 -o "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" "$url"
+          actual=$(sha256sum "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" | awk '{print $1}')
+          if [ "$actual" != "$FFMPEG_KIT_WIN_SHA256" ]; then
+            echo "❌ bundle sha256 不符：$actual"
+            exit 1
+          fi
+          rm -rf ffmpeg-kit-bundle/work
+          powershell.exe -NoProfile -NonInteractive -Command \
+            "Expand-Archive -Path 'ffmpeg-kit-bundle\\$FFMPEG_KIT_WIN_BUNDLE' -DestinationPath 'ffmpeg-kit-bundle\\work' -Force"
+          mv "ffmpeg-kit-bundle/work/${FFMPEG_KIT_WIN_BUNDLE%.zip}" ffmpeg-kit-bundle/work/fk
+          powershell.exe -NoProfile -NonInteractive -Command \
+            "Compress-Archive -Path 'ffmpeg-kit-bundle\\work\\fk' -DestinationPath 'ffmpeg-kit-bundle\\fk.zip' -Force"
+          dll_sha=$(sha256sum ffmpeg-kit-bundle/work/fk/bin/libffmpegkit.dll | awk '{print $1}')
+          if [ "$dll_sha" != "$FFMPEG_KIT_DLL_SHA256" ]; then
+            echo "❌ libffmpegkit.dll sha256 不符：$dll_sha"
+            exit 1
+          fi
+          ls -l ffmpeg-kit-bundle/fk.zip
+          echo "✅ 已生成短名 bundle ffmpeg-kit-bundle/fk.zip"
+
+      # 用绝对路径指向本地短名 bundle：无论钩子把 appRoot 解析成什么都能命中
+      - name: 🔧 让构建钩子使用本地 bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_win=$(cygpath -m "$PWD/ffmpeg-kit-bundle/fk.zip")
+          awk '!/^  windows: /' pubspec.yaml > pubspec.clean.yaml
+          mv pubspec.clean.yaml pubspec.yaml
+          awk -v line="  windows: \"$bundle_win\"" \
+            '{ print } /^ffmpeg_kit_extended_config:/ { print line }' \
+            pubspec.yaml > pubspec.patched.yaml
+          mv pubspec.patched.yaml pubspec.yaml
+          grep -n -A4 '^ffmpeg_kit_extended_config:' pubspec.yaml
+          grep -q '^  windows: ' pubspec.yaml || { echo "❌ windows 覆盖未写入 pubspec.yaml"; exit 1; }
 
       - name: 📦 重新安装 Windows 依赖
         shell: bash
         run: flutter pub get
+
+      # 预置钩子解压缓存，让 prepareExtractedArtifact 直接命中、完全不触发上游解压
+      - name: 🌱 预置 ffmpeg-kit 解压缓存
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='.dart_tool/hooks_runner/shared/ffmpeg_kit_extended_flutter/build/ffmpeg_kit_cache/windows/fk'
+          rm -rf "$root"
+          mkdir -p "$root/fk/bin"
+          cp ffmpeg-kit-bundle/work/fk/bin/libffmpegkit.dll "$root/fk/bin/"
+          : > "$root/.extract_complete"
+          find "$root" -type f -printf '  %p  %s bytes\n'
+          echo "✅ 已预置 ffmpeg-kit 解压缓存"
 
       - name: 🔨 构建 Windows
         shell: bash
@@ -190,32 +245,6 @@ jobs:
             echo "❌ 未找到构建输出目录"
             exit 1
           fi
-
-      - name: ⬇️ 下载并内置 ffmpeg
-        shell: bash
-        run: |
-          set -euo pipefail
-          url="https://github.com/GyanD/codexffmpeg/releases/download/${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}-essentials_build.zip"
-          release_dir='build/windows/x64/runner/Release'
-          echo "URL: $url"
-          curl -L --retry 3 --connect-timeout 30 -o ffmpeg.zip "$url"
-          powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path 'ffmpeg.zip' -DestinationPath 'ffmpeg-extracted' -Force"
-          bin=$(find ffmpeg-extracted -type f -name ffmpeg.exe | head -n 1)
-          if [ -z "${bin:-}" ]; then
-            echo "❌ 压缩包中未找到 ffmpeg.exe"
-            exit 1
-          fi
-          cp "$bin" "$release_dir/ffmpeg.exe"
-          echo "✅ 已内置 ffmpeg.exe"
-          rm -f "$release_dir/ffprobe.exe"
-          echo "=== 最终产物列表 ==="
-          for f in "$release_dir"/*; do
-            if [ -f "$f" ]; then
-              size=$(stat -c%s "$f")
-              size_mb=$(awk "BEGIN{printf \"%.2f\", $size/1048576}")
-              echo "  $(basename "$f")  ($size_mb MB)"
-            fi
-          done
 
       - name: 🗜️ 打包 Windows ZIP
         shell: bash

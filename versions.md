@@ -7,8 +7,7 @@
 > [Gradle 版本服务](https://services.gradle.org/versions/all)。
 >
 > **列说明**：
-> - **当前版本**：Flutter 依赖取自 `pubspec.yaml`
->   （Windows 构建使用 `pubspec_windows.yaml`）；构建链取自 `android/` 下的
+> - **当前版本**：Flutter 依赖取自 `pubspec.yaml`；构建链取自 `android/` 下的
 >   Gradle 配置
 > - **MAJOR 最新版本**：最新大版本线的最新稳定版
 >   （跨大版本升级，可能含破坏式变更）
@@ -24,8 +23,8 @@
 
 | 项目                                      | 版本                               |
 |-------------------------------------------|------------------------------------|
-| 应用版本 (`pubspec.yaml`)                 | 0.4.28                             |
-| 应用内版本号 (`lib/utils/constants.dart`) | 0.4.28                             |
+| 应用版本 (`pubspec.yaml`)                 | 0.4.29                             |
+| 应用内版本号 (`lib/utils/constants.dart`) | 0.4.29                             |
 | Flutter SDK（CI 固定版本）                | 3.47.7                             |
 | Dart SDK 约束                             | >=3.13.5 <4.0.0                    |
 | compileSdk / targetSdk                    | 37 / 37                            |
@@ -40,24 +39,24 @@
 
 ## 1. Flutter 运行时依赖
 
-| 组件                                                        | 当前版本  | MAJOR 最新版本       | MINOR 最新版本       | PATCH 最新版本       | 引用文件                                | 说明                          | 类型         |
-|-------------------------------------------------------------|-----------|----------------------|----------------------|----------------------|-----------------------------------------|-------------------------------|--------------|
-| Provider (`provider`)                                       | `6.1.5+1` | `6.1.5+1` (已是最新) | `6.1.5+1` (已是最新) | `6.1.5+1` (已是最新) | `pubspec.yaml` / `pubspec_windows.yaml` | 状态管理                      | dependencies |
-| Dio (`dio`)                                                 | `5.11.1`  | `5.11.1` (已是最新)  | `5.11.1` (已是最新)  | `5.11.1` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | HTTP 客户端                   | dependencies |
-| Shared Preferences (`shared_preferences`)                   | `2.5.6`   | `2.5.6` (已是最新)   | `2.5.6` (已是最新)   | `2.5.6` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 键值本地存储                  | dependencies |
-| Path Provider (`path_provider`)                             | `2.1.6`   | `2.1.6` (已是最新)   | `2.1.6` (已是最新)   | `2.1.6` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 平台目录定位                  | dependencies |
-| Intl (`intl`)                                               | `0.20.3`  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 国际化与日期格式化            | dependencies |
-| Crypto (`crypto`)                                           | `3.0.7`   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 哈希与加密算法                | dependencies |
-| Flutter Local Notifications (`flutter_local_notifications`) | `22.3.2`  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `pubspec.yaml` / `pubspec_windows.yaml` | 本地通知                      | dependencies |
-| URL Launcher (`url_launcher`)                               | `6.3.3`   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 外部链接与应用唤起            | dependencies |
-| FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.6.2`   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `pubspec.yaml`                          | 音视频处理（FFmpeg Kit 扩展） | dependencies |
-| Window Manager (`window_manager`)                           | `0.5.2`   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `pubspec.yaml` / `pubspec_windows.yaml` | 桌面窗口管理（Windows）       | dependencies |
+| 组件                                                        | 当前版本  | MAJOR 最新版本       | MINOR 最新版本       | PATCH 最新版本       | 引用文件       | 说明                          | 类型         |
+|-------------------------------------------------------------|-----------|----------------------|----------------------|----------------------|----------------|-------------------------------|--------------|
+| Provider (`provider`)                                       | `6.1.5+1` | `6.1.5+1` (已是最新) | `6.1.5+1` (已是最新) | `6.1.5+1` (已是最新) | `pubspec.yaml` | 状态管理                      | dependencies |
+| Dio (`dio`)                                                 | `5.11.1`  | `5.11.1` (已是最新)  | `5.11.1` (已是最新)  | `5.11.1` (已是最新)  | `pubspec.yaml` | HTTP 客户端                   | dependencies |
+| Shared Preferences (`shared_preferences`)                   | `2.5.6`   | `2.5.6` (已是最新)   | `2.5.6` (已是最新)   | `2.5.6` (已是最新)   | `pubspec.yaml` | 键值本地存储                  | dependencies |
+| Path Provider (`path_provider`)                             | `2.1.6`   | `2.1.6` (已是最新)   | `2.1.6` (已是最新)   | `2.1.6` (已是最新)   | `pubspec.yaml` | 平台目录定位                  | dependencies |
+| Intl (`intl`)                                               | `0.20.3`  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `0.20.3` (已是最新)  | `pubspec.yaml` | 国际化与日期格式化            | dependencies |
+| Crypto (`crypto`)                                           | `3.0.7`   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `pubspec.yaml` | 哈希与加密算法                | dependencies |
+| Flutter Local Notifications (`flutter_local_notifications`) | `22.3.2`  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `pubspec.yaml` | 本地通知                      | dependencies |
+| URL Launcher (`url_launcher`)                               | `6.3.3`   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `pubspec.yaml` | 外部链接与应用唤起            | dependencies |
+| FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.6.2`   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `pubspec.yaml` | 音视频处理（FFmpeg Kit 扩展） | dependencies |
+| Window Manager (`window_manager`)                           | `0.5.2`   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `pubspec.yaml` | 桌面窗口管理（Windows）       | dependencies |
 
 ## 2. Flutter 开发依赖
 
-| 组件                            | 当前版本 | MAJOR 最新版本     | MINOR 最新版本     | PATCH 最新版本     | 引用文件                                | 说明             | 类型             |
-|---------------------------------|----------|--------------------|--------------------|--------------------|-----------------------------------------|------------------|------------------|
-| Flutter Lints (`flutter_lints`) | `6.0.0`  | `6.0.0` (已是最新) | `6.0.0` (已是最新) | `6.0.0` (已是最新) | `pubspec.yaml` / `pubspec_windows.yaml` | 官方 lint 规则集 | dev_dependencies |
+| 组件                            | 当前版本 | MAJOR 最新版本     | MINOR 最新版本     | PATCH 最新版本     | 引用文件       | 说明             | 类型             |
+|---------------------------------|----------|--------------------|--------------------|--------------------|----------------|------------------|------------------|
+| Flutter Lints (`flutter_lints`) | `6.0.0`  | `6.0.0` (已是最新) | `6.0.0` (已是最新) | `6.0.0` (已是最新) | `pubspec.yaml` | 官方 lint 规则集 | dev_dependencies |
 
 ## 3. Android 构建链
 
@@ -71,17 +70,17 @@
 
 ## 4. CI 与外部工具
 
-| 组件                            | 当前版本 | 引用文件                                                     | 说明                          |
-|---------------------------------|----------|--------------------------------------------------------------|-------------------------------|
-| FFmpeg (GyanD essentials build) | `8.1.1`  | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | Windows 产物内置的 ffmpeg.exe |
-| actions/checkout                | `v6`     | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | 检出仓库代码                  |
-| subosito/flutter-action         | `v2`     | `.github/workflows/build.yml`                                | 安装指定版本 Flutter SDK      |
-| actions/setup-java              | `v5`     | `.github/workflows/build.yml`                                | 安装 JDK（Temurin）           |
-| actions/upload-artifact         | `v7`     | `.github/workflows/build.yml`                                | 上传构建产物（GitHub）        |
-| actions/download-artifact       | `v8`     | `.github/workflows/build.yml`                                | 下载构建产物（GitHub）        |
-| softprops/action-gh-release     | `v3`     | `.github/workflows/build.yml`                                | 创建 GitHub Release           |
-| actions/gitea-upload-artifact   | `v4`     | `.gitea/workflows/build.yml`                                 | 上传构建产物（Gitea）         |
-| actions/gitea-download-artifact | `v8`     | `.gitea/workflows/build.yml`                                 | 下载构建产物（Gitea）         |
+| 组件                                                                 | 当前版本 | 引用文件                                                     | 说明                                                                        |
+|----------------------------------------------------------------------|----------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
+| ffmpeg-kit Windows 原生库 (`bundle-base-windows-x86_64-shared-lgpl`) | `0.11.1` | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | Windows 产物内置的 libffmpegkit.dll（构建期下载 → 短名重打包 → code asset） |
+| actions/checkout                                                     | `v6`     | `.github/workflows/build.yml` / `.gitea/workflows/build.yml` | 检出仓库代码                                                                |
+| subosito/flutter-action                                              | `v2`     | `.github/workflows/build.yml`                                | 安装指定版本 Flutter SDK                                                    |
+| actions/setup-java                                                   | `v5`     | `.github/workflows/build.yml`                                | 安装 JDK（Temurin）                                                         |
+| actions/upload-artifact                                              | `v7`     | `.github/workflows/build.yml`                                | 上传构建产物（GitHub）                                                      |
+| actions/download-artifact                                            | `v8`     | `.github/workflows/build.yml`                                | 下载构建产物（GitHub）                                                      |
+| softprops/action-gh-release                                          | `v3`     | `.github/workflows/build.yml`                                | 创建 GitHub Release                                                         |
+| actions/gitea-upload-artifact                                        | `v4`     | `.gitea/workflows/build.yml`                                 | 上传构建产物（Gitea）                                                       |
+| actions/gitea-download-artifact                                      | `v8`     | `.gitea/workflows/build.yml`                                 | 下载构建产物（Gitea）                                                       |
 
 ---
 

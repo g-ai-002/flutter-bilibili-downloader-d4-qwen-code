@@ -11,7 +11,7 @@
     - Gradle：https://services.gradle.org/versions/all
 
 「当前版本」：
-    - Flutter 依赖：直接读取 pubspec.yaml 与 pubspec_windows.yaml；
+    - Flutter 依赖：直接读取 pubspec.yaml；
     - Android 构建链：直接解析 android/ 下的 Gradle 配置；
     - CI 动作：直接解析 .github / .gitea 下的工作流文件。
 """
@@ -38,7 +38,7 @@ ctx.verify_mode = ssl.CERT_NONE
 
 UA = {'User-Agent': 'Mozilla/5.0'}
 
-PUBSPECS = ('pubspec.yaml', 'pubspec_windows.yaml')
+PUBSPECS = ('pubspec.yaml',)
 
 PRERELEASE_RE = re.compile(
     r'(?:^|[\-.+])(?:m\d+|rc[\-.]?\d*|cr\d+|alpha[\-.]?\d*|beta[\-.]?\d*|'
@@ -208,7 +208,8 @@ def collect_project_info():
         'abi': search(r"abiFilters\s+'([^']+)'", app_gradle),
         'kotlin_stdlib': search(r'kotlin-stdlib:([\d.]+)', app_gradle),
         'desugar': search(r'desugar_jdk_libs:([\d.]+)', app_gradle),
-        'ffmpeg': search(r"FFMPEG_VERSION:\s*'([^']+)'", gh_workflow),
+        'ffmpeg_builder': search(r"FFMPEG_KIT_BUILDER:\s*'([^']+)'", gh_workflow),
+        'ffmpeg_bundle': search(r"FFMPEG_KIT_WIN_BUNDLE:\s*'([^']+)'", gh_workflow),
     }
 
 
@@ -375,7 +376,7 @@ def build_markdown(info, pub_order, pub_refs, pub_types, pub_latest, build_lates
     lines.append('> 本文件由脚本 `.build/query_all_versions.py` 自动生成，数据来源：Flutter 依赖为 [pub.dev API](https://pub.dev/api/packages/)，Android 构建链为 [Google Maven](https://dl.google.com/dl/android/maven2/) / [Maven Central](https://repo1.maven.org/maven2/) / [Gradle 版本服务](https://services.gradle.org/versions/all)。')
     lines.append('>')
     lines.append('> **列说明**：')
-    lines.append('> - **当前版本**：Flutter 依赖取自 `pubspec.yaml`（Windows 构建使用 `pubspec_windows.yaml`）；构建链取自 `android/` 下的 Gradle 配置')
+    lines.append('> - **当前版本**：Flutter 依赖取自 `pubspec.yaml`；构建链取自 `android/` 下的 Gradle 配置')
     lines.append('> - **MAJOR 最新版本**：最新大版本线的最新稳定版（跨大版本升级，可能含破坏式变更）')
     lines.append('> - **MINOR 最新版本**：当前大版本线内的最新稳定版（同大版本升级，通常向后兼容）')
     lines.append('> - **PATCH 最新版本**：当前大版本.中版本线内的最新补丁版（仅 bug 修复）')
@@ -447,8 +448,9 @@ def build_markdown(info, pub_order, pub_refs, pub_types, pub_latest, build_lates
     lines.append('| 组件 | 当前版本 | 引用文件 | 说明 |')
     lines.append('|------|---------|----------|------|')
     lines.append(
-        f'| FFmpeg (GyanD essentials build) | `{info["ffmpeg"]}` | '
-        '`.github/workflows/build.yml` / `.gitea/workflows/build.yml` | Windows 产物内置的 ffmpeg.exe |'
+        f'| ffmpeg-kit Windows 原生库 (`{info["ffmpeg_bundle"]}`) | `{info["ffmpeg_builder"]}` | '
+        '`.github/workflows/build.yml` / `.gitea/workflows/build.yml` | '
+        'Windows 产物内置的 libffmpegkit.dll（构建期下载 → 短名重打包 → code asset）|'
     )
     for name, entry in actions.items():
         ref = ' / '.join(f'`{r}`' for r in entry['refs'])

@@ -48,7 +48,7 @@ void main() async {
   _flushStartupFailures();
   await _startupStep('通知服务初始化', NotificationService.instance.init);
 
-  // 初始化 ffmpeg（Android: ffmpeg_kit_extended_flutter; Windows: 无操作）
+  // 初始化 ffmpeg（Android 与 Windows 均为 ffmpeg_kit_extended_flutter）
   await _startupStep('ffmpeg 初始化', initializeFfmpeg);
 
   // 预加载设置，确保 Cookies 等配置在应用启动时已就绪

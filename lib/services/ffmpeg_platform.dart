@@ -1,6 +1,8 @@
-/// FFmpeg 平台实现入口。
-/// 默认使用 Android 平台实现（ffmpeg_kit_extended_flutter），本地开发/调试方便。
-/// Windows 构建时由 CI 替换为 ffmpeg_windows.dart。
+/// FFmpeg 平台实现入口（Android 与 Windows 共用 ffmpeg_kit_extended_flutter）。
+///
+/// 注意 Windows 侧的原生库由包自己的构建钩子落盘：上游 bundle 的内部目录名较长，
+/// Windows 上 Expand-Archive 会因 MAX_PATH 静默失败，因此 CI 会把它重打包成短名
+/// fk.zip 并预置钩子解压缓存（见两份 build.yml 里的 ffmpeg-kit 步骤）。
 library ffmpeg_platform;
 
 import 'dart:async';
@@ -25,7 +27,7 @@ Future<VideoMetadata?> probeMediaPlatform(String filePath) async {
     if (output == null || output.isEmpty) return null;
     return _parseFfprobeJson(output, filePath);
   } catch (e) {
-    LogService.warning('Android 平台解析媒体信息失败: $filePath | $e');
+    LogService.warning('解析媒体信息失败: $filePath | $e');
     return null;
   }
 }
