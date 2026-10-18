@@ -55,8 +55,8 @@ flutter build windows --release
 Windows ZIP，并在对应平台自动创建 Release：
 
 ```bash
-git tag v0.4.27
-git push origin v0.4.27
+git tag v0.4.28
+git push origin v0.4.28
 ```
 
 构建产物的版本号取自 `pubspec.yaml` 的 `version` 字段，标签版本号优先；应用内展示的版本号
@@ -64,7 +64,12 @@ git push origin v0.4.27
 
 ## 版本历史
 
-### v0.4.27 (当前版本)
+### v0.4.28 (当前版本)
+- 修复 Android 启动卡在启动画面：启动阶段的插件初始化（本地存储 / 日志 / 通知 / ffmpeg）统一加超时与兜底，任一步失败或超时都只记录日志并降级继续，保证能进入主界面
+- 启动步骤的成功/失败写入应用日志（设置页可查看），日志服务自身不可用时用 debugPrint 兜底输出到 logcat
+- 补充 ProGuard keep 规则：保留 path_provider 新版 JNI 实现（package:jni / jni_flutter）与通知插件模型类，避免 release 构建被 R8 裁剪
+
+### v0.4.27
 - 新增 Gitea Actions 构建发布流水线，与 GitHub 流水线同构，推送标签自动创建对应平台 Release
 - 新增阿里云 Maven 镜像 init 脚本，供 Gitea 自建 runner 使用
 - 新增 `versions.md` 开源软件版本清单与生成脚本 `.build/query_all_versions.py`

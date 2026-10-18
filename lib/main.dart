@@ -34,18 +34,26 @@ void main() async {
     });
   }
 
-  // 提前完成 StorageService 初始化，避免后续多个 Provider 并发
-  // 触发 SharedPreferences 异步加载竞态，导致 LateInitializationError。
-  await StorageService.instance;
-  await LogService.init();
-  await NotificationService.instance.init();
+  // 启动阶段各步骤互相独立：任一步失败或超时都只记录日志并降级继续，
+  // 绝不阻断 runApp()。否则某个插件不可用时会一直停在启动画面，
+  // 用户只能看到一个 logo，既进不去主界面也拿不到失败原因。
+  //
+  // StorageService 提前初始化，避免后续多个 Provider 并发触发
+  // SharedPreferences 异步加载竞态，导致 LateInitializationError。
+  await _startupStep('本地存储初始化', () async {
+    await StorageService.instance;
+  });
+  await _startupStep('日志服务初始化', LogService.init);
+  await _startupStep('通知服务初始化', NotificationService.instance.init);
 
   // 初始化 ffmpeg（Android: ffmpeg_kit_extended_flutter; Windows: 无操作）
-  await initializeFfmpeg();
+  await _startupStep('ffmpeg 初始化', initializeFfmpeg);
 
   // 预加载设置，确保 Cookies 等配置在应用启动时已就绪
   final settings = SettingsProvider();
-  await settings.load();
+  await _startupStep('设置加载', settings.load);
+
+  LogService.info('启动流程执行完毕，进入主界面');
 
   // 沉浸式状态栏：透明背景 + 深色图标
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -57,6 +65,28 @@ void main() async {
   ));
 
   runApp(BilibiliDownloaderApp(preloadedSettings: settings));
+}
+
+/// 单个启动步骤的超时上限
+const _startupStepTimeout = Duration(seconds: 10);
+
+/// 执行一个启动步骤，失败或超时只记录日志并继续。
+///
+/// 启动阶段的插件调用（SharedPreferences / path_provider / 通知 / ffmpeg）
+/// 任一不可用都不应该让应用卡在启动画面，这里统一做兜底，
+/// 失败原因会写入日志（设置页可查看）。
+Future<void> _startupStep(String name, Future<void> Function() action) async {
+  final stopwatch = Stopwatch()..start();
+  try {
+    await action().timeout(_startupStepTimeout);
+    LogService.info('启动步骤完成: $name (${stopwatch.elapsedMilliseconds}ms)');
+  } catch (e, stack) {
+    // 超时也走这里，异常文本形如 TimeoutException after 0:00:10.000000
+    const message = '[启动] 步骤失败（已降级继续）';
+    // LogService 自身失败时无法落盘，debugPrint 作为兜底（可在 logcat 中看到）
+    debugPrint('$message: $name | $e');
+    LogService.error('$message: $name', e, stack);
+  }
 }
 
 class BilibiliDownloaderApp extends StatelessWidget {

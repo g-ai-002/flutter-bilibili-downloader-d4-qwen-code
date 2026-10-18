@@ -24,8 +24,8 @@
 
 | 项目                                      | 版本                               |
 |-------------------------------------------|------------------------------------|
-| 应用版本 (`pubspec.yaml`)                 | 0.4.27                             |
-| 应用内版本号 (`lib/utils/constants.dart`) | 0.4.27                             |
+| 应用版本 (`pubspec.yaml`)                 | 0.4.28                             |
+| 应用内版本号 (`lib/utils/constants.dart`) | 0.4.28                             |
 | Flutter SDK（CI 固定版本）                | 3.47.7                             |
 | Dart SDK 约束                             | >=3.13.5 <4.0.0                    |
 | compileSdk / targetSdk                    | 37 / 37                            |
