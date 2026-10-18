@@ -158,8 +158,33 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # 托管 runner 默认未开启长路径：ffmpeg-kit 钩子用 Expand-Archive 把上游长名 bundle 解压到
+      # .dart_tool\hooks_runner\... 时会因 MAX_PATH 静默失败（详见 plan.md）。自建
+      # windows-flutter runner 上上游 bundle 已能直接解压，因此只在 GitHub 侧补这一步。
+      - name: Enable Windows long paths
+        shell: pwsh
+        run: |
+          $fs = 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem'
+          $before = (Get-ItemProperty -Path $fs -Name LongPathsEnabled -ErrorAction SilentlyContinue).LongPathsEnabled
+          New-ItemProperty -Path $fs -Name LongPathsEnabled -PropertyType DWord -Value 1 -Force | Out-Null
+          $after = (Get-ItemProperty -Path $fs -Name LongPathsEnabled).LongPathsEnabled
+          Write-Host "LongPathsEnabled: $before -> $after"
+
       - name: Build Windows
         run: flutter build windows --release
+
+      # 钩子的报错被 MSBuild 吞成一行，失败时把钩子缓存状态与原生资产工具链版本留进日志
+      - name: Dump ffmpeg-kit hook state (on failure)
+        if: failure()
+        shell: pwsh
+        run: |
+          Write-Host "=== 原生资产工具链（hooks / code_assets 等） ==="
+          flutter pub deps --style=compact | Select-String -Pattern 'hooks|code_assets|record_use|native_toolchain_c'
+          Write-Host "=== .dart_tool\hooks_runner（判断 bundle 是否下载/解压成功） ==="
+          Get-ChildItem -Recurse -Force .dart_tool\hooks_runner -ErrorAction SilentlyContinue |
+            Sort-Object FullName |
+            Select-Object -First 80 |
+            ForEach-Object { '{0,10}  {1}' -f $_.Length, $_.FullName.Replace("$PWD\", '') }
 
       - name: List build output
         shell: pwsh
