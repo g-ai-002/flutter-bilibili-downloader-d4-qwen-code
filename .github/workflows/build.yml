@@ -14,11 +14,9 @@ env:
   JAVA_VERSION: '21'
   FLUTTER_VERSION: '3.47.7'
   APP_NAME: ${{ github.event.repository.name }}
-  # Windows 产物内置的 ffmpeg-kit 原生库：上游 builder 版本、bundle 文件名与两个校验值
+  # Windows 产物内置的 ffmpeg-kit 原生库：上游 builder 版本与 bundle 文件名
   FFMPEG_KIT_BUILDER: '0.11.1'
   FFMPEG_KIT_WIN_BUNDLE: 'bundle-base-windows-x86_64-shared-lgpl.zip'
-  FFMPEG_KIT_WIN_SHA256: 'ac4f7c6893eb2d2a7d9c1c7a08e8cad42105b509d097ce2b2eceabcdcbd7cb47'
-  FFMPEG_KIT_DLL_SHA256: '888a15993862950feed714990e459f653b68bbc2ce30da7d4bda8db9a5212c06'
 
 jobs:
   metadata:
@@ -171,22 +169,12 @@ jobs:
           mkdir -p ffmpeg-kit-bundle
           echo "URL: $url"
           curl -fL --retry 3 --connect-timeout 30 -o "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" "$url"
-          actual=$(sha256sum "ffmpeg-kit-bundle/$FFMPEG_KIT_WIN_BUNDLE" | awk '{print $1}')
-          if [ "$actual" != "$FFMPEG_KIT_WIN_SHA256" ]; then
-            echo "❌ bundle sha256 不符：$actual"
-            exit 1
-          fi
           rm -rf ffmpeg-kit-bundle/work
           powershell.exe -NoProfile -NonInteractive -Command \
             "Expand-Archive -Path 'ffmpeg-kit-bundle\\$FFMPEG_KIT_WIN_BUNDLE' -DestinationPath 'ffmpeg-kit-bundle\\work' -Force"
           mv "ffmpeg-kit-bundle/work/${FFMPEG_KIT_WIN_BUNDLE%.zip}" ffmpeg-kit-bundle/work/fk
           powershell.exe -NoProfile -NonInteractive -Command \
             "Compress-Archive -Path 'ffmpeg-kit-bundle\\work\\fk' -DestinationPath 'ffmpeg-kit-bundle\\fk.zip' -Force"
-          dll_sha=$(sha256sum ffmpeg-kit-bundle/work/fk/bin/libffmpegkit.dll | awk '{print $1}')
-          if [ "$dll_sha" != "$FFMPEG_KIT_DLL_SHA256" ]; then
-            echo "❌ libffmpegkit.dll sha256 不符：$dll_sha"
-            exit 1
-          fi
           ls -l ffmpeg-kit-bundle/fk.zip
           echo "✅ 已生成短名 bundle ffmpeg-kit-bundle/fk.zip"
 

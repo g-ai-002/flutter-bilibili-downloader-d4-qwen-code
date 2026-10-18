@@ -26,7 +26,8 @@
 - **任务**:
   - [x] 临时验证（`.gitea/workflows/verify-windows-ffmpegkit.yml` 与 `tool/` 自检测试已在验证后删除）：Windows 构建通过、Release 含 `libffmpegkit.dll`、真机 DASH 下载合并正常
   - [x] 定位上游缺陷：0.6.2 钩子 `_extractFile` 用 `powershell Expand-Archive`，目标路径超过 MAX_PATH 时静默失败（退出码 0、什么都没解出），随后 `_handleDownloadedFile` 找不到 `<extractRoot>/<zip 同名目录>` 抛 `PathNotFoundException`；外层只报 `Target build_hooks failed : Building native assets failed`
-  - [x] 绕行落进 CI：下载上游 bundle → sha256 校验 → 重打包成短名 `fk.zip`（内部根目录同为 `fk`，兼顾钩子的同名目录回退）→ `windows:` 覆盖指向本地绝对路径 → 预置钩子解压缓存（`.extract_complete` + `fk/bin/libffmpegkit.dll`，并用 DLL 的 sha256 二次校验）
+  - [x] 绕行落进 CI：下载上游 bundle → 重打包成短名 `fk.zip`（内部根目录同为 `fk`，兼顾钩子的同名目录回退）→ `windows:` 覆盖指向本地绝对路径 → 预置钩子解压缓存（`.extract_complete` + `fk/bin/libffmpegkit.dll`）
+  - [x] 按用户要求：CI 侧不对上游 bundle / AAR 做 sha256 校验，直接使用下载内容
   - [x] 合并依赖：删除 `pubspec_windows.yaml`，改为 `pubspec.yaml` 的 `ffmpeg_kit_extended_config.windows`
   - [x] 合并实现：删除 `lib/services/ffmpeg_windows.dart`，`ffmpeg_platform.dart` 双平台共用
   - [x] 两份 CI 工作流去掉「切换 Windows 平台依赖」与「下载并内置 ffmpeg」两步
