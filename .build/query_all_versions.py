@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""生成 flutter-bilibili-downloader-d4-qwen-code 开源软件版本清单。
+"""生成开源软件版本清单（适用于四个同栈 Flutter 项目）。
 
 用法：
-    python .build/query_all_versions.py
+    python .build/query_all_versions.py [输出文件]
+    缺省输出到项目根目录 versions.md
 
 数据来源：
     - Flutter 依赖：https://pub.dev/api/packages/<package>
@@ -18,6 +19,7 @@
 import json
 import re
 import ssl
+import sys
 import unicodedata
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -26,6 +28,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / 'versions.md'
+if len(sys.argv) > 1:
+    OUTPUT = Path(sys.argv[1])
 
 GOOGLE_MAVEN = 'https://dl.google.com/dl/android/maven2'
 MAVEN_CENTRAL = 'https://repo1.maven.org/maven2'
@@ -115,22 +119,31 @@ def fmt_ver(current, latest):
 # ---------------------------------------------------------------------------
 # 依赖与构建链信息采集
 # ---------------------------------------------------------------------------
-# (显示名, pub 包名, 说明)
-PUB_META = [
-    ('Provider', 'provider', '状态管理'),
-    ('Dio', 'dio', 'HTTP 客户端'),
-    ('Shared Preferences', 'shared_preferences', '键值本地存储'),
-    ('Path Provider', 'path_provider', '平台目录定位'),
-    ('Intl', 'intl', '国际化与日期格式化'),
-    ('Crypto', 'crypto', '哈希与加密算法'),
-    ('Flutter Local Notifications', 'flutter_local_notifications', '本地通知'),
-    ('URL Launcher', 'url_launcher', '外部链接与应用唤起'),
-    ('FFmpeg Kit Extended Flutter', 'ffmpeg_kit_extended_flutter', '音视频处理（FFmpeg Kit 扩展）'),
-    ('Window Manager', 'window_manager', '桌面窗口管理（Windows）'),
-    ('Flutter Lints', 'flutter_lints', '官方 lint 规则集'),
-]
-PUB_TITLES = {pkg: name for name, pkg, _desc in PUB_META}
-PUB_DESCS = {pkg: desc for _name, pkg, desc in PUB_META}
+# (显示名, 说明) 按包名索引：四个项目共用的依赖描述表，未收录的包回退为包名 + 通用说明
+DEPS_META = {
+    'provider': ('Provider', '状态管理'),
+    'dio': ('Dio', 'HTTP 客户端'),
+    'shared_preferences': ('Shared Preferences', '键值本地存储'),
+    'path_provider': ('Path Provider', '平台目录定位'),
+    'path': ('Path', '路径处理'),
+    'intl': ('Intl', '国际化与日期格式化'),
+    'crypto': ('Crypto', '哈希与加密算法'),
+    'flutter_local_notifications': ('Flutter Local Notifications', '本地通知'),
+    'url_launcher': ('URL Launcher', '外部链接与应用唤起'),
+    'ffmpeg_kit_extended_flutter': ('FFmpeg Kit Extended Flutter', '音视频处理（FFmpeg Kit 扩展）'),
+    'window_manager': ('Window Manager', '桌面窗口管理（Windows）'),
+    'flutter_lints': ('Flutter Lints', '官方 lint 规则集'),
+    'just_audio': ('Just Audio', '音频播放'),
+    'just_audio_windows': ('Just Audio Windows', 'Just Audio 的 Windows 实现'),
+    'audio_service': ('Audio Service', '后台音频服务'),
+    'audio_session': ('Audio Session', '音频会话管理'),
+    'audio_metadata_reader': ('Audio Metadata Reader', '音频元数据读取'),
+    'file_picker': ('File Picker', '文件选择器'),
+    'permission_handler': ('Permission Handler', '运行时权限管理'),
+    'audioplayers': ('Audioplayers', '音频播放（audioplayers）'),
+}
+PUB_TITLES = {pkg: DEPS_META[pkg][0] for pkg in DEPS_META}
+PUB_DESCS = {pkg: DEPS_META[pkg][1] for pkg in DEPS_META}
 
 ACTION_DESCS = {
     'actions/checkout': '检出仓库代码',
@@ -190,7 +203,9 @@ def collect_project_info():
     settings = read_text('android/settings.gradle')
     app_gradle = read_text('android/app/build.gradle')
     gh_workflow = read_text('.github/workflows/build.yml')
-    constants = read_text('lib/utils/constants.dart')
+    constants = ''
+    if (ROOT / 'lib/utils/constants.dart').exists():
+        constants = read_text('lib/utils/constants.dart')
 
     return {
         'app_version': search(r'^version:\s*(\S+)', pubspec, re.M),
@@ -389,7 +404,8 @@ def build_markdown(info, pub_order, pub_refs, pub_types, pub_latest, build_lates
     lines.append('| 项目 | 版本 |')
     lines.append('|------|------|')
     lines.append(f'| 应用版本 (`pubspec.yaml`) | {info["app_version"]} |')
-    lines.append(f'| 应用内版本号 (`lib/utils/constants.dart`) | {info["constants_version"]} |')
+    if info['constants_version']:
+        lines.append(f'| 应用内版本号 (`lib/utils/constants.dart`) | {info["constants_version"]} |')
     lines.append(f'| Flutter SDK（CI 固定版本） | {info["flutter"]} |')
     lines.append(f'| Dart SDK 约束 | {info["dart"]} |')
     lines.append(f'| compileSdk / targetSdk | {info["compile_sdk"]} / {info["target_sdk"]} |')
@@ -447,11 +463,12 @@ def build_markdown(info, pub_order, pub_refs, pub_types, pub_latest, build_lates
     lines.append('## 4. CI 与外部工具\n')
     lines.append('| 组件 | 当前版本 | 引用文件 | 说明 |')
     lines.append('|------|---------|----------|------|')
-    lines.append(
-        f'| ffmpeg-kit Windows 原生库 (`{info["ffmpeg_bundle"]}`) | `{info["ffmpeg_builder"]}` | '
-        '`pubspec.yaml` | '
-        'Windows 产物内置的 libffmpegkit.dll（构建期由 ffmpeg_kit 钩子下载 → code asset）|'
-    )
+    if info['ffmpeg_builder']:
+        lines.append(
+            f'| ffmpeg-kit Windows 原生库 (`{info["ffmpeg_bundle"]}`) | `{info["ffmpeg_builder"]}` | '
+            '`pubspec.yaml` | '
+            'Windows 产物内置的 libffmpegkit.dll（构建期由 ffmpeg_kit 钩子下载 → code asset）|'
+        )
     for name, entry in actions.items():
         ref = ' / '.join(f'`{r}`' for r in entry['refs'])
         desc = ACTION_DESCS.get(name, '第三方 Action')
