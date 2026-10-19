@@ -20,8 +20,17 @@
 
 ## 版本历史
 
-### v0.4.30 (PATCH) — 当前开发版本
+### v0.4.31 (PATCH) — 当前开发版本
 - **状态**: 开发中 🔧
+- **目标**: release 不再跑 R8、删除 proguard-rules.pro，用约 1~2 MB dex 换「新增插件不会静默失效」的确定性
+- **任务**:
+  - [x] 对比另一同栈 Flutter 项目（`shared_preferences` 2.5.5，同代 jnigen 实现）：其 release `minifyEnabled false`、无任何 proguard 规则而持久化长期正常，确认差异只在是否跑 R8，与插件版本无关
+  - [x] `android/app/build.gradle` release 改 `minifyEnabled false` + `shrinkResources false`，删除 `proguardFiles` 行与 `android/app/proguard-rules.pro`（v0.4.30 的 keep 方案保留于 a02a24d）
+  - [x] 版本号升至 0.4.31，同步 README / plan / versions.md / 应用内版本号
+- **注意**: 本机无 Flutter / Android SDK，未在本地构建验证。验证方式：CI 出新包后真机确认设置与下载历史保留，可顺带对比 APK 体积（预期 dex 增大 1~2 MB）
+
+### v0.4.30 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: 修掉 Android release 包存储读写全挂（R8 把 JNI 查找签名里的 Kotlin 类型改名）
 - **任务**:
   - [x] 定位根因：解析 v0.4.29 release APK 的 `classes.dex`（脚本直接读 dex 类型表与方法表），`SharedPreferencesApiRegistrar.getAll` 成员本身完好（`flags=0x1`、`static=False`，没被裁剪或静态化），但它与其余 `suspend` 方法的签名都成了 `(..., Ld5;)Ljava/lang/Object;` —— `kotlin.coroutines.Continuation` 被 R8 改名成 `d5`（`CoroutineContext` → `i5`），与 Dart 侧按 `(..., Lkotlin/coroutines/Continuation;)` 的查找对不上，读写一起抛 `NoSuchMethodError`

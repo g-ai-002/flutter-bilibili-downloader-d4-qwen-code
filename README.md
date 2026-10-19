@@ -64,7 +64,12 @@ git push origin v0.4.29
 
 ## 版本历史
 
-### v0.4.30 (当前版本)
+### v0.4.31 (当前版本)
+- release 构建改为不跑 R8（`minifyEnabled false` + `shrinkResources false`），删除 `android/app/proguard-rules.pro`：不再需要为 jnigen / 反射类插件逐个维护 keep 规则，杜绝「只在 release 包暴露」的静默存储故障再次出现
+- 依据：另一同栈 Flutter 项目（`shared_preferences` 2.5.5，同代 jnigen 实现）release 一直不跑 R8、无任何 proguard 规则，持久化长期正常——差异从来不在插件版本，只在是否启用 R8（根因分析见 v0.4.30）
+- 代价：dex 不再参与裁剪/混淆，APK 预计增大 1~2 MB（大头是 ffmpeg-kit 原生库与 libapp.so，不受影响）
+
+### v0.4.30
 - 修复 Android release 包存储读写全部失败（退出重开像新装一样）：`shared_preferences_android` 2.5.0 改用 Pigeon JNI 后，Dart 侧按「类名 + 方法签名」反射查找 Kotlin 成员，而 R8 会把签名里的 `kotlin.coroutines.Continuation` 改名成 `d5`（`CoroutineContext` → `i5`），插件所有 `suspend` 方法（`getAll` / `setString` 等）签名不再匹配，运行时抛 `NoSuchMethodError: no non-static method`
 - `android/app/proguard-rules.pro` 新增 `-keep class kotlin.** { *; }`：JNI 按签名逐类型名匹配，签名里出现的 Kotlin 标准库类型同样不能被改名（v0.4.28 只保留 `io.flutter.plugins.**` 挡不住这类问题）
 
