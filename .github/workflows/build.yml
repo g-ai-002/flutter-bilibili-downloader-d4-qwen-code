@@ -176,17 +176,6 @@ jobs:
       - name: 🔨 构建 Windows
         run: flutter build windows --release
 
-      - name: 🧾 失败时导出 ffmpeg-kit 钩子日志
-        if: failure()
-        run: |
-          echo "=== 🧾 钩子 stdout / stderr / output.json ==="
-          find .dart_tool/hooks_runner -type f \( -name stdout.txt -o -name stderr.txt -o -name output.json \) 2>/dev/null | sort | while read -r f; do
-            echo "--- $f ($(stat -c%s "$f") bytes) ---"
-            head -200 "$f"
-          done
-          echo "=== 📦 DLL 落点 ==="
-          find .dart_tool/hooks_runner/shared build/windows -name '*.dll' 2>/dev/null | head -20
-
       - name: 📊 列出构建产物
         run: |
           release_dir='build/windows/x64/runner/Release'
