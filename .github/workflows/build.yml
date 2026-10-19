@@ -258,7 +258,7 @@ jobs:
 
           body_content=""
           if [[ -n "$prev_tag" ]]; then
-            body_content=$(git log --pretty=format:"* %s (%h)" "$prev_tag".."$current_tag" -- . ":(exclude)docs" ":(exclude).github")
+            body_content=$(git log --pretty=format:"* %s (%h)" "$prev_tag".."$current_tag" -- . ":(exclude)docs" ":(exclude).github" ":(exclude).gitea")
           else
             body_content="首次发布。"
           fi
