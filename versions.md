@@ -49,7 +49,7 @@
 | Crypto (`crypto`)                                           | `3.0.7`   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `3.0.7` (已是最新)   | `pubspec.yaml` | 哈希与加密算法                | dependencies |
 | Flutter Local Notifications (`flutter_local_notifications`) | `22.3.2`  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `22.3.2` (已是最新)  | `pubspec.yaml` | 本地通知                      | dependencies |
 | URL Launcher (`url_launcher`)                               | `6.3.3`   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `6.3.3` (已是最新)   | `pubspec.yaml` | 外部链接与应用唤起            | dependencies |
-| FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.6.2`   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `pubspec.yaml` | 音视频处理（FFmpeg Kit 扩展） | dependencies |
+| FFmpeg Kit Extended Flutter (`ffmpeg_kit_extended_flutter`) | `0.6.2`   | `1.0.0`              | `0.6.2` (已是最新)   | `0.6.2` (已是最新)   | `pubspec.yaml` | 音视频处理（FFmpeg Kit 扩展） | dependencies |
 | Window Manager (`window_manager`)                           | `0.5.2`   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `0.5.2` (已是最新)   | `pubspec.yaml` | 桌面窗口管理（Windows）       | dependencies |
 
 ## 2. Flutter 开发依赖
@@ -62,7 +62,7 @@
 
 | 组件                  | 当前版本 | MAJOR 最新版本     | MINOR 最新版本     | PATCH 最新版本      | 引用文件                                           | 说明                  |
 |-----------------------|----------|--------------------|--------------------|---------------------|----------------------------------------------------|-----------------------|
-| Gradle                | `9.5.1`  | `9.8.1`            | `9.8.1`            | `9.5.1` (已是最新)  | `android/gradle/wrapper/gradle-wrapper.properties` | Gradle Wrapper 分发包 |
+| Gradle                | `9.5.1`  | `9.8.2`            | `9.8.2`            | `9.5.1` (已是最新)  | `android/gradle/wrapper/gradle-wrapper.properties` | Gradle Wrapper 分发包 |
 | Android Gradle Plugin | `9.2.1`  | `9.4.1`            | `9.4.1`            | `9.2.1` (已是最新)  | `android/settings.gradle`                          | Android 构建插件      |
 | Kotlin Gradle Plugin  | `2.3.21` | `2.4.21`           | `2.4.21`           | `2.3.21` (已是最新) | `android/settings.gradle`                          | Kotlin 编译插件       |
 | Kotlin Stdlib         | `2.3.21` | `2.4.21`           | `2.4.21`           | `2.3.21` (已是最新) | `android/app/build.gradle`                         | Kotlin 标准库         |
