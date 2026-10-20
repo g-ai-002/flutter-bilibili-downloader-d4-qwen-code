@@ -62,10 +62,10 @@
 
 | 组件                  | 当前版本 | MAJOR 最新版本     | MINOR 最新版本     | PATCH 最新版本      | 引用文件                                           | 说明                  |
 |-----------------------|----------|--------------------|--------------------|---------------------|----------------------------------------------------|-----------------------|
-| Gradle                | `9.5.1`  | `9.8.2`            | `9.8.2`            | `9.5.1` (已是最新)  | `android/gradle/wrapper/gradle-wrapper.properties` | Gradle Wrapper 分发包 |
-| Android Gradle Plugin | `9.2.1`  | `9.4.1`            | `9.4.1`            | `9.2.1` (已是最新)  | `android/settings.gradle`                          | Android 构建插件      |
-| Kotlin Gradle Plugin  | `2.3.21` | `2.4.21`           | `2.4.21`           | `2.3.21` (已是最新) | `android/settings.gradle`                          | Kotlin 编译插件       |
-| Kotlin Stdlib         | `2.3.21` | `2.4.21`           | `2.4.21`           | `2.3.21` (已是最新) | `android/app/build.gradle`                         | Kotlin 标准库         |
+| Gradle                | `9.8.2`  | `9.8.2` (已是最新) | `9.8.2` (已是最新) | `9.8.2` (已是最新)  | `android/gradle/wrapper/gradle-wrapper.properties` | Gradle Wrapper 分发包 |
+| Android Gradle Plugin | `9.4.1`  | `9.4.1` (已是最新) | `9.4.1` (已是最新) | `9.4.1` (已是最新)  | `android/settings.gradle`                          | Android 构建插件      |
+| Kotlin Gradle Plugin  | `2.4.21` | `2.4.21` (已是最新)| `2.4.21` (已是最新)| `2.4.21` (已是最新) | `android/settings.gradle`                          | Kotlin 编译插件       |
+| Kotlin Stdlib         | `2.4.21` | `2.4.21` (已是最新)| `2.4.21` (已是最新)| `2.4.21` (已是最新) | `android/app/build.gradle`                         | Kotlin 标准库         |
 | Desugar JDK Libs      | `2.1.5`  | `2.1.5` (已是最新) | `2.1.5` (已是最新) | `2.1.5` (已是最新)  | `android/app/build.gradle`                         | Java 8+ API 脱糖支持  |
 
 ## 4. CI 与外部工具
