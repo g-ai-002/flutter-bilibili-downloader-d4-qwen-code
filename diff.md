@@ -1,6 +1,7 @@
 # 四项目配置差异对比
 
 > 对比时间：2026-10-19（第二轮清理后复查；四仓库本轮改动待提交）
+> 构建链版本值已于 2026-10-20 随四项目同步升级更新（Gradle 9.8.2 / AGP 9.4.1 / Kotlin 2.4.21）
 > 对比范围：pubspec.yaml 依赖、Android 构建配置与签名、analysis_options（lint）、
 > CI 工作流（GitHub + Gitea）、目录结构与辅助文件（versions.md、.build、.metadata 等）
 > 项目清单：`flutter-bilibili-downloader-d4-qwen-code`（下称 bilibili）、`flutter-music`、
@@ -80,9 +81,9 @@
 
 | 配置                            | 四项目统一值                                                                                                |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| AGP                             | 9.2.1（settings.gradle 插件声明）                                                                           |
-| Kotlin                          | 2.3.21（插件 + kotlin-stdlib）                                                                              |
-| Gradle                          | 9.5.1-all（华为云镜像 distributionUrl）                                                                     |
+| AGP                             | 9.4.1（settings.gradle 插件声明）                                                                           |
+| Kotlin                          | 2.4.21（插件 + kotlin-stdlib）                                                                              |
+| Gradle                          | 9.8.2-all（华为云镜像 distributionUrl）                                                                     |
 | compileSdk / targetSdk / minSdk | 37 / 37 / 35                                                                                                |
 | NDK                             | 30.0.16248370                                                                                               |
 | Java 兼容性                     | VERSION_21 + jvmTarget 21                                                                                   |
