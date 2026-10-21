@@ -20,8 +20,17 @@
 
 ## 版本历史
 
-### v0.4.31 (PATCH) — 当前开发版本
+### v0.4.32 (PATCH) — 当前开发版本
 - **状态**: 开发中 🔧
+- **目标**: Android 构建链升级（无功能变化），随四项目同步推进
+- **任务**:
+  - [x] Gradle 9.5.1 → 9.8.2、AGP 9.2.1 → 9.4.1、Kotlin 2.3.21 → 2.4.21
+  - [x] versions.md 版本清单刷新（96fbeec）与 diff.md 四项目对比快照同步（d6cee3f）
+  - [x] 版本号升至 0.4.32，同步 README / plan / versions.md / 应用内版本号
+- **注意**: 本机无 Flutter / Android SDK，未在本地构建验证。验证方式：CI 出新包后真机确认核心功能正常
+
+### v0.4.31 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: release 不再跑 R8、删除 proguard-rules.pro，用约 1~2 MB dex 换「新增插件不会静默失效」的确定性
 - **任务**:
   - [x] 对比另一同栈 Flutter 项目（`shared_preferences` 2.5.5，同代 jnigen 实现）：其 release `minifyEnabled false`、无任何 proguard 规则而持久化长期正常，确认差异只在是否跑 R8，与插件版本无关

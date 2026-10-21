@@ -64,7 +64,11 @@ git push origin v0.4.29
 
 ## 版本历史
 
-### v0.4.31 (当前版本)
+### v0.4.32 (当前版本)
+- Android 构建链升级：Gradle 9.5.1 → 9.8.2、AGP 9.2.1 → 9.4.1、Kotlin 2.3.21 → 2.4.21（无功能变化，随四项目同步推进）
+- versions.md 版本清单与 diff.md 四项目对比快照同步更新
+
+### v0.4.31
 - release 构建改为不跑 R8（`minifyEnabled false` + `shrinkResources false`），删除 `android/app/proguard-rules.pro`：不再需要为 jnigen / 反射类插件逐个维护 keep 规则，杜绝「只在 release 包暴露」的静默存储故障再次出现
 - 依据：另一同栈 Flutter 项目（`shared_preferences` 2.5.5，同代 jnigen 实现）release 一直不跑 R8、无任何 proguard 规则，持久化长期正常——差异从来不在插件版本，只在是否启用 R8（根因分析见 v0.4.30）
 - 代价：dex 不再参与裁剪/混淆，APK 预计增大 1~2 MB（大头是 ffmpeg-kit 原生库与 libapp.so，不受影响）
