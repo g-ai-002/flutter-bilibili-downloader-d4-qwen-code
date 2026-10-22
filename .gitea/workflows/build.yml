@@ -151,16 +151,22 @@ jobs:
           cp -a "$src"/. /c/w/
           echo "✅ 工程已复制: $src -> C:\\w"
 
-      - name: 🩺 诊断 Flutter 环境
+      - name: 🩺 诊断网络与 Flutter 环境
         shell: bash
         run: |
+          echo "=== 🌍 构建环境变量 ==="
+          echo "http_proxy=${http_proxy:-<未设置>}"
+          echo "https_proxy=${https_proxy:-<未设置>}"
           echo "=== 🦋 Flutter 版本 ==="
           flutter --version
           echo "=== 🩺 Flutter doctor ==="
-          flutter doctor -v || true
-          echo "=== 🌍 相关环境变量 ==="
-          echo "PUB_HOSTED_URL=${PUB_HOSTED_URL:-<未设置>}"
+          timeout 10 flutter doctor -v || true
+          echo "=== 🌍 Flutter 相关环境变量 ==="
           echo "FLUTTER_STORAGE_BASE_URL=${FLUTTER_STORAGE_BASE_URL:-<未设置>}"
+          echo "PUB_HOSTED_URL=${PUB_HOSTED_URL:-<未设置>}"
+          echo "=== 🌐 网络连通性检查 ==="
+          curl -sI --connect-timeout 10 https://storage.flutter-io.cn 2>&1 || echo "❌ 无法访问 storage.flutter-io.cn"
+          curl -sI --connect-timeout 10 https://storage.googleapis.com 2>&1 || echo "❌ 无法访问 storage.googleapis.com"
 
       - name: 📦 安装依赖
         shell: bash
