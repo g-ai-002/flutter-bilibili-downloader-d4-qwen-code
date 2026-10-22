@@ -40,7 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadLogs() async {
-    final logs = LogService.getRecentLogs(200);
+    final logs = LogService.getRecentLogs();
     if (mounted) {
       setState(() => _logContent = logs.join('\n'));
     }

@@ -56,9 +56,10 @@ class LogService {
       _logDate = _now();
       _cleanOldLogs();
     }
-    // 补写初始化前的早期日志（启动步骤失败等）
+    // 补写初始化前的早期日志（启动步骤失败等），并保留在内存缓冲中
     if (_earlyBuffer.isNotEmpty) {
       for (final line in _earlyBuffer) {
+        _buffer.add(line);
         _appendLine(line);
       }
       _earlyBuffer.clear();

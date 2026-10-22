@@ -58,7 +58,7 @@ void main() async {
   LogService.info('启动流程执行完毕，进入主界面');
 
   // 沉浸式状态栏：透明背景 + 深色图标
-  SystemChrome.setSystemUIOverlayStyle(const SystemUIOverlayStyle(
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
