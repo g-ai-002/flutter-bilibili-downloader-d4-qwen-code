@@ -1,92 +1,217 @@
 import 'dart:io';
-import 'file_system_service.dart';
 
-/// 日志服务
+import 'package:flutter/foundation.dart';
+
+/// 日志服务：内存环形缓冲 + 按天文件落盘。
+///
+/// - 初始化前产生的日志先进入早期缓冲，初始化后自动补写文件；
+/// - 日志目录不可用时（单测/异常环境）降级为仅内存模式，绝不阻断启动；
+/// - 跨天自动切换日志文件，单文件超过大小上限自动轮转，过期文件自动清理；
+/// - 日志根目录由 [init] 的 `logRoot` 注入，本类不感知各项目的目录约定。
 class LogService {
   static LogService? _instance;
-  File? _logFile;
+  static final List<String> _earlyBuffer = [];
   final List<String> _buffer = [];
-  static const int _maxBufferLines = 1000;
+  Directory? _logDir;
+  File? _logFile;
+  DateTime? _logDate;
   bool _initialized = false;
+  DateTime Function() _now = DateTime.now;
+
+  static const int _maxBufferLines = 2000;
+  static const int _maxEarlyLines = 500;
+  static const int _maxFileSize = 5 * 1024 * 1024;
+  static const int _maxRetentionDays = 7;
 
   LogService._();
 
-  static Future<LogService> get instance async {
+  static Future<void> init({
+    required Future<Directory> Function() logRoot,
+    DateTime Function()? clock,
+  }) async {
     _instance ??= LogService._();
-    await _instance!._init();
-    return _instance!;
+    await _instance!._init(logRoot, clock);
   }
 
-  static Future<void> init() async {
-    _instance ??= LogService._();
-    await _instance!._init();
+  /// 仅用于测试：重置单例与早期缓冲
+  static void reset() {
+    _instance = null;
+    _earlyBuffer.clear();
   }
 
-  Future<void> _init() async {
+  Future<void> _init(
+    Future<Directory> Function() logRoot,
+    DateTime Function()? clock,
+  ) async {
     if (_initialized) return;
-    final logDir = await FileSystemService.instance.getLogRoot();
-    final now = DateTime.now();
-    final dateStr =
-        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-    final logFile = File('${logDir.path}${Platform.pathSeparator}app_$dateStr.log');
-    if (!await logFile.exists()) {
-      await logFile.create();
+    if (clock != null) _now = clock;
+    try {
+      _logDir = await logRoot();
+    } catch (e) {
+      debugPrint('[LogService] 日志目录不可用，降级为内存日志: $e');
     }
-    _logFile = logFile;
+    _logFile = _openTodayFile();
     _initialized = true;
+    if (_logFile != null) {
+      _logDate = _now();
+      _cleanOldLogs();
+    }
+    // 补写初始化前的早期日志（启动步骤失败等）
+    if (_earlyBuffer.isNotEmpty) {
+      for (final line in _earlyBuffer) {
+        _appendLine(line);
+      }
+      _earlyBuffer.clear();
+    }
+    _write(
+      'INFO',
+      '==== LogService 已初始化, 日志文件: ${_logFile?.path ?? '内存模式'} ====',
+    );
   }
 
-  static void info(String message) {
-    _instance?._log('INFO', message);
-  }
+  /// 当前日志文件路径（内存模式或未初始化时为空串）
+  static String get logFilePath => _instance?._logFile?.path ?? '';
 
-  static void warning(String message) {
-    _instance?._log('WARN', message);
-  }
+  static void info(String message) => _log('INFO', message);
 
-  static void error(String message, [dynamic error, StackTrace? stack]) {
+  static void warning(String message) => _log('WARN', message);
+
+  static void error(String message, [Object? error, StackTrace? stack]) {
     final msg = error != null ? '$message | $error' : message;
-    _instance?._log('ERROR', msg);
+    _log('ERROR', msg);
     if (stack != null) {
-      _instance?._log('ERROR', stack.toString());
+      _log('ERROR', stack.toString());
     }
   }
 
-  void _log(String level, String message) {
-    if (!_initialized || _logFile == null) return;
-    final now = DateTime.now();
-    final timeStr =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}';
-    final line = '[$timeStr][$level] $message';
+  static void _log(String level, String message) {
+    final inst = _instance;
+    if (inst == null || !inst._initialized) {
+      final line = _formatLine(DateTime.now(), level, message);
+      _earlyBuffer.add(line);
+      if (_earlyBuffer.length > _maxEarlyLines) {
+        _earlyBuffer.removeAt(0);
+      }
+      return;
+    }
+    inst._write(level, message);
+  }
+
+  static String _formatLine(DateTime now, String level, String message) {
+    final ts =
+        '${_pad(now.hour)}:${_pad(now.minute)}:${_pad(now.second)}.${now.millisecond.toString().padLeft(3, '0')}';
+    return '[$ts][$level] $message';
+  }
+
+  static String _pad(int n) => n.toString().padLeft(2, '0');
+
+  void _write(String level, String message) {
+    final line = _formatLine(_now(), level, message);
     _buffer.add(line);
     if (_buffer.length > _maxBufferLines) {
       _buffer.removeAt(0);
     }
+    _appendLine(line);
+  }
+
+  void _appendLine(String line) {
     try {
-      _logFile!.writeAsStringSync('$line\n', mode: FileMode.append);
+      _refreshLogFile();
+      _logFile?.writeAsStringSync('$line\n', mode: FileMode.append);
+    } catch (_) {}
+  }
+
+  /// 写文件前检查：跨天切换新文件、单文件超限轮转。失败静默（内存缓冲仍保留日志）。
+  void _refreshLogFile() {
+    if (_logDir == null) return;
+    final now = _now();
+    final current = _logDate;
+    final needSwitch = current == null ||
+        current.year != now.year ||
+        current.month != now.month ||
+        current.day != now.day;
+    if (needSwitch) {
+      final file = _openTodayFile();
+      if (file != null) {
+        _logFile = file;
+        _logDate = now;
+        _cleanOldLogs();
+      }
+      return;
+    }
+    _rotateIfNeeded();
+  }
+
+  File? _openTodayFile() {
+    final dir = _logDir;
+    if (dir == null) return null;
+    try {
+      final now = _now();
+      final dateStr = '${now.year}${_pad(now.month)}${_pad(now.day)}';
+      final file = File('${dir.path}${Platform.pathSeparator}app_$dateStr.log');
+      if (!file.existsSync()) {
+        file.createSync(recursive: true);
+      }
+      return file;
     } catch (_) {
-      // 日志写入失败不阻塞应用
+      return null;
     }
   }
 
-  static Future<String> getLogContent() async {
-    if (_instance == null || _instance!._logFile == null) return '';
+  /// 单文件超过大小上限时轮转为 `app_YYYYMMDD_N.log` 备份
+  void _rotateIfNeeded() {
+    final file = _logFile;
+    if (file == null) return;
     try {
-      return _instance!._logFile!.readAsString();
-    } catch (_) {
-      return '';
+      if (!file.existsSync() || file.lengthSync() < _maxFileSize) return;
+      final originalPath = file.path;
+      final parent = file.parent;
+      final baseName = file.uri.pathSegments.last.replaceAll('.log', '');
+      var index = 1;
+      File backup;
+      do {
+        backup =
+            File('${parent.path}${Platform.pathSeparator}${baseName}_$index.log');
+        index++;
+      } while (backup.existsSync());
+      file.renameSync(backup.path);
+      final fresh = File(originalPath);
+      if (!fresh.existsSync()) {
+        fresh.createSync();
+      }
+      _logFile = fresh;
+    } catch (_) {}
+  }
+
+  /// 清理超过保留期的日志文件（含轮转备份），初始化与跨天切换时各执行一次
+  void _cleanOldLogs() {
+    final dir = _logDir;
+    if (dir == null) return;
+    try {
+      final cutoff = _now().subtract(const Duration(days: _maxRetentionDays));
+      for (final entity in dir.listSync()) {
+        if (entity is! File) continue;
+        final name = entity.uri.pathSegments.last;
+        if (!name.startsWith('app_') || !name.endsWith('.log')) continue;
+        try {
+          if (entity.statSync().modified.isBefore(cutoff)) {
+            entity.deleteSync();
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  /// 最近日志（内存缓冲，含尚未落盘的早期日志）
+  static List<String> getRecentLogs([int lines = 200]) {
+    final inst = _instance;
+    final all = <String>[
+      ..._earlyBuffer,
+      if (inst != null) ...inst._buffer,
+    ];
+    if (all.length <= lines) {
+      return all;
     }
-  }
-
-  static List<String> getRecentLogs([int lines = 100]) {
-    if (_instance == null) return [];
-    final buffer = _instance!._buffer;
-    if (buffer.length <= lines) return List.from(buffer);
-    return buffer.sublist(buffer.length - lines);
-  }
-
-  static Future<String> getLogFilePath() async {
-    if (_instance == null || _instance!._logFile == null) return '';
-    return _instance!._logFile!.path;
+    return all.sublist(all.length - lines);
   }
 }

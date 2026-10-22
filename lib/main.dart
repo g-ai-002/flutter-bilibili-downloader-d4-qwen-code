@@ -10,6 +10,7 @@ import 'providers/download_provider.dart';
 import 'providers/settings_provider.dart';
 import 'pages/home_page.dart';
 import 'services/ffmpeg_platform.dart';
+import 'services/file_system_service.dart';
 import 'services/log_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
@@ -43,9 +44,8 @@ void main() async {
   await _startupStep('本地存储初始化', () async {
     await StorageService.instance;
   });
-  await _startupStep('日志服务初始化', LogService.init);
-  // 日志服务已就绪：把之前只进了 logcat 的启动失败补写入日志文件
-  _flushStartupFailures();
+  await _startupStep('日志服务初始化',
+      () => LogService.init(logRoot: FileSystemService.instance.getLogRoot));
   await _startupStep('通知服务初始化', NotificationService.instance.init);
 
   // 初始化 ffmpeg（Android 与 Windows 均为 ffmpeg_kit_extended_flutter）
@@ -55,11 +55,10 @@ void main() async {
   final settings = SettingsProvider();
   await _startupStep('设置加载', settings.load);
 
-  _flushStartupFailures();
   LogService.info('启动流程执行完毕，进入主界面');
 
   // 沉浸式状态栏：透明背景 + 深色图标
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+  SystemChrome.setSystemUIOverlayStyle(const SystemUIOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
@@ -72,10 +71,6 @@ void main() async {
 
 /// 单个启动步骤的超时上限
 const _startupStepTimeout = Duration(seconds: 10);
-
-/// 日志服务就绪前发生的启动失败（步骤描述 / 异常 / 堆栈），
-/// 等日志服务可用后再补写入日志文件
-final List<(String, Object, StackTrace)> _pendingStartupFailures = [];
 
 /// 执行一个启动步骤，失败或超时只记录日志并继续。
 ///
@@ -90,22 +85,10 @@ Future<void> _startupStep(String name, Future<void> Function() action) async {
   } catch (e, stack) {
     // 超时也走这里，异常文本形如 TimeoutException after 0:00:10.000000
     final failure = '[启动] 步骤失败（已降级继续）: $name';
-    // 此时日志服务可能还没就绪，debugPrint 先兜底（可在 logcat 中看到）
+    // 日志服务未就绪时进入早期缓冲，初始化后自动补写；debugPrint 便于在 logcat 中即时查看
+    LogService.error(failure, e, stack);
     debugPrint('$failure | $e');
-    _pendingStartupFailures.add((failure, e, stack));
   }
-}
-
-/// 把待落盘的启动失败写入日志文件。
-///
-/// 日志服务未就绪时写入会被丢弃，因此调用点都在日志服务初始化之后；
-/// 若日志服务自身也失败了，这些内容就只留在 logcat 里。
-void _flushStartupFailures() {
-  if (_pendingStartupFailures.isEmpty) return;
-  for (final (message, error, stack) in _pendingStartupFailures) {
-    LogService.error(message, error, stack);
-  }
-  _pendingStartupFailures.clear();
 }
 
 class BilibiliDownloaderApp extends StatelessWidget {
