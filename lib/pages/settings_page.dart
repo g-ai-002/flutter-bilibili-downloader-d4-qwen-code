@@ -40,7 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadLogs() async {
-    final logs = LogService.getRecentLogs(50);
+    final logs = LogService.getRecentLogs(200);
     if (mounted) {
       setState(() => _logContent = logs.join('\n'));
     }
@@ -291,41 +291,66 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _copyText(BuildContext context, String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('已复制到剪贴板'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _showLogDialog(BuildContext context) {
     _loadLogs();
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (context) => Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppBar(
-              title: const Text('应用日志'),
-              automaticallyImplyLeading: false,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _loadLogs,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: SelectableText(
-                  _logContent.isEmpty ? '暂无日志' : _logContent,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppBar(
+                    title: const Text('应用日志'),
+                    automaticallyImplyLeading: false,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () {
+                          _loadLogs();
+                          setDialogState(() {});
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy),
+                        tooltip: '复制全部',
+                        onPressed: () => _copyText(ctx, _logContent),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: SelectableText(
+                        _logContent.isEmpty ? '暂无日志' : _logContent,
+                        style: const TextStyle(
+                            fontFamily: 'monospace', fontSize: 11),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
