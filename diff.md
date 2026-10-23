@@ -1,35 +1,39 @@
 # 七项目配置差异对比
 
-> 对比时间：2026-10-23（7 项目复查；7 个仓库工作区均 clean，HEAD 与 tag 已推送）
+> 对比时间：2026-10-23（第二轮复查；复核时 7 个仓库工作区均 clean，
+> HEAD 与 tag 均已推送）
 > 对比范围：pubspec 依赖、Android 构建配置与签名、analysis_options（lint）、
 > CI 工作流（GitHub + Gitea）、仓库卫生与目录结构、代码层共享组件
 > 项目清单：`flutter-bilibili-downloader-d4-qwen-code`（下称 bilibili）、
 > `flutter-gomoku`（gomoku）、`flutter-music`（music）、`flutter-racing`（racing）、
 > `flutter-snake`（snake）、`flutter-tank-battle`（tank）、`flutter-tetris`（tetris）
 >
-> 上一版（2026-10-19 / 20，4 项目）的结论仍然成立；遗留的 2 个可选项中
-> music 的 windows/ 策略本次已核实为必需保留（见 7.2），
-> bilibili 的 gradle.properties 注释仍未处理。
-> 本次新增 gomoku / racing / tank，并补上仓库卫生与代码层对比。
+> 本版是 A 类整改后的复采样（上一版快照为 bilibili `8a3f555`）。上一版列出的
+> 9 项 A 类差异中 7 项已关闭，仅剩 A1（`.metadata` 索引残留）与 A9
+> （FileSystemService 未收敛）；同时本轮新增了 CI 资源限制与构建脚本对齐。
 
 ## 0. 结论速览
 
-1. **工程模板层已统一**：工具链、基础依赖、lint、签名、双流水线骨架、
-   versions.md 机制在 7 个项目上逐项一致。
-2. **代码层两项已统一**：`lib/services/log_service.dart` 7 份逐字节一致；
-   设置页日志查看 UI（弹窗 + 复制全部 + 日志目录 tile）7 份齐备。
-3. **剩余真分叉 9 处（A 类）**，集中在 gomoku / racing / tank 三个较新的仓库。
-   其中只有 A2（日志目录落点）与 A9（FileSystemService）涉及运行行为，
-   其余为仓库卫生与构建配置。
-4. 其余差异属于业务差异（依赖、包名、assets、权限、横屏）或装饰差异，
+1. **工程模板层已完全统一**：工具链、基础依赖、lint、签名、Maven 镜像、
+   Gradle/Kotlin 资源限制、版本脚本在 7 个项目上逐项一致；同一轨道的 7 份
+   工作流在归一化项目名与 emoji 后逐字相同（GitHub 与 Gitea 之间仍按 6.2
+   保留固有差异）。
+2. **代码层三项已统一**：`lib/services/log_service.dart` 7 份逐字节一致；
+   设置页日志查看 UI 7 份齐备；日志目录落点本轮统一为
+   `<用户可见根>/<应用目录>/logs>`。
+3. **剩余真分叉 2 处（A 类）**：A1 `.metadata` 仍在 gomoku / racing / tank
+   的索引中（`.gitignore` 已加忽略行但不生效）；A9 FileSystemService 仍是
+   6 份实现 + tetris 内联。
+4. 其余为仓库卫生差异（`.gitignore` 5 套模板、racing 缺 `prompt.md`、
+   `diff.md` 仅 bilibili）与业务差异（依赖、包名、assets、权限、横屏），
    不建议强行统一。
 
 ## 1. 项目概览
 
 | 项                            | bilibili                | gomoku             | music             | racing             | snake             | tank                    | tetris             |
-|-------------------------------|-------------------------|--------------------|-------------------|--------------------|-------------------|-------------------------|--------------------|
+| ----------------------------- | ----------------------- | ------------------ | ----------------- | ------------------ | ----------------- | ----------------------- | ------------------ |
 | 应用类型                      | Bilibili 下载器         | 五子棋             | 本地音乐播放器    | 赛车游戏           | 贪吃蛇            | 坦克大战                | 俄罗斯方块         |
-| 版本号（pubspec）             | 0.4.33                  | 0.3.8              | 0.3.49            | 0.1.2              | 0.3.4             | 0.3.2                   | 0.6.3              |
+| 版本号（pubspec）             | 0.4.34                  | 0.3.9              | 0.3.50            | 0.1.3              | 0.3.5             | 0.3.3                   | 0.6.4              |
 | applicationId / namespace     | com.bilibili.downloader | com.flutter.gomoku | com.flutter.music | com.flutter.racing | com.flutter.snake | com.flutter.tank_battle | com.flutter.tetris |
 | rootProject.name              | bilibili_downloader     | flutter_gomoku     | flutter_music     | flutter_racing     | flutter_snake     | flutter_tank_battle     | flutter_tetris     |
 | 正式 keystore（android/app/） | bilibili-downloader.jks | flutter-gomoku.jks | flutter-music.jks | flutter-racing.jks | flutter-snake.jks | flutter-tank-battle.jks | flutter-tetris.jks |
@@ -41,7 +45,7 @@
 ## 2. Dart / Flutter 环境（完全一致）
 
 | 配置            | 7 项目统一值                                                         |
-|-----------------|----------------------------------------------------------------------|
+| --------------- | -------------------------------------------------------------------- |
 | Dart SDK 约束   | `>=3.13.5 <4.0.0`                                                    |
 | CI Flutter 版本 | `3.47.7`（GitHub workflow env `FLUTTER_VERSION`；Gitea runner 预装） |
 | CI JDK          | Temurin 21（GitHub workflow env `JAVA_VERSION`；Gitea runner 预装）  |
@@ -51,7 +55,7 @@
 ### 3.1 共有依赖（已全部对齐）
 
 | 依赖                  | 7 项目统一值 |
-|-----------------------|--------------|
+| --------------------- | ------------ |
 | provider              | 6.1.5+1      |
 | shared_preferences    | 2.5.6        |
 | path_provider         | 2.1.6        |
@@ -64,65 +68,70 @@
 ### 3.2 各项目独有依赖（业务决定，不属于基础依赖）
 
 | 项目     | 独有依赖                                                                                                                                                            |
-|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | bilibili | dio 5.11.1、intl 0.20.3、crypto 3.0.7、flutter_local_notifications 22.3.2、url_launcher 6.3.3、ffmpeg_kit_extended_flutter 0.6.2（三平台原生库走 gh-proxy）         |
 | gomoku   | 无（仅 path）                                                                                                                                                       |
-| music    | just_audio 0.10.6、just_audio_windows 0.2.3、audio_service 0.18.19、audio_session 2.0.4、audio_metadata_reader 1.8.1、file_picker 13.1.0、permission_handler 13.0.2 |
+| music    | just_audio 0.10.6、just_audio_windows 0.2.3、audio_service 0.18.19、audio_session 0.2.4、audio_metadata_reader 1.8.1、file_picker 13.1.0、permission_handler 13.0.2 |
 | racing   | audioplayers 6.8.1                                                                                                                                                  |
 | snake    | audioplayers 6.8.1                                                                                                                                                  |
 | tank     | audioplayers 6.8.1                                                                                                                                                  |
 | tetris   | audioplayers 6.8.1                                                                                                                                                  |
 
-注：music 的音频栈版本已高于上一版 diff.md 记录，以本表为准。
-
 ## 4. Android 构建配置
 
 ### 4.1 完全一致
 
-| 配置                            | 7 项目统一值                                                                     |
-|---------------------------------|----------------------------------------------------------------------------------|
-| AGP                             | 9.4.1（settings.gradle 插件声明）                                                |
-| Kotlin                          | 2.4.21（插件 + kotlin-stdlib）                                                   |
-| Gradle                          | 9.8.2-all（华为云镜像 distributionUrl）                                          |
-| compileSdk / targetSdk / minSdk | 37 / 37 / 35                                                                     |
-| NDK                             | 30.0.16248370                                                                    |
-| Java 兼容性                     | VERSION_21 + jvmTarget 21                                                        |
-| coreLibraryDesugaring           | 2.1.5（启用）                                                                    |
-| ABI                             | 仅 arm64-v8a                                                                     |
-| R8 / 资源收缩                   | `minifyEnabled false` + `shrinkResources false`（全关）                          |
-| gradle.properties               | -Xmx4G、useAndroidX、newDsl=false、builtInKotlin=false、kotlin.incremental=false |
-| Maven 镜像机制                  | `USE_ALIYUN_MAVEN` 条件启用阿里云镜像                                            |
+| 配置                            | 7 项目统一值                                                                                         |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| AGP                             | 9.4.1（settings.gradle 插件声明）                                                                    |
+| Kotlin                          | 2.4.21（插件 + kotlin-stdlib）                                                                       |
+| Gradle                          | 9.8.2-all（华为云镜像 distributionUrl）                                                              |
+| compileSdk / targetSdk / minSdk | 37 / 37 / 35                                                                                         |
+| NDK                             | 30.0.16248370                                                                                        |
+| Java 兼容性                     | VERSION_21 + jvmTarget 21                                                                            |
+| coreLibraryDesugaring           | 2.1.5（启用）                                                                                        |
+| ABI                             | 仅 arm64-v8a                                                                                         |
+| R8 / 资源收缩                   | `minifyEnabled false` + `shrinkResources false`（全关）                                              |
+| Gradle 资源限制                 | `-Xmx3G`、`workers.max=2`、`parallel=false`、`ActiveProcessorCount=4`                                |
+| Kotlin 守护进程                 | `kotlin.daemon.jvmargs=-Xmx1G -XX:MaxMetaspaceSize=256m -XX:ActiveProcessorCount=4`                  |
+| gradle.properties 其余项        | useAndroidX、newDsl=false、builtInKotlin=false、kotlin.incremental=false                             |
+| Maven 镜像机制                  | 阿里云 public/google/gradle-plugin 三项 + `mavenCentral()` + `google()`；`USE_ALIYUN_MAVEN` 条件启用 |
 
-以下文件逐字一致：`analysis_options.yaml`（7 份）、
-`android/gradle/wrapper/gradle-wrapper.properties`（7 份）、
-`android/gradle/init-aliyun-mirror.gradle`（7 份）。
-`android/build.gradle` 有两个版本（见 A5），`.build/query_all_versions.py` 也有两代（见 A4）。
+以下文件逐字一致：`analysis_options.yaml`（7 份，md5 `0b5e2c78`）、
+`android/gradle/wrapper/gradle-wrapper.properties`（md5 `ed29e8b7`）、
+`android/gradle/init-aliyun-mirror.gradle`（md5 `e57cb091`）、
+`android/build.gradle`（md5 `4555ab33`）、`android/gradle.properties`
+（md5 `b77f3e3d`）、`.build/query_all_versions.py`（md5 `f191bb70`）。
+`android/settings.gradle` 与 `android/app/build.gradle` 归一化项目标识符后
+7 份无差异。
 
 ### 4.2 签名策略（已统一）
 
 7 个项目机制一致：`android/key.properties` + `android/app/<应用名>.jks`，
 debug 与 release 均指向 `signingConfigs.release`，签名材料随仓库分发，
-`.gitignore` 无签名相关忽略项，CI 直接出包。
+`.gitignore` 无签名相关忽略项，CI 直接出包。`signingConfigs` 两行注释措辞
+本轮已统一为同一版本。
 
 ### 4.3 剩余差异（应用标识与装饰为主）
 
-| 差异点                                       | 现状                                                                                                                          |
-|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| namespace / applicationId / rootProject.name | 各项目自有标识（正常差异）                                                                                                    |
-| gradle.properties                            | bilibili 多两行注释且带末尾换行，其余 6 份逐字一致                                                                            |
-| flutterVersionName 兜底                      | gomoku 为 `0.1.3`，其余 6 个为 `0.1.0`                                                                                        |
-| Maven 镜像源                                 | bilibili/gomoku/music/snake/tetris 为阿里云 3 项、`mavenCentral()` 在前；racing/tank 另有腾讯云与华为云 4 项、`google()` 在前 |
-| signingConfigs 注释                          | bilibili / racing / tank 三种措辞（配置项完全一致）                                                                           |
+| 差异点                                       | 现状                       |
+| -------------------------------------------- | -------------------------- |
+| namespace / applicationId / rootProject.name | 各项目自有标识（正常差异） |
+| keystore 文件名                              | 各项目自有（正常差异）     |
+| strings.xml 中的应用名                       | 各项目业务名称（正常差异） |
+
+上一版记录的 gradle.properties 注释、兜底版本 `0.1.3`、Maven 镜像两套、
+签名注释三种措辞均已关闭。
 
 ### 4.4 应用清单差异（部分属业务决定）
 
-| 项                | bilibili                | gomoku | music                             | racing           | snake  | tank             | tetris           |
-|-------------------|-------------------------|--------|-----------------------------------|------------------|--------|------------------|------------------|
-| 应用名来源        | 硬编码                  | 硬编码 | @string/app_name                  | @string/app_name | 硬编码 | @string/app_name | @string/app_name |
-| strings.xml       | 有                      | 无     | 有                                | 有               | 无     | 有               | 有               |
-| INTERNET 权限     | 有                      | 有     | 无                                | 无               | 无     | 无               | 无               |
-| 其他组件/权限     | FileProvider、cleartext | —      | 媒体/通知/前台服务 + AudioService | —                | —      | —                | —                |
-| screenOrientation | —                       | —      | —                                 | landscape        | —      | —                | —                |
+| 项                | bilibili                | gomoku           | music                             | racing           | snake            | tank             | tetris           |
+| ----------------- | ----------------------- | ---------------- | --------------------------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+| 应用名来源        | @string/app_name        | @string/app_name | @string/app_name                  | @string/app_name | @string/app_name | @string/app_name | @string/app_name |
+| strings.xml       | 有                      | 有               | 有                                | 有               | 有               | 有               | 有               |
+| INTERNET 权限     | 有                      | 有               | 无                                | 无               | 无               | 无               | 无               |
+| 其他组件/权限     | FileProvider、cleartext | —                | 媒体/通知/前台服务 + AudioService | —                | —                | —                | —                |
+| screenOrientation | —                       | —                | —                                 | landscape        | —                | —                | —                |
 
 ## 5. analysis_options.yaml（lint）
 
@@ -132,15 +141,18 @@ debug 与 release 均指向 `signingConfigs.release`，签名材料随仓库分�
 ## 6. CI 工作流对比
 
 7 个项目均为双轨制：`.github/workflows/build.yml` + `.gitea/workflows/build.yml`。
-以下内容完全一致：
+归一化项目名与 `run-name` emoji 后，7 份 GitHub 工作流彼此无差异，
+7 份 Gitea 工作流同样无差异。以下内容完全一致：
 
 - 触发：push tag `v*` + workflow_dispatch；`concurrency` 按 sha 分组并取消旧构建
 - 命名：workflow / run-name / job / step 全部中文 + emoji
 - 版本号：从 `pubspec.yaml` 解析，tag 触发时优先取 tag 中的版本
 - 流水线：metadata → test（`flutter analyze --no-fatal-infos --no-fatal-warnings`
-    + `flutter test`）→ build-android ∥ build-windows → release
+    + `flutter test --concurrency=2`）→ build-android ∥ build-windows → release
+- 超时：Android / Windows 构建 job 均 `timeout-minutes: 30`（GitHub 与 Gitea 一致）
 - Windows 构建：复制到短路径 `C:\w`（`cygpath` + `cp -a`）→ `pub get`
-  → `flutter create --platforms=windows` → 构建
+  → `flutter create --platforms=windows` → 构建；构建时设
+  `CMAKE_BUILD_PARALLEL_LEVEL: 2`
 - ZIP 打包：pwsh `Compress-Archive`
 - 产物命名：`{仓库名}-{版本}-android-aarch64.apk` / `-windows-x86_64.zip`
 - GitHub 产物保留 1 天；prerelease 自动识别 `-rc` / `-beta`
@@ -148,11 +160,10 @@ debug 与 release 均指向 `signingConfigs.release`，签名材料随仓库分�
 
 ### 6.1 项目专属差异
 
-| 差异点                         | bilibili | gomoku | music | racing | snake | tank | tetris |
-|--------------------------------|----------|--------|-------|--------|-------|------|--------|
-| run-name emoji                 | 📺       | ♟️     | 🎵    | 🏁     | 🐍    | 🪖   | 🎮     |
-| CMP0091 步骤                   | 无       | 无     | 无    | 有     | 有    | 有   | 有     |
-| GitHub changelog 排除 `.gitea` | 有       | **缺** | 有    | 有     | 有    | 有   | 有     |
+| 差异点         | bilibili | gomoku | music | racing | snake | tank | tetris |
+| -------------- | -------- | ------ | ----- | ------ | ----- | ---- | ------ |
+| run-name emoji | 📺       | ♟️      | 🎵    | 🏁     | 🐍    | 🪖   | 🎮     |
+| CMP0091 步骤   | 无       | 无     | 无    | 有     | 有    | 有   | 有     |
 
 CMP0091 与依赖严格对应：使用 `audioplayers 6.8.1` 的 racing / snake / tank /
 tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指向 VS 2026
@@ -162,36 +173,43 @@ tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指�
 ### 6.2 GitHub 与 Gitea 双轨之间的固有差异
 
 | 维度     | GitHub Actions                                                    | Gitea Actions                                                                                                                           |
-|----------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| -------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | runner   | ubuntu-latest / windows-latest                                    | ubuntu-flutter / windows-flutter（自建，预装 Flutter/JDK）                                                                              |
 | 环境准备 | subosito/flutter-action@v2（3.47.7）+ setup-java@v5（temurin 21） | 无 setup 步骤；构建前做环境诊断（flutter doctor、storage.flutter-io.cn 连通性）并部署 `init-aliyun-mirror.gradle` 到 `~/.gradle/init.d` |
-| 超时     | 无特殊设置                                                        | build job `timeout-minutes: 30`                                                                                                         |
 | 产物传递 | upload-artifact@v7 / download-artifact@v8（merge-multiple）       | gitea-upload-artifact@v4 / gitea-download-artifact@v8（release 按名逐个下载）                                                           |
 | release  | softprops/action-gh-release@v3                                    | `GITEA_TOKEN` + curl 直调 Gitea API                                                                                                     |
 
+资源限制两轨一致：Gradle `-Xmx3G` / 2 workers、测试 `--concurrency=2`、
+Windows CMake 并行 2、构建 job 30 分钟超时。
+
 ## 7. 仓库卫生与工程结构
 
-### 7.1 `.metadata` 与 `.gitignore`（三套模板）
+### 7.1 `.metadata` 与 `.gitignore`（五套模板）
 
 | 项                | bilibili | gomoku | music          | racing | snake | tank   | tetris |
-|-------------------|----------|--------|----------------|--------|-------|--------|--------|
+| ----------------- | -------- | ------ | -------------- | ------ | ----- | ------ | ------ |
 | `.metadata` 入库  | 否       | **是** | 否             | **是** | 否    | **是** | 否     |
-| `.gitignore` 模板 | A        | B      | C              | B      | C     | B      | C      |
+| `.gitignore` 模板 | A        | B      | D              | C      | E     | C      | E      |
 | `windows/` 入库   | 无       | 无     | CMakeLists.txt | 无     | 无    | 无     | 无     |
-| 版本脚本          | 旧       | 旧     | 旧             | 新     | 旧    | 新     | 旧     |
+| 版本脚本          | 新       | 新     | 新             | 新     | 新    | 新     | 新     |
 | prompt.md         | 有       | 有     | 有             | 无     | 有    | 有     | 有     |
 
-模板定义：
+模板定义（5 份 md5 各异）：
 
-- **A（bilibili）**：忽略 `.metadata`；windows 子目录细粒度；额外忽略
-  `downloads/`、`*.mp4`；不列 `.flutter-plugins`。
-- **B（gomoku / racing / tank）**：忽略 `.flutter-plugins`， **不忽略 `.metadata`**；
-  整目录忽略 `windows/`、`macos/`、`ios/`、`linux/`；racing/tank 另忽略 `tools/`。
-- **C（music / snake / tetris）**：忽略 `.metadata` 与 `.flutter-plugins`；
-  整目录忽略 `windows/` 等。
+- **A（bilibili）**：忽略 `.metadata`；windows / macOS / iOS 用子路径细粒度
+  忽略；额外忽略 `downloads/`、`*.mp4`；不列 `.flutter-plugins`。
+- **B（gomoku）**：忽略 `.metadata` 与 `.flutter-plugins`；整目录忽略
+  `windows/`、`macos/`、`ios/`、`linux/`；`.qwen` 前无空行。
+- **C（racing / tank）**：与 B 相同，另忽略 `tools/`；两份逐字一致。
+- **D（music）**：忽略 `.metadata` 与 `.flutter-plugins`；`windows/` 整目录忽略，
+  但 macOS / iOS / Linux 用子路径细粒度忽略。
+- **E（snake / tetris）**：忽略 `.metadata` 与 `.flutter-plugins`；四个平台目录
+  全部整目录忽略；`.qwen` 前有空行；两份逐字一致。
 
-`.metadata` 入库的 3 个项目正是上一轮清理未覆盖的新仓库；bilibili 等 4 个均按
-「删除 + 忽略」处理。
+A1 只完成了一半：7 个 `.gitignore` 都已写入 `.metadata`，但 gomoku / racing /
+tank 的 `.metadata` 仍在索引中（`git ls-files` 可见），忽略规则对已跟踪文件
+无效，`git status` 也不会提示。本轮 `d50ed7e` / `b637e66` / `1b67d16` 只加了
+忽略行，缺 `git rm --cached`。
 
 ### 7.2 windows/ 策略
 
@@ -211,29 +229,27 @@ tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指�
   只有定义该宏才能通过编译。
 
 因此宏必须保留；删掉该文件（交给 CI 重新生成）会在编译 `just_audio_windows`
-时报 STL1011。上一版「audioplayers 6.8.1 后作废」的结论只对 audioplayers 成立
-（`audioplayers_windows 4.4.1` 已改用 WIL + C++20，不再碰 C++/WinRT）。
+时报 STL1011。`audioplayers 6.8.1` 改用 WIL + C++20，不受此约束。
 
-### 7.3 `.build/query_all_versions.py` 两代并存
+### 7.3 版本脚本与 versions.md
 
-- racing / tank：新版，比旧版多两处守卫——工作流文件不存在时跳过；
-  单流水线时把文案改成「GitHub Actions 流水线」。
-- 其余 5 个：旧版。新版是向后兼容超集，缺少的只是健壮性。
-
-7 份 `versions.md` 结构一致（94~101 行），版本表与 `pubspec.yaml`、
-`lib/utils/constants.dart` 均同步。
+`.build/query_all_versions.py` 本轮统一为同一代（md5 `f191bb70`，547 行）：
+工作流文件不存在时跳过，单流水线时文案改为「GitHub Actions 流水线」。
+7 份 `versions.md` 结构一致，应用版本已同步到本版（0.4.34 / 0.3.9 /
+0.3.50 / 0.1.3 / 0.3.5 / 0.3.3 / 0.6.4），与 `pubspec.yaml` 一致。
 
 ### 7.4 文档齐套性
 
 - `plan.md`：7 个均有。
 - `prompt.md`：racing 缺。
 - `diff.md`：仅 bilibili（本文档）。
+- `README.md`：7 个均有。
 
 ## 8. 代码层共享组件
 
 ### 8.1 LogService（已统一）
 
-7 份 `lib/services/log_service.dart` 逐字节一致（md5 `b709171b`）：
+7 份 `lib/services/log_service.dart` 逐字节一致（md5 `b709171b`，218 行）：
 早期缓冲 500 + 内存缓冲 2000 + 目录不可用降级内存模式；7 天 mtime 清理、
 5MB 轮转 `app_YYYYMMDD_N.log`；`init({required logRoot, clock?})` 注入目录。
 
@@ -243,39 +259,38 @@ tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指�
 弹窗（刷新 / 复制全部 / 关闭，200 行 monospace `SelectableText`）；
 刷新按钮使用 `StatefulBuilder` 重建，修复了父级 `setState` 不刷新弹窗的问题。
 bilibili 与 tetris 的「日志目录」字符串各出现 2 次（其余 3 次），tetris 的
-`openDirectory` 还是设置页内本地实现；两者属实现位置差异，不影响功能与外观。
+`openDirectory` 仍是设置页内本地实现；两者属实现位置差异，不影响功能与外观。
 
-### 8.3 FileSystemService 与日志落点（A9 / A2）
+### 8.3 FileSystemService 与日志落点（A9）
 
-| 项目     | 行数 | 公开方法                                                                                      |
-|----------|------|-----------------------------------------------------------------------------------------------|
-| bilibili | 257  | 下载根、日志根、revealInFileManager、openDirectory、openWithSystemPlayer、mergeAv、probeMedia |
-| gomoku   | 52   | reset、getLogRoot、openDirectory                                                              |
-| music    | 93   | getUserRoot、getLogRoot、openDirectory                                                        |
-| racing   | 54   | getLogRoot、openDirectory                                                                     |
-| snake    | 62   | getUserRoot、getLogRoot、openDirectory                                                        |
-| tank     | 52   | getLogRoot、openDirectory                                                                     |
-| tetris   | —    | 无 FSS，`main.dart` 内联 `_logRoot`                                                           |
+| 项目     | 行数 | 公开方法                                                                                                   |
+| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
+| bilibili | 260  | getDownloadRoot、getLogRoot、revealInFileManager、openDirectory、openWithSystemPlayer、mergeAv、probeMedia |
+| gomoku   | 61   | getLogRoot、openDirectory                                                                                  |
+| music    | 93   | getUserRoot、getLogRoot、openDirectory                                                                     |
+| racing   | 54   | getLogRoot、openDirectory                                                                                  |
+| snake    | 62   | getUserRoot、getLogRoot、openDirectory                                                                     |
+| tank     | 52   | getLogRoot、openDirectory                                                                                  |
+| tetris   | —    | 无 FSS，`main.dart` 内联 `_logRoot`                                                                        |
 
-日志目录 5 种落点：
+日志目录本轮已统一为 `<用户可见根>/<应用目录>/logs>`：
 
-| 项目     | 日志目录                                              |
-|----------|-------------------------------------------------------|
-| bilibili | `<Documents 或 external>/logs`（无应用子目录）        |
-| gomoku   | `<ApplicationSupport>/logs`（Android 为应用内部目录） |
-| music    | `<Documents 或 external>/FlutterMusic/logs`           |
-| racing   | `<Documents 或 external>/FlutterRacing/logs`          |
-| snake    | `<Documents 或 external>/FlutterSnake/logs`           |
-| tank     | `<Documents 或 external>/TankBattle/logs`             |
-| tetris   | `<Documents>/FlutterTetris/logs`                      |
+| 项目     | 日志目录                                                         |
+| -------- | ---------------------------------------------------------------- |
+| bilibili | `<Documents 或 external>/BilibiliDownloader/logs`                |
+| gomoku   | `<Documents 或 external>/FlutterGomoku/logs`                     |
+| music    | `<Documents 或 external>/FlutterMusic/logs`                      |
+| racing   | `<Documents 或 external>/FlutterRacing/logs`                     |
+| snake    | `<Documents 或 external>/FlutterSnake/logs`                      |
+| tank     | `<Documents 或 external>/TankBattle/logs`                        |
+| tetris   | `<Documents 或 external>/FlutterTetris/logs`（`main.dart` 内联） |
 
-影响：bilibili 在 Windows 会写公共 `Documents\logs`；gomoku 在 Android
-落在应用内部目录，文件管理器不可见，与设置页「日志目录」入口的语义不符。
+Android 优先 `getExternalStorageDirectory()`，其余平台用 Documents。
 
 ### 8.4 目录结构差异
 
 | 项目     | 特有目录                                       | lib Dart 数 | test 文件数 |
-|----------|------------------------------------------------|-------------|-------------|
+| -------- | ---------------------------------------------- | ----------- | ----------- |
 | bilibili | 无 widgets/；主题文件为 `china_app_theme.dart` | 29          | 3           |
 | gomoku   | `ai/`                                          | 21          | 9           |
 | music    | 无                                             | 30          | 10          |
@@ -288,27 +303,31 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 ## 9. 差异分级
 
-### A 类：建议统一
+### A 类：仍建议统一
 
-| 编号 | 差异                                 | 位置                                      | 影响                              | 建议                            |
-|------|--------------------------------------|-------------------------------------------|-----------------------------------|---------------------------------|
-| A1   | `.metadata` 入库 + `.gitignore` 三套 | gomoku / racing / tank                    | 仓库约定不一致                    | 取消入库并统一模板              |
-| A2   | 日志目录 5 种落点                    | FSS / main.dart                           | 路径不可见或跨应用冲突            | 统一 `<用户根>/<应用目录>/logs` |
-| A3   | GitHub changelog 缺 `.gitea` 排除    | gomoku workflow                           | release notes 混入配置提交        | 补排除                          |
-| A4   | 版本脚本两代                         | `.build/query_all_versions.py`            | 缺少工作流时读取失败              | 回填 racing/tank 版             |
-| A5   | Maven 镜像两套                       | `android/build.gradle`、`settings.gradle` | 拉取稳定性与顺序不一致            | 以 racing/tank 为基线           |
-| A6   | 兜底版本 `0.1.3`                     | gomoku `app/build.gradle`                 | `local.properties` 缺失时版本错误 | 改 `0.1.0`                      |
-| A7   | 唯一入库 windows 工程文件 + 协程宏   | music `windows/CMakeLists.txt`            | 与其余 6 个策略相反，但编译必需   | 保留，不统一（见 7.2）          |
-| A8   | 应用名资源化不一致                   | Manifest / strings.xml                    | 改名与多语言成本                  | 统一 `@string/app_name`         |
-| A9   | FSS 6 份实现 + tetris 缺失           | `lib/services/`                           | 公共内核重复维护                  | 收敛最小契约                    |
+| 编号 | 差异                                     | 位置                         | 影响                         | 建议                                   |
+| ---- | ---------------------------------------- | ---------------------------- | ---------------------------- | -------------------------------------- |
+| A1   | `.metadata` 仍在索引 + `.gitignore` 5 套 | gomoku / racing / tank       | 仓库约定不一致，忽略规则失效 | `git rm --cached .metadata` 并收敛模板 |
+| A9   | FSS 6 份实现 + tetris 内联               | `lib/services/`、`main.dart` | 公共内核重复维护             | 收敛最小契约，tetris 补齐              |
+
+### 上一版 A 类中本轮已关闭
+
+| 编号 | 差异                         | 处理结果                                          |
+| ---- | ---------------------------- | ------------------------------------------------- |
+| A2   | 日志目录 5 种落点            | 7 个项目统一为 `<用户根>/<应用目录>/logs>`        |
+| A3   | GitHub changelog 缺 `.gitea` | gomoku 已补，7 份工作流归一化后无差异             |
+| A4   | 版本脚本两代                 | 7 份统一为 md5 `f191bb70`                         |
+| A5   | Maven 镜像两套               | 统一 3 项阿里云 + `mavenCentral()` + `google()`   |
+| A6   | 兜底版本 `0.1.3`             | 统一为 `0.1.0`                                    |
+| A7   | 唯一入库 windows 工程文件    | 保留（`just_audio_windows` 编译必需，见 7.2）     |
+| A8   | 应用名资源化不一致           | 7 个均改为 `@string/app_name`，`strings.xml` 齐备 |
 
 ### B 类：装饰或卫生，可顺手
 
-- bilibili `gradle.properties` 的两行注释与末尾换行。
-- `signingConfigs` 注释的三种措辞。
-- bilibili 主题文件名 `china_app_theme.dart`。
+- `.gitignore` 五套模板（随 A1 一并收敛）。
 - racing 缺 `prompt.md`。
-- `.gitignore` 中 `downloads/`、`*.mp4`、`tools/` 的取舍。
+- bilibili 主题文件名 `china_app_theme.dart`。
+- bilibili `.gitignore` 保留 windows 子路径规则，但仓库内无 `windows/` 目录。
 - README 结构与长度（业务文档，不建议统一）。
 
 ### C 类：有意保留
@@ -322,38 +341,35 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 - 测试数量差异（3~14 个文件，反映业务复杂度）。
 - 平台目录：7 个项目均未入库完整 `windows/` 工程（music 仅一个 CMakeLists），
   iOS / macOS / Linux / web 全部缺失。
+- CI 资源限制的具体数值（3G 堆 / 2 workers / 测试并发 2 / CMake 并行 2）
+  与自建 runner 规格绑定，可按机器能力调整。
 
 ## 10. 演进路线
 
 ### P0 仓库卫生（零功能风险，逐仓库一个提交）
 
-1. gomoku / racing / tank：`git rm --cached .metadata`，`.gitignore` 统一为
-   一套模板（以 C 为基础，按需保留 A 的 `downloads/`、`*.mp4`）。
-2. gomoku：GitHub workflow 补 `":(exclude).gitea"`。
-3. gomoku：`flutterVersionName` 兜底改 `0.1.0`。
-4. 5 个旧仓库回填 racing/tank 版 `query_all_versions.py`，随后重跑脚本刷新
-   `versions.md`。
+1. gomoku / racing / tank：`git rm --cached .metadata` 并提交，让忽略规则生效。
+2. 统一 `.gitignore`：以 E 为基础，bilibili 保留 `downloads/`、`*.mp4`，
+   racing / tank 保留 `tools/`。
+3. racing：补 `prompt.md`；后续文档变更时同步 `diff.md`。
 
 ### P1 构建配置对齐
 
-5. 以 racing/tank 的镜像源为基线，回填其余 5 个，保留 `USE_ALIYUN_MAVEN`。
-6. gomoku / snake 补 `strings.xml`，bilibili 改用 `@string/app_name`。
-7. music 的 `windows/CMakeLists.txt`：已核实协程宏为 `just_audio_windows`
-   编译所必需（见 7.2），保留现状，不再视为待清理项。
-8. 可选：bilibili gradle.properties 注释、签名注释措辞、主题文件改名。
+4. 本轮已完成：Maven 镜像、兜底版本、签名注释、gradle.properties 注释、
+   应用名资源化、版本脚本、超时与资源限制。
+5. music 的 `windows/CMakeLists.txt` 保留现状（见 7.2）。
 
 ### P2 代码层最小契约
 
-9. 约定日志目录为 `<用户可见根>/<应用目录>/logs>`：先修 bilibili（加应用
-   子目录）与 gomoku（改 external / Documents），其余 4 个保持。
-10. `FileSystemService` 收敛为「单例 + `getLogRoot` + `openDirectory`」，
-    项目特有方法保留；tetris 补齐 FSS 或至少让 `_logRoot` 走同一约定。
-11. `log_service_test.dart` 已一致，无需改动；如需可补 FSS 测试。
+6. `FileSystemService` 收敛为「单例 + `getLogRoot` + `openDirectory`」，
+   项目特有方法保留；tetris 补齐 FSS 或至少让 `_logRoot` 走同一约定。
+7. 日志目录约定已落地，后续新增项目直接沿用。
+8. `log_service_test.dart` 已一致，无需改动；如需可补 FSS 测试。
 
 ### P3 版本演进
 
-12. 工具链保持一致升级节奏：先 bilibili + racing 验证，通过后回填其余 5 个。
-13. 每次改动先用 `workflow_dispatch` 触发双轨构建验证，再打 tag。
+9. 工具链保持一致升级节奏：先 bilibili + racing 验证，通过后回填其余 5 个。
+10. 每次改动先用 `workflow_dispatch` 触发双轨构建验证，再打 tag。
 
 ## 11. 差异之外的提醒
 
@@ -362,17 +378,20 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
   `audioplayers_windows` 的 README/CMake 要求，不要顺手删除。
 - `ffmpeg_kit_extended_flutter`（bilibili）原生库三平台走 gh-proxy，
   是该网络环境下的特例配置。
+- CI 资源限制（Gradle `-Xmx3G`、2 workers、测试并发 2、CMake 并行 2、
+  30 分钟超时）是为自建 runner 与 GitHub 免费 runner 的稳定性加的，
+  调整前先确认 runner 的 CPU / 内存规格。
 - 7 个项目 CI 的 Flutter / JDK / AGP / Kotlin / Gradle 完全同版本，
   工具链层面不存在分叉；后续升级建议同步推进。
 - 本机 `flutter` / `dart` CLI 不可用，本文档所有结论来自静态文件核对，
-  未运行 `flutter analyze` / `flutter test`；P0 / P1 改动需依赖 CI 双轨验证。
+  未运行 `flutter analyze` / `flutter test`；改动需依赖 CI 双轨验证。
 
 ## 12. 提交索引（备查）
 
 **第一轮统一（2026-10-17 ~ 10-19 上午，均已提交）**
 
 | 项目                 | 相关提交                                                                                                                               |
-|----------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | bilibili（模板先行） | 2890516 workflow 中文名、d1d786e C:\w 短路径、b1af1de bash cp -a、5e33bec 关 R8、58d0fb6 版本脚本通用化、bb55eec changelog 排除 .gitea |
 | music                | 737973f 依赖升级、6deab1e 统一签名、f2a5881 Windows 短路径 + 日志统一、2253f36 补齐 lint、c1dd03a versions.md、a72511b 签名材料入库    |
 | snake                | 847851e 包名改 com.flutter.snake + 统一签名、19b8845 双流水线优化避长路径、9b4c2a6 依赖升级、0c2f16f versions.md、b7c516d 签名密钥入库 |
@@ -386,16 +405,26 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
   snake 迁移 Kotlin MainActivity；snake / tetris 升级 audioplayers 6.8.1
   并改用 CMP0091 步骤。
 
+**第三轮整改（2026-10-23，本轮，已推送 tag）**
+
+| 项目     | 本轮提交                                                                                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| bilibili | 8effe15 超时、eda897d 版本脚本、ff3eab3 日志目录、079daab 应用名、feb859f gradle 注释、29351f4 资源限制、f19431a 测试并发、3a60ec3 文档更正、7b61a8c 发版                    |
+| gomoku   | b32153f 超时 + .gitea 排除、3039d47 版本脚本、d50ed7e 忽略 .metadata、3362836 应用名、ca088f1 兜底 0.1.0、e787ddf 日志目录、a2cafde 资源限制、9883466 测试并发、450e23e 发版 |
+| music    | e2a9b56 超时、bb2d169 版本脚本、2d04756 资源限制、2f29e08 测试并发、74a6163 发版                                                                                             |
+| racing   | af152f9 超时、b637e66 忽略 .metadata、90ccc00 Maven 精简、d8c77af 签名注释、3073a3a 资源限制、d5d3d8a 测试并发、53cdd66 发版                                                 |
+| snake    | 28619c5 超时、6b29e6c 版本脚本、0e966b0 应用名、71fe931 资源限制、b129208 测试并发、1b44898 发版                                                                             |
+| tank     | 12f4e9b 超时、1b67d16 忽略 .metadata、fbdc397 Maven 精简、93b8899 签名注释、4fa42ae 资源限制、64ee8ec 测试并发、1f69f58 发版                                                 |
+| tetris   | 2104c7c 超时、ec873e9 版本脚本、cc883fa 日志目录、4346b3c 资源限制、d571792 测试并发、bf48750 发版                                                                           |
+
 **当前 HEAD（2026-10-23 核对，均已推送 tag）**
 
 | 项目     | HEAD    | tag     |
-|----------|---------|---------|
-| bilibili | 5bcad72 | v0.4.33 |
-| gomoku   | 17ea43a | v0.3.8  |
-| music    | 638d1fc | v0.3.49 |
-| racing   | 9e0f970 | v0.1.2  |
-| snake    | c1a69b2 | v0.3.4  |
-| tank     | 1565803 | v0.3.2  |
-| tetris   | 20986f0 | v0.6.3  |
-
-**本次更新（2026-10-23）**：仅 `diff.md`（本文档），尚未提交。
+| -------- | ------- | ------- |
+| bilibili | 7b61a8c | v0.4.34 |
+| gomoku   | 450e23e | v0.3.9  |
+| music    | 74a6163 | v0.3.50 |
+| racing   | 53cdd66 | v0.1.3  |
+| snake    | 1b44898 | v0.3.5  |
+| tank     | 1f69f58 | v0.3.3  |
+| tetris   | bf48750 | v0.6.4  |
