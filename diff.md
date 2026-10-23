@@ -1,6 +1,6 @@
 # 七项目配置差异对比
 
-> 对比时间：2026-10-23（第二轮复查 + A1 收尾；复核时 7 个仓库工作区均 clean，
+> 对比时间：2026-10-23（第二轮复查 + A1/A9 收尾；复核时 7 个仓库工作区均 clean，
 > 本轮新增提交尚未推送）
 > 对比范围：pubspec 依赖、Android 构建配置与签名、analysis_options（lint）、
 > CI 工作流（GitHub + Gitea）、仓库卫生与目录结构、代码层共享组件
@@ -9,8 +9,8 @@
 > `flutter-snake`（snake）、`flutter-tank-battle`（tank）、`flutter-tetris`（tetris）
 >
 > 本版是 A 类整改后的复采样（上一版快照为 bilibili `8a3f555`）。上一版列出的
-> 9 项 A 类差异中 8 项已关闭，仅剩 A9（FileSystemService 未收敛）；
-> `.metadata` 索引与 `.gitignore` 模板已在后续 A1 收尾中统一。
+> 9 项 A 类差异已全部关闭：`.metadata` / `.gitignore` 在 A1 收尾中统一，
+> FileSystemService 在 A9 收尾中收敛为同一最小契约。
 
 ## 0. 结论速览
 
@@ -18,11 +18,11 @@
    Gradle/Kotlin 资源限制、版本脚本在 7 个项目上逐项一致；同一轨道的 7 份
    工作流在归一化项目名与 emoji 后逐字相同（GitHub 与 Gitea 之间仍按 6.2
    保留固有差异）。
-2. **代码层三项已统一**：`lib/services/log_service.dart` 7 份逐字节一致；
-   设置页日志查看 UI 7 份齐备；日志目录落点本轮统一为
-   `<用户可见根>/<应用目录>/logs>`。
-3. **剩余真分叉 1 处（A 类）**：A9 FileSystemService 仍是 6 份实现 +
-   tetris 内联。
+2. **代码层四项已统一**：`lib/services/log_service.dart` 7 份逐字节一致；
+   设置页日志查看 UI 7 份齐备；日志目录落点统一为
+   `<用户可见根>/<应用目录>/logs>`；FileSystemService 的
+   `_baseDir` / `getLogRoot` / `openDirectory` 7 份逐字一致。
+3. **A 类差异已全部关闭**：7 个仓库均有 FSS，tetris 的内联实现已移除。
 4. 其余为仓库卫生差异（racing 缺 `prompt.md`、`diff.md` 仅 bilibili）与
    业务差异（依赖、包名、assets、权限、横屏），不建议强行统一。
 
@@ -37,7 +37,7 @@
 | 正式 keystore（android/app/） | bilibili-downloader.jks | flutter-gomoku.jks | flutter-music.jks | flutter-racing.jks | flutter-snake.jks | flutter-tank-battle.jks | flutter-tetris.jks |
 | 业务依赖                      | 见 3.2                  | 仅 path            | 见 3.2            | audioplayers       | audioplayers      | audioplayers            | audioplayers       |
 | assets/                       | 无                      | 无                 | 无                | audio/             | 无                | audio/                  | 无                 |
-| lib Dart 文件数               | 29                      | 21                 | 30                | 30                 | 17                | 27                      | 28                 |
+| lib Dart 文件数               | 29                      | 21                 | 30                | 30                 | 17                | 27                      | 29                 |
 | test 文件数                   | 3                       | 9                  | 10                | 11                 | 5                 | 7                       | 14                 |
 
 ## 2. Dart / Flutter 环境（完全一致）
@@ -252,32 +252,36 @@ A1 已收尾：gomoku / racing / tank 的 `.metadata` 已用 `git rm --cached`
 7 份设置页均有「日志目录」tile（复制路径 + 桌面端打开目录）与「查看日志」
 弹窗（刷新 / 复制全部 / 关闭，200 行 monospace `SelectableText`）；
 刷新按钮使用 `StatefulBuilder` 重建，修复了父级 `setState` 不刷新弹窗的问题。
-bilibili 与 tetris 的「日志目录」字符串各出现 2 次（其余 3 次），tetris 的
-`openDirectory` 仍是设置页内本地实现；两者属实现位置差异，不影响功能与外观。
+bilibili 与 tetris 的「日志目录」字符串各出现 2 次（其余 3 次），
+tetris 已改调 `FileSystemService.openDirectory`，实现位置差异已消除。
 
-### 8.3 FileSystemService 与日志落点（A9）
+### 8.3 FileSystemService 与日志落点（已统一）
 
 | 项目     | 行数 | 公开方法                                                                                                   |
 | -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| bilibili | 260  | getDownloadRoot、getLogRoot、revealInFileManager、openDirectory、openWithSystemPlayer、mergeAv、probeMedia |
-| gomoku   | 61   | getLogRoot、openDirectory                                                                                  |
-| music    | 93   | getUserRoot、getLogRoot、openDirectory                                                                     |
-| racing   | 54   | getLogRoot、openDirectory                                                                                  |
-| snake    | 62   | getUserRoot、getLogRoot、openDirectory                                                                     |
-| tank     | 52   | getLogRoot、openDirectory                                                                                  |
-| tetris   | —    | 无 FSS，`main.dart` 内联 `_logRoot`                                                                        |
+| bilibili | 266  | getDownloadRoot、getLogRoot、revealInFileManager、openDirectory、openWithSystemPlayer、mergeAv、probeMedia |
+| gomoku   | 62   | getLogRoot、openDirectory                                                                                  |
+| music    | 110  | getUserRoot、getLogRoot、getDefaultMusicDirs、openDirectory                                                |
+| racing   | 62   | getLogRoot、openDirectory                                                                                  |
+| snake    | 78   | getUserRoot、getLogRoot、openDirectory                                                                     |
+| tank     | 62   | getLogRoot、openDirectory                                                                                  |
+| tetris   | 62   | getLogRoot、openDirectory                                                                                  |
+
+7 份的 `_baseDir`、`getLogRoot`、`openDirectory` 逐字一致（仅 `appDirName`
+不同）；bilibili 的下载/播放/ffmpeg 方法与 music 的默认音乐目录方法保留在
+各自文件中。
 
 日志目录本轮已统一为 `<用户可见根>/<应用目录>/logs>`：
 
-| 项目     | 日志目录                                                         |
-| -------- | ---------------------------------------------------------------- |
-| bilibili | `<Documents 或 external>/BilibiliDownloader/logs`                |
-| gomoku   | `<Documents 或 external>/FlutterGomoku/logs`                     |
-| music    | `<Documents 或 external>/FlutterMusic/logs`                      |
-| racing   | `<Documents 或 external>/FlutterRacing/logs`                     |
-| snake    | `<Documents 或 external>/FlutterSnake/logs`                      |
-| tank     | `<Documents 或 external>/TankBattle/logs`                        |
-| tetris   | `<Documents 或 external>/FlutterTetris/logs`（`main.dart` 内联） |
+| 项目     | 日志目录                                          |
+| -------- | ------------------------------------------------- |
+| bilibili | `<Documents 或 external>/BilibiliDownloader/logs` |
+| gomoku   | `<Documents 或 external>/FlutterGomoku/logs`      |
+| music    | `<Documents 或 external>/FlutterMusic/logs`       |
+| racing   | `<Documents 或 external>/FlutterRacing/logs`      |
+| snake    | `<Documents 或 external>/FlutterSnake/logs`       |
+| tank     | `<Documents 或 external>/TankBattle/logs`         |
+| tetris   | `<Documents 或 external>/FlutterTetris/logs`      |
 
 Android 优先 `getExternalStorageDirectory()`，其余平台用 Documents。
 
@@ -291,7 +295,7 @@ Android 优先 `getExternalStorageDirectory()`，其余平台用 Documents。
 | racing   | `engine/`                                      | 30          | 11          |
 | snake    | 无                                             | 17          | 5           |
 | tank     | `engine/`                                      | 27          | 7           |
-| tetris   | 无                                             | 28          | 14          |
+| tetris   | 无                                             | 29          | 14          |
 
 bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命名差异。
 
@@ -299,9 +303,7 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 ### A 类：仍建议统一
 
-| 编号 | 差异                       | 位置                         | 影响             | 建议                      |
-| ---- | -------------------------- | ---------------------------- | ---------------- | ------------------------- |
-| A9   | FSS 6 份实现 + tetris 内联 | `lib/services/`、`main.dart` | 公共内核重复维护 | 收敛最小契约，tetris 补齐 |
+无。上一版 9 项已全部关闭。
 
 ### A 类关闭记录
 
@@ -315,6 +317,7 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 | A6   | 兜底版本 `0.1.3`                     | 统一为 `0.1.0`                                          |
 | A7   | 唯一入库 windows 工程文件            | 保留（`just_audio_windows` 编译必需，见 7.2）           |
 | A8   | 应用名资源化不一致                   | 7 个均改为 `@string/app_name`，`strings.xml` 齐备       |
+| A9   | FSS 6 份实现 + tetris 内联           | 7 份公共方法逐字一致，tetris 补齐 FSS 并移除内联        |
 
 ### B 类：装饰或卫生，可顺手
 
@@ -352,10 +355,10 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 ### P2 代码层最小契约
 
-6. `FileSystemService` 收敛为「单例 + `getLogRoot` + `openDirectory`」，
-   项目特有方法保留；tetris 补齐 FSS 或至少让 `_logRoot` 走同一约定。
+6. 已完成：`FileSystemService` 收敛为「单例 + `getLogRoot` + `openDirectory`」，
+   项目特有方法保留；tetris 已补齐 FSS 并移除内联。
 7. 日志目录约定已落地，后续新增项目直接沿用。
-8. `log_service_test.dart` 已一致，无需改动；如需可补 FSS 测试。
+8. `log_service_test.dart` 已一致，无需改动；FSS 暂无独立测试，由 CI 验证。
 
 ### P3 版本演进
 
@@ -420,14 +423,26 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 | snake    | —       | 已是基准模板，无改动                  |
 | tetris   | —       | 已是基准模板，无改动                  |
 
-**当前 HEAD（2026-10-23 核对；tag 见上表，A1 收尾提交未推送）**
+**A9 收尾（2026-10-23，tag 后新增，未推送）**
+
+| 项目     | 提交    | 内容                                |
+| -------- | ------- | ----------------------------------- |
+| bilibili | fa3ca8b | 统一 FSS 最小契约                   |
+| gomoku   | b4aa7d6 | 统一 FSS 最小契约                   |
+| music    | 09eb566 | 统一 FSS 最小契约                   |
+| racing   | 0e8ed61 | 统一 FSS 最小契约                   |
+| snake    | c1a2e13 | 统一 FSS 最小契约                   |
+| tank     | f99ae0a | 统一 FSS 最小契约                   |
+| tetris   | 5e40235 | 新增 FSS，移除 main / settings 内联 |
+
+**当前 HEAD（2026-10-23 核对；tag 见上表，A1 / A9 收尾提交未推送）**
 
 | 项目     | HEAD    | tag     |
 | -------- | ------- | ------- |
-| bilibili | a770fc4 | v0.4.34 |
-| gomoku   | a64487b | v0.3.9  |
-| music    | 761a2a5 | v0.3.50 |
-| racing   | 7f6e0a2 | v0.1.3  |
-| snake    | 1b44898 | v0.3.5  |
-| tank     | 4d1368f | v0.3.3  |
-| tetris   | bf48750 | v0.6.4  |
+| bilibili | fa3ca8b | v0.4.34 |
+| gomoku   | b4aa7d6 | v0.3.9  |
+| music    | 09eb566 | v0.3.50 |
+| racing   | 0e8ed61 | v0.1.3  |
+| snake    | c1a2e13 | v0.3.5  |
+| tank     | f99ae0a | v0.3.3  |
+| tetris   | 5e40235 | v0.6.4  |
