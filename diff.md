@@ -98,7 +98,7 @@
 以下文件逐字一致：`analysis_options.yaml`（7 份，md5 `0b5e2c78`）、
 `android/gradle/wrapper/gradle-wrapper.properties`（md5 `ed29e8b7`）、
 `android/gradle/init-aliyun-mirror.gradle`（md5 `e57cb091`）、
-`android/build.gradle`（md5 `7ccccbeb`）、`android/gradle.properties`
+`android/build.gradle`（md5 `159cdd9c`）、`android/gradle.properties`
 （md5 `b77f3e3d`）、`.build/query_all_versions.py`（md5 `f191bb70`）。
 `android/settings.gradle` 与 `android/app/build.gradle` 归一化项目标识符后
 7 份无差异。
@@ -121,9 +121,10 @@ debug 与 release 均指向 `signingConfigs.release`，签名材料随仓库分�
 上一版记录的 gradle.properties 注释、兜底版本 `0.1.3`、Maven 镜像两套、
 签名注释三种措辞均已关闭。
 
-7 个项目的 `android/build.gradle` 均通过 `subprojects.afterEvaluate` 将
-所有 Android 子项目（含 `file_picker` 的 `android_file_picker`）强制为
-`compileSdk 37.2`，避免插件按 Flutter 默认的 36 编译并引入 Build Tools 36。
+7 个项目的 `android/build.gradle` 均通过 `subprojects` 统一设置
+（未评估的子项目走 `afterEvaluate`），把所有 Android 子项目（含
+`file_picker` 的 `android_file_picker`）强制为 `compileSdk 37.2`，避免插件
+按 Flutter 默认的 36 编译并引入 Build Tools 36。
 
 ### 4.4 应用清单差异（部分属业务决定）
 
