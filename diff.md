@@ -7,8 +7,9 @@
 > `flutter-gomoku`（gomoku）、`flutter-music`（music）、`flutter-racing`（racing）、
 > `flutter-snake`（snake）、`flutter-tank-battle`（tank）、`flutter-tetris`（tetris）
 >
-> 上一版（2026-10-19 / 20，4 项目）的结论仍然成立；遗留的 2 个可选项
-> （music 的 windows/ 策略、bilibili 的 gradle.properties 注释）仍未处理。
+> 上一版（2026-10-19 / 20，4 项目）的结论仍然成立；遗留的 2 个可选项中
+> music 的 windows/ 策略本次已核实为必需保留（见 7.2），
+> bilibili 的 gradle.properties 注释仍未处理。
 > 本次新增 gomoku / racing / tank，并补上仓库卫生与代码层对比。
 
 ## 0. 结论速览
@@ -195,9 +196,23 @@ tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指�
 ### 7.2 windows/ 策略
 
 只有 music 入库 `windows/CMakeLists.txt`，其余 6 个完全交给 CI 的
-`flutter create` 生成。该文件内仍保留
-`_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS`——上一版已判定该协程
-静默补丁在 `audioplayers 6.8.1` 后作废，music 又不使用 audioplayers，属历史残留。
+`flutter create` 生成（该命令不覆盖已存在文件，只补 `runner/`、`flutter/`
+等缺失部分）。
+
+该文件是 2026-06-09 提交 `3ce1078` 为解决 Windows 构建失败而加的，
+其中 `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS` **不是历史残留**，
+而是 music 独有的硬依赖：
+
+- music 的 Windows 原生栈是 `just_audio_windows 0.2.3` 与
+  `permission_handler_windows`，两者都拉 C++/WinRT `2.0.210806.1` 并按 C++17 编译；
+- 该版本 C++/WinRT 的 `strings/base_includes.h` 在 `__cpp_lib_coroutine`
+  未定义（`/std:c++17` 即如此）时 `#include <experimental/coroutine>`；
+- MSVC STL 对 `<experimental/coroutine>` 直接报硬错误 STL1011，
+  只有定义该宏才能通过编译。
+
+因此宏必须保留；删掉该文件（交给 CI 重新生成）会在编译 `just_audio_windows`
+时报 STL1011。上一版「audioplayers 6.8.1 后作废」的结论只对 audioplayers 成立
+（`audioplayers_windows 4.4.1` 已改用 WIL + C++20，不再碰 C++/WinRT）。
 
 ### 7.3 `.build/query_all_versions.py` 两代并存
 
@@ -283,7 +298,7 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 | A4   | 版本脚本两代                         | `.build/query_all_versions.py`            | 缺少工作流时读取失败              | 回填 racing/tank 版             |
 | A5   | Maven 镜像两套                       | `android/build.gradle`、`settings.gradle` | 拉取稳定性与顺序不一致            | 以 racing/tank 为基线           |
 | A6   | 兜底版本 `0.1.3`                     | gomoku `app/build.gradle`                 | `local.properties` 缺失时版本错误 | 改 `0.1.0`                      |
-| A7   | 唯一入库 windows 工程文件 + 旧宏     | music `windows/CMakeLists.txt`            | 与其余 6 个策略相反               | 删除或清理                      |
+| A7   | 唯一入库 windows 工程文件 + 协程宏   | music `windows/CMakeLists.txt`            | 与其余 6 个策略相反，但编译必需   | 保留，不统一（见 7.2）          |
 | A8   | 应用名资源化不一致                   | Manifest / strings.xml                    | 改名与多语言成本                  | 统一 `@string/app_name`         |
 | A9   | FSS 6 份实现 + tetris 缺失           | `lib/services/`                           | 公共内核重复维护                  | 收敛最小契约                    |
 
@@ -323,8 +338,8 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 5. 以 racing/tank 的镜像源为基线，回填其余 5 个，保留 `USE_ALIYUN_MAVEN`。
 6. gomoku / snake 补 `strings.xml`，bilibili 改用 `@string/app_name`。
-7. music 的 `windows/CMakeLists.txt` 做决策：删除并交给 CI（与 6 个项目一致），
-   或保留并移除旧协程宏。
+7. music 的 `windows/CMakeLists.txt`：已核实协程宏为 `just_audio_windows`
+   编译所必需（见 7.2），保留现状，不再视为待清理项。
 8. 可选：bilibili gradle.properties 注释、签名注释措辞、主题文件改名。
 
 ### P2 代码层最小契约
