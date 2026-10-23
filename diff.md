@@ -1,7 +1,7 @@
 # 七项目配置差异对比
 
-> 对比时间：2026-10-23（第二轮复查；复核时 7 个仓库工作区均 clean，
-> HEAD 与 tag 均已推送）
+> 对比时间：2026-10-23（第二轮复查 + A1 收尾；复核时 7 个仓库工作区均 clean，
+> 本轮新增提交尚未推送）
 > 对比范围：pubspec 依赖、Android 构建配置与签名、analysis_options（lint）、
 > CI 工作流（GitHub + Gitea）、仓库卫生与目录结构、代码层共享组件
 > 项目清单：`flutter-bilibili-downloader-d4-qwen-code`（下称 bilibili）、
@@ -9,8 +9,8 @@
 > `flutter-snake`（snake）、`flutter-tank-battle`（tank）、`flutter-tetris`（tetris）
 >
 > 本版是 A 类整改后的复采样（上一版快照为 bilibili `8a3f555`）。上一版列出的
-> 9 项 A 类差异中 7 项已关闭，仅剩 A1（`.metadata` 索引残留）与 A9
-> （FileSystemService 未收敛）；同时本轮新增了 CI 资源限制与构建脚本对齐。
+> 9 项 A 类差异中 8 项已关闭，仅剩 A9（FileSystemService 未收敛）；
+> `.metadata` 索引与 `.gitignore` 模板已在后续 A1 收尾中统一。
 
 ## 0. 结论速览
 
@@ -21,12 +21,10 @@
 2. **代码层三项已统一**：`lib/services/log_service.dart` 7 份逐字节一致；
    设置页日志查看 UI 7 份齐备；日志目录落点本轮统一为
    `<用户可见根>/<应用目录>/logs>`。
-3. **剩余真分叉 2 处（A 类）**：A1 `.metadata` 仍在 gomoku / racing / tank
-   的索引中（`.gitignore` 已加忽略行但不生效）；A9 FileSystemService 仍是
-   6 份实现 + tetris 内联。
-4. 其余为仓库卫生差异（`.gitignore` 5 套模板、racing 缺 `prompt.md`、
-   `diff.md` 仅 bilibili）与业务差异（依赖、包名、assets、权限、横屏），
-   不建议强行统一。
+3. **剩余真分叉 1 处（A 类）**：A9 FileSystemService 仍是 6 份实现 +
+   tetris 内联。
+4. 其余为仓库卫生差异（racing 缺 `prompt.md`、`diff.md` 仅 bilibili）与
+   业务差异（依赖、包名、assets、权限、横屏），不建议强行统一。
 
 ## 1. 项目概览
 
@@ -184,32 +182,28 @@ Windows CMake 并行 2、构建 job 30 分钟超时。
 
 ## 7. 仓库卫生与工程结构
 
-### 7.1 `.metadata` 与 `.gitignore`（五套模板）
+### 7.1 `.metadata` 与 `.gitignore`（已统一）
 
-| 项                | bilibili | gomoku | music          | racing | snake | tank   | tetris |
-| ----------------- | -------- | ------ | -------------- | ------ | ----- | ------ | ------ |
-| `.metadata` 入库  | 否       | **是** | 否             | **是** | 否    | **是** | 否     |
-| `.gitignore` 模板 | A        | B      | D              | C      | E     | C      | E      |
-| `windows/` 入库   | 无       | 无     | CMakeLists.txt | 无     | 无    | 无     | 无     |
-| 版本脚本          | 新       | 新     | 新             | 新     | 新    | 新     | 新     |
-| prompt.md         | 有       | 有     | 有             | 无     | 有    | 有     | 有     |
+| 项                | bilibili | gomoku | music          | racing  | snake | tank    | tetris |
+| ----------------- | -------- | ------ | -------------- | ------- | ----- | ------- | ------ |
+| `.metadata` 入库  | 否       | 否     | 否             | 否      | 否    | 否      | 否     |
+| `.gitignore` 模板 | E+下载   | E      | E              | E+tools | E     | E+tools | E      |
+| `windows/` 入库   | 无       | 无     | CMakeLists.txt | 无      | 无    | 无      | 无     |
+| 版本脚本          | 新       | 新     | 新             | 新      | 新    | 新      | 新     |
+| prompt.md         | 有       | 有     | 有             | 无      | 有    | 有      | 有     |
 
-模板定义（5 份 md5 各异）：
+模板定义（以 E 为基准，7 份只差项目特有忽略项）：
 
-- **A（bilibili）**：忽略 `.metadata`；windows / macOS / iOS 用子路径细粒度
-  忽略；额外忽略 `downloads/`、`*.mp4`；不列 `.flutter-plugins`。
-- **B（gomoku）**：忽略 `.metadata` 与 `.flutter-plugins`；整目录忽略
-  `windows/`、`macos/`、`ios/`、`linux/`；`.qwen` 前无空行。
-- **C（racing / tank）**：与 B 相同，另忽略 `tools/`；两份逐字一致。
-- **D（music）**：忽略 `.metadata` 与 `.flutter-plugins`；`windows/` 整目录忽略，
-  但 macOS / iOS / Linux 用子路径细粒度忽略。
-- **E（snake / tetris）**：忽略 `.metadata` 与 `.flutter-plugins`；四个平台目录
-  全部整目录忽略；`.qwen` 前有空行；两份逐字一致。
+- **E（基准）**：忽略 `.metadata`、`.flutter-plugins`、
+  `.flutter-plugins-dependencies`；整目录忽略 `windows/`、`macos/`、`ios/`、
+  `linux/`、`web/`；忽略 Android 构建产物、`*.log`、`.env`、`token`；
+  末尾忽略 `.qwen`。
+- **bilibili**：E + `downloads/`、`*.mp4`。
+- **racing / tank**：E + `tools/`（两份逐字一致）。
 
-A1 只完成了一半：7 个 `.gitignore` 都已写入 `.metadata`，但 gomoku / racing /
-tank 的 `.metadata` 仍在索引中（`git ls-files` 可见），忽略规则对已跟踪文件
-无效，`git status` 也不会提示。本轮 `d50ed7e` / `b637e66` / `1b67d16` 只加了
-忽略行，缺 `git rm --cached`。
+A1 已收尾：gomoku / racing / tank 的 `.metadata` 已用 `git rm --cached`
+移出索引（本地文件保留），`git check-ignore` 确认忽略规则生效；
+`.gitignore` 由 5 套收敛为「1 份基准 + 2 组项目特有项」。
 
 ### 7.2 windows/ 策略
 
@@ -305,29 +299,27 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 ### A 类：仍建议统一
 
-| 编号 | 差异                                     | 位置                         | 影响                         | 建议                                   |
-| ---- | ---------------------------------------- | ---------------------------- | ---------------------------- | -------------------------------------- |
-| A1   | `.metadata` 仍在索引 + `.gitignore` 5 套 | gomoku / racing / tank       | 仓库约定不一致，忽略规则失效 | `git rm --cached .metadata` 并收敛模板 |
-| A9   | FSS 6 份实现 + tetris 内联               | `lib/services/`、`main.dart` | 公共内核重复维护             | 收敛最小契约，tetris 补齐              |
+| 编号 | 差异                       | 位置                         | 影响             | 建议                      |
+| ---- | -------------------------- | ---------------------------- | ---------------- | ------------------------- |
+| A9   | FSS 6 份实现 + tetris 内联 | `lib/services/`、`main.dart` | 公共内核重复维护 | 收敛最小契约，tetris 补齐 |
 
-### 上一版 A 类中本轮已关闭
+### A 类关闭记录
 
-| 编号 | 差异                         | 处理结果                                          |
-| ---- | ---------------------------- | ------------------------------------------------- |
-| A2   | 日志目录 5 种落点            | 7 个项目统一为 `<用户根>/<应用目录>/logs>`        |
-| A3   | GitHub changelog 缺 `.gitea` | gomoku 已补，7 份工作流归一化后无差异             |
-| A4   | 版本脚本两代                 | 7 份统一为 md5 `f191bb70`                         |
-| A5   | Maven 镜像两套               | 统一 3 项阿里云 + `mavenCentral()` + `google()`   |
-| A6   | 兜底版本 `0.1.3`             | 统一为 `0.1.0`                                    |
-| A7   | 唯一入库 windows 工程文件    | 保留（`just_audio_windows` 编译必需，见 7.2）     |
-| A8   | 应用名资源化不一致           | 7 个均改为 `@string/app_name`，`strings.xml` 齐备 |
+| 编号 | 差异                                 | 处理结果                                                |
+| ---- | ------------------------------------ | ------------------------------------------------------- |
+| A1   | `.metadata` 索引 + `.gitignore` 多套 | 3 个仓库已 `git rm --cached`，模板收敛为 E + 项目特有项 |
+| A2   | 日志目录 5 种落点                    | 7 个项目统一为 `<用户根>/<应用目录>/logs>`              |
+| A3   | GitHub changelog 缺 `.gitea`         | gomoku 已补，7 份工作流归一化后无差异                   |
+| A4   | 版本脚本两代                         | 7 份统一为 md5 `f191bb70`                               |
+| A5   | Maven 镜像两套                       | 统一 3 项阿里云 + `mavenCentral()` + `google()`         |
+| A6   | 兜底版本 `0.1.3`                     | 统一为 `0.1.0`                                          |
+| A7   | 唯一入库 windows 工程文件            | 保留（`just_audio_windows` 编译必需，见 7.2）           |
+| A8   | 应用名资源化不一致                   | 7 个均改为 `@string/app_name`，`strings.xml` 齐备       |
 
 ### B 类：装饰或卫生，可顺手
 
-- `.gitignore` 五套模板（随 A1 一并收敛）。
 - racing 缺 `prompt.md`。
 - bilibili 主题文件名 `china_app_theme.dart`。
-- bilibili `.gitignore` 保留 windows 子路径规则，但仓库内无 `windows/` 目录。
 - README 结构与长度（业务文档，不建议统一）。
 
 ### C 类：有意保留
@@ -346,12 +338,11 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 ## 10. 演进路线
 
-### P0 仓库卫生（零功能风险，逐仓库一个提交）
+### P0 仓库卫生
 
-1. gomoku / racing / tank：`git rm --cached .metadata` 并提交，让忽略规则生效。
-2. 统一 `.gitignore`：以 E 为基础，bilibili 保留 `downloads/`、`*.mp4`，
-   racing / tank 保留 `tools/`。
-3. racing：补 `prompt.md`；后续文档变更时同步 `diff.md`。
+1. 已完成：gomoku / racing / tank 的 `.metadata` 已移出索引，`.gitignore`
+   统一为 E 基准（bilibili 加 `downloads/`、`*.mp4`，racing / tank 加 `tools/`）。
+2. 剩余：racing 补 `prompt.md`；后续文档变更时同步 `diff.md`。
 
 ### P1 构建配置对齐
 
@@ -405,7 +396,7 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
   snake 迁移 Kotlin MainActivity；snake / tetris 升级 audioplayers 6.8.1
   并改用 CMP0091 步骤。
 
-**第三轮整改（2026-10-23，本轮，已推送 tag）**
+**第三轮整改（2026-10-23，已推送 tag）**
 
 | 项目     | 本轮提交                                                                                                                                                                     |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -417,14 +408,26 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 | tank     | 12f4e9b 超时、1b67d16 忽略 .metadata、fbdc397 Maven 精简、93b8899 签名注释、4fa42ae 资源限制、64ee8ec 测试并发、1f69f58 发版                                                 |
 | tetris   | 2104c7c 超时、ec873e9 版本脚本、cc883fa 日志目录、4346b3c 资源限制、d571792 测试并发、bf48750 发版                                                                           |
 
-**当前 HEAD（2026-10-23 核对，均已推送 tag）**
+**A1 收尾（2026-10-23，tag 后新增，未推送）**
+
+| 项目     | 提交    | 内容                                  |
+| -------- | ------- | ------------------------------------- |
+| bilibili | a770fc4 | 统一 .gitignore 模板                  |
+| gomoku   | a64487b | 统一 .gitignore + 移除 .metadata 索引 |
+| music    | 761a2a5 | 统一 .gitignore 模板                  |
+| racing   | 7f6e0a2 | 移除 .metadata 索引                   |
+| tank     | 4d1368f | 移除 .metadata 索引                   |
+| snake    | —       | 已是基准模板，无改动                  |
+| tetris   | —       | 已是基准模板，无改动                  |
+
+**当前 HEAD（2026-10-23 核对；tag 见上表，A1 收尾提交未推送）**
 
 | 项目     | HEAD    | tag     |
 | -------- | ------- | ------- |
-| bilibili | 7b61a8c | v0.4.34 |
-| gomoku   | 450e23e | v0.3.9  |
-| music    | 74a6163 | v0.3.50 |
-| racing   | 53cdd66 | v0.1.3  |
+| bilibili | a770fc4 | v0.4.34 |
+| gomoku   | a64487b | v0.3.9  |
+| music    | 761a2a5 | v0.3.50 |
+| racing   | 7f6e0a2 | v0.1.3  |
 | snake    | 1b44898 | v0.3.5  |
-| tank     | 1f69f58 | v0.3.3  |
+| tank     | 4d1368f | v0.3.3  |
 | tetris   | bf48750 | v0.6.4  |
