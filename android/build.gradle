@@ -18,11 +18,16 @@ subprojects {
 }
 
 // 统一所有 Android 子项目（含插件模块）到 compileSdk 37.2。
-subprojects {
-    afterEvaluate { project ->
+subprojects { project ->
+    def applyCompileSdk = {
         if (project.hasProperty('android')) {
             project.android.compileSdkVersion = "android-37.2"
         }
+    }
+    if (project.state.executed) {
+        applyCompileSdk()
+    } else {
+        project.afterEvaluate { applyCompileSdk() }
     }
 }
 
