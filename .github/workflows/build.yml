@@ -82,6 +82,7 @@ jobs:
     name: 🤖 构建 Android APK
     permissions:
       contents: read
+    timeout-minutes: 30
     steps:
       - name: 📥 检出代码
         uses: actions/checkout@v6
@@ -144,6 +145,7 @@ jobs:
     name: 🪟 构建 Windows EXE
     permissions:
       contents: read
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: C:\w
