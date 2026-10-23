@@ -84,7 +84,7 @@
 | AGP                             | 9.4.1（settings.gradle 插件声明）                                                                    |
 | Kotlin                          | 2.4.21（插件 + kotlin-stdlib）                                                                       |
 | Gradle                          | 9.8.2-all（华为云镜像 distributionUrl）                                                              |
-| compileSdk / targetSdk / minSdk | 37 / 37 / 35                                                                                         |
+| compileSdk / targetSdk / minSdk | 37.2 / 37 / 35                                                                                       |
 | NDK                             | 30.0.16248370                                                                                        |
 | Java 兼容性                     | VERSION_21 + jvmTarget 21                                                                            |
 | coreLibraryDesugaring           | 2.1.5（启用）                                                                                        |
@@ -98,7 +98,7 @@
 以下文件逐字一致：`analysis_options.yaml`（7 份，md5 `0b5e2c78`）、
 `android/gradle/wrapper/gradle-wrapper.properties`（md5 `ed29e8b7`）、
 `android/gradle/init-aliyun-mirror.gradle`（md5 `e57cb091`）、
-`android/build.gradle`（md5 `4555ab33`）、`android/gradle.properties`
+`android/build.gradle`（md5 `7ccccbeb`）、`android/gradle.properties`
 （md5 `b77f3e3d`）、`.build/query_all_versions.py`（md5 `f191bb70`）。
 `android/settings.gradle` 与 `android/app/build.gradle` 归一化项目标识符后
 7 份无差异。
@@ -120,6 +120,10 @@ debug 与 release 均指向 `signingConfigs.release`，签名材料随仓库分�
 
 上一版记录的 gradle.properties 注释、兜底版本 `0.1.3`、Maven 镜像两套、
 签名注释三种措辞均已关闭。
+
+7 个项目的 `android/build.gradle` 均通过 `subprojects.afterEvaluate` 将
+所有 Android 子项目（含 `file_picker` 的 `android_file_picker`）强制为
+`compileSdk 37.2`，避免插件按 Flutter 默认的 36 编译并引入 Build Tools 36。
 
 ### 4.4 应用清单差异（部分属业务决定）
 
@@ -167,6 +171,7 @@ CMP0091 与依赖严格对应：使用 `audioplayers 6.8.1` 的 racing / snake /
 tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指向 VS 2026
 镜像，`audioplayers_windows` 4.4.1 要求 CMP0091 NEW；sed 在
 `cmake_minimum_required` 行后插入策略并用 grep 校验，模板失配时显式失败。
+
 
 ### 6.2 GitHub 与 Gitea 双轨之间的固有差异
 
@@ -439,7 +444,7 @@ bilibili 的主题文件名与其余 6 个（`app_theme.dart`）不同，属命�
 
 | 项目     | HEAD    | tag     |
 | -------- | ------- | ------- |
-| bilibili | fa3ca8b | v0.4.34 |
+| bilibili | cb2a5de | v0.4.34 |
 | gomoku   | b4aa7d6 | v0.3.9  |
 | music    | 09eb566 | v0.3.50 |
 | racing   | 0e8ed61 | v0.1.3  |
