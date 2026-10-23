@@ -1,5 +1,6 @@
 # Flutter
 .metadata
+.flutter-plugins
 .flutter-plugins-dependencies
 .dart_tool/
 .packages
@@ -16,24 +17,16 @@ android/build/
 android/local.properties
 
 # Windows
-windows/runner/Debug/
-windows/runner/Release/
-windows/runner/x64/
-windows/flutter/ephemeral/
-windows/flutter/generated_*
+windows/
 
 # macOS
-macos/Runner/DerivedData/
-macos/Flutter/ephemeral/
+macos/
 
 # iOS
-ios/Pods/
-ios/.symlinks/
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
+ios/
 
 # Linux
-linux/flutter/ephemeral/
+linux/
 
 # Web
 web/
@@ -53,5 +46,4 @@ Thumbs.db
 **/gradlew
 **/gradlew.bat
 
-# Agent
 .qwen
