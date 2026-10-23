@@ -17,6 +17,15 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// 统一所有 Android 子项目（含插件模块）到 compileSdk 37.2。
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android.compileSdkVersion = "android-37.2"
+        }
+    }
+}
+
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

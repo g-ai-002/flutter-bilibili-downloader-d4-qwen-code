@@ -33,7 +33,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.bilibili.downloader"
-    compileSdk 37
+    compileSdkVersion "android-37.2"
     ndkVersion "30.0.16248370"
 
     compileOptions {
