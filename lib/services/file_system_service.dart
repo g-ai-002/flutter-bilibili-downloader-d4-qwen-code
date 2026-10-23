@@ -12,9 +12,13 @@ import 'log_service.dart';
 /// - 打开文件管理器并定位到目标文件
 /// - DASH 视频/音频合并（委托给 ffmpeg_platform.dart）
 class FileSystemService {
-  static FileSystemService? _instance;
-  static FileSystemService get instance => _instance ??= FileSystemService._();
-  FileSystemService._();
+  FileSystemService._(this.appDirName);
+
+  static final FileSystemService instance =
+      FileSystemService._('BilibiliDownloader');
+
+  /// 应用数据目录名（位于 Documents 或应用外部存储下）
+  final String appDirName;
 
   Directory? _downloadRoot;
   Directory? _logRoot;
@@ -65,20 +69,20 @@ class FileSystemService {
     }
   }
 
-  /// 获取日志根目录（仅文件父目录，路径展示用）
+  Future<Directory> _baseDir() async {
+    if (Platform.isAndroid) {
+      final ext = await getExternalStorageDirectory();
+      return ext ?? await getApplicationDocumentsDirectory();
+    }
+    return getApplicationDocumentsDirectory();
+  }
+
+  /// 日志根目录：<Documents 或 external>/<appDirName>/logs
   Future<Directory> getLogRoot() async {
     if (_logRoot != null) return _logRoot!;
-
-    Directory baseDir;
-    if (Platform.isAndroid) {
-      final extDir = await getExternalStorageDirectory();
-      baseDir = extDir ?? await getApplicationDocumentsDirectory();
-    } else {
-      baseDir = await getApplicationDocumentsDirectory();
-    }
-
+    final base = await _baseDir();
     final logDir = Directory(
-      '${baseDir.path}${Platform.pathSeparator}BilibiliDownloader'
+      '${base.path}${Platform.pathSeparator}$appDirName'
       '${Platform.pathSeparator}logs',
     );
     if (!await logDir.exists()) {
@@ -118,20 +122,22 @@ class FileSystemService {
   }
 
   /// 打开目录
-  Future<bool> openDirectory(String dirPath) async {
+  Future<bool> openDirectory(String path) async {
     try {
       if (Platform.isWindows) {
-        await Process.run('explorer.exe', [dirPath]);
-        return true;
-      } else if (Platform.isMacOS) {
-        await Process.run('open', [dirPath]);
-        return true;
-      } else if (Platform.isLinux) {
-        await Process.run('xdg-open', [dirPath]);
+        await Process.run('explorer.exe', [path]);
         return true;
       }
-    } catch (e) {
-      LogService.error('打开目录失败: $dirPath', e);
+      if (Platform.isMacOS) {
+        await Process.run('open', [path]);
+        return true;
+      }
+      if (Platform.isLinux) {
+        await Process.run('xdg-open', [path]);
+        return true;
+      }
+    } catch (e, stack) {
+      LogService.error('打开目录失败: $path', e, stack);
     }
     return false;
   }
