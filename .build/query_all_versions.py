@@ -231,6 +231,8 @@ def collect_project_info():
 def collect_actions():
     refs = {}
     for rel in ('.github/workflows/build.yml', '.gitea/workflows/build.yml'):
+        if not (ROOT / rel).exists():
+            continue
         text = read_text(rel)
         for match in re.finditer(r'^\s*uses:\s*([^\s#]+)@(\S+)', text, re.M):
             name, version = match.group(1), match.group(2)
@@ -415,7 +417,8 @@ def build_markdown(info, pub_order, pub_refs, pub_types, pub_latest, build_lates
     lines.append(f'| 目标平台 | Android ({info["abi"]})、Windows (x64) |')
     lines.append('')
 
-    lines.append('发布产物：Android APK（`android-arm64`）与 Windows ZIP（`windows-x86_64`），由 GitHub Actions 与 Gitea Actions 双流水线构建。\n')
+    pipelines = 'GitHub Actions 与 Gitea Actions 双流水线' if (ROOT / '.gitea/workflows/build.yml').exists() else 'GitHub Actions 流水线'
+    lines.append(f'发布产物：Android APK（`android-arm64`）与 Windows ZIP（`windows-x86_64`），由 {pipelines}构建。\n')
     lines.append('---\n')
 
     # ---- Flutter 运行时依赖 / 开发依赖 ----
