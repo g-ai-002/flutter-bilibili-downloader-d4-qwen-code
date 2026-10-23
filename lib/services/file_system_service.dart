@@ -77,7 +77,10 @@ class FileSystemService {
       baseDir = await getApplicationDocumentsDirectory();
     }
 
-    final logDir = Directory('${baseDir.path}/logs');
+    final logDir = Directory(
+      '${baseDir.path}${Platform.pathSeparator}BilibiliDownloader'
+      '${Platform.pathSeparator}logs',
+    );
     if (!await logDir.exists()) {
       await logDir.create(recursive: true);
     }
