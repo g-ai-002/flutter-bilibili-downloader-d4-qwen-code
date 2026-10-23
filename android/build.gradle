@@ -17,18 +17,6 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-// 统一所有 Android 子项目（含插件模块）到 compileSdk 37.2。
-// :app 已被 evaluationDependsOn(':app') 提前评估，且自身已设置 37.2，这里跳过。
-subprojects { project ->
-    if (project.name != 'app') {
-        project.afterEvaluate {
-            if (project.hasProperty('android')) {
-                project.android.compileSdkVersion = "android-37.2"
-            }
-        }
-    }
-}
-
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
