@@ -20,8 +20,29 @@
 
 ## 版本历史
 
-### v0.4.33 (PATCH) — 当前开发版本
-- **状态**: 开发中 🔧
+### v0.4.35 (PATCH) — 当前版本
+- **状态**: 已发布 ✅
+- **目标**: 构建配置收尾与文档/清单同步
+- **任务**:
+  - [x] compileSdk 统一为 `android-37.2`：`:app` 直接声明；非 `:app` 子项目先尝试直接应用、改为延迟设置后最终回退为不强制覆盖
+  - [x] `.gitignore` 统一为基准模板，FileSystemService 收敛为最小契约
+  - [x] 版本清单脚本适配 `compileSdkVersion "android-37.2"`，`versions.md` 的 compileSdk 由 37 修正为 37.2
+  - [x] 版本号升至 0.4.35，同步 README / plan / versions.md / 应用内版本号
+- **注意**: 本机无 Flutter / Android SDK，未在本地构建验证。验证方式：CI 出新包后真机确认核心功能正常
+
+### v0.4.34 (PATCH)
+- **状态**: 已发布 ✅
+- **目标**: 构建/CI 资源约束与配置清理（无功能变化）
+- **任务**:
+  - [x] GitHub 与 Gitea 构建任务增加 30 分钟超时；限制 Gradle / Kotlin 资源占用；测试并发与 Windows CMake 并行降为 2
+  - [x] 版本清单脚本兼容缺失 Gitea 工作流的仓库
+  - [x] 日志目录改为应用专属子目录并优先外部存储；应用名改用 `app_name` 字符串资源
+  - [x] 清理 `gradle.properties` 过时注释，更正 music Windows 协程宏结论
+  - [x] 版本号升至 0.4.34，同步 README / plan / versions.md / 应用内版本号
+- **注意**: 本机无 Flutter / Android SDK，未在本地构建验证。验证方式：CI 出新包后真机确认核心功能正常
+
+### v0.4.33 (PATCH)
+- **状态**: 已发布 ✅
 - **目标**: 日志系统统一与日志查看能力
 - **任务**:
   - [x] 日志服务统一为标准实现（早期缓冲 / 跨天切换 / 清理轮转 / logRoot 注入），设置页「查看日志」弹窗补齐复制全部并修复刷新不生效

@@ -122,6 +122,7 @@ def fmt_ver(current, latest):
 # (显示名, 说明) 按包名索引：四个项目共用的依赖描述表，未收录的包回退为包名 + 通用说明
 DEPS_META = {
     'provider': ('Provider', '状态管理'),
+    'flame': ('Flame', '游戏引擎'),
     'dio': ('Dio', 'HTTP 客户端'),
     'shared_preferences': ('Shared Preferences', '键值本地存储'),
     'path_provider': ('Path Provider', '平台目录定位'),
@@ -215,7 +216,7 @@ def collect_project_info():
         'gradle': search(r'gradle-([\d.]+)-', wrapper),
         'agp': search(r'id "com\.android\.application" version "([^"]+)"', settings),
         'kotlin': search(r'id "org\.jetbrains\.kotlin\.android" version "([^"]+)"', settings),
-        'compile_sdk': search(r'compileSdk\s+(\d+)', app_gradle),
+        'compile_sdk': search(r'compileSdk(?:Version)?\s+["\']?android-([\d.]+)', app_gradle) or search(r'compileSdk(?:Version)?\s+([\d.]+)', app_gradle),
         'target_sdk': search(r'targetSdk\s+(\d+)', app_gradle),
         'min_sdk': search(r'minSdk\s+(\d+)', app_gradle),
         'ndk': search(r'ndkVersion\s+"([^"]+)"', app_gradle),

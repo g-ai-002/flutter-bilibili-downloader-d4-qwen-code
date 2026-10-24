@@ -64,7 +64,19 @@ git push origin v0.4.29
 
 ## 版本历史
 
-### v0.4.33 (当前版本)
+### v0.4.35 (当前版本)
+- Android compileSdk 统一为 `android-37.2`：`:app` 直接声明，非 `:app` 子项目尝试直接应用/延迟设置后最终回退为不强制覆盖
+- 版本清单脚本兼容 `compileSdkVersion "android-37.2"` 写法，`versions.md` 的 compileSdk 由 37 修正为 37.2
+- FileSystemService 收敛为最小契约，`.gitignore` 统一为基准模板
+- 版本号升至 0.4.35
+
+### v0.4.34
+- 构建与 CI 维护：构建任务 30 分钟超时、Gradle/Kotlin 资源限制、测试并发 2、Windows CMake 并行 2
+- 日志目录改为应用专属子目录并优先外部存储；应用名改用 `app_name` 字符串资源
+- 版本清单脚本兼容缺失 Gitea 工作流的仓库，清理 `gradle.properties` 过时注释
+- 版本号升至 0.4.34
+
+### v0.4.33
 - 日志系统统一：日志服务对齐标准实现（早期缓冲 / 跨天切换 / 清理轮转），启动早期的失败日志也会补写入文件并在设置页可查
 - 设置页「查看日志」弹窗补齐复制全部与刷新（修复刷新不生效）
 - CI 工作流补齐「诊断网络与 Flutter 环境」步骤（`timeout 10` 防挂起 + 网络连通性检查）
