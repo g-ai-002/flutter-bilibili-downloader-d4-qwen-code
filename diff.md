@@ -44,8 +44,8 @@
 
 | 配置            | 7 项目统一值                                                         |
 | --------------- | -------------------------------------------------------------------- |
-| Dart SDK 约束   | `>=3.13.5 <4.0.0`                                                    |
-| CI Flutter 版本 | `3.47.7`（GitHub workflow env `FLUTTER_VERSION`；Gitea runner 预装） |
+| Dart SDK 约束   | `>=3.13.7 <4.0.0`                                                    |
+| CI Flutter 版本 | `3.47.8`（GitHub workflow env `FLUTTER_VERSION`；Gitea runner 预装） |
 | CI JDK          | Temurin 21（GitHub workflow env `JAVA_VERSION`；Gitea runner 预装）  |
 
 ## 3. pubspec.yaml 依赖对比
@@ -174,7 +174,7 @@ tetris 需要该步骤，其余 3 个不需要。GitHub `windows-latest` 已指�
 | 维度     | GitHub Actions                                                    | Gitea Actions                                                                                                                           |
 | -------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | runner   | ubuntu-latest / windows-latest                                    | ubuntu-flutter / windows-flutter（自建，预装 Flutter/JDK）                                                                              |
-| 环境准备 | subosito/flutter-action@v2（3.47.7）+ setup-java@v5（temurin 21） | 无 setup 步骤；构建前做环境诊断（flutter doctor、storage.flutter-io.cn 连通性）并部署 `init-aliyun-mirror.gradle` 到 `~/.gradle/init.d` |
+| 环境准备 | subosito/flutter-action@v2（3.47.8）+ setup-java@v5（temurin 21） | 无 setup 步骤；构建前做环境诊断（flutter doctor、storage.flutter-io.cn 连通性）并部署 `init-aliyun-mirror.gradle` 到 `~/.gradle/init.d` |
 | 产物传递 | upload-artifact@v7 / download-artifact@v8（merge-multiple）       | gitea-upload-artifact@v4 / gitea-download-artifact@v8（release 按名逐个下载）                                                           |
 | release  | softprops/action-gh-release@v3                                    | `GITEA_TOKEN` + curl 直调 Gitea API                                                                                                     |
 
