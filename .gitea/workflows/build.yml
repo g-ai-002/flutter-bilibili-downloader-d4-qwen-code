@@ -93,8 +93,17 @@ jobs:
           echo "https_proxy=${https_proxy:-<未设置>}"
           echo "=== 🦋 Flutter 版本 ==="
           flutter --version
-          echo "=== 🩺 Flutter doctor ==="
-          timeout 10 flutter doctor -v || true
+          echo "=== 🩺 Flutter doctor（输出写入 doctor.log，最多等 20s） ==="
+          # 不能让 doctor 直接写步骤日志：一旦有子进程残留，它会一直占着日志管道，
+          # 步骤就永远走不到下一步（曾因此在同一位置卡死 7 分钟）。
+          # stdin 接 /dev/null，避免子命令等交互输入。
+          timeout -k 5 20 flutter doctor -v > doctor.log 2>&1 </dev/null || true
+          cat doctor.log 2>/dev/null || true
+          # timeout 只覆盖 msys 进程组，残留的 dart 会占住 flutter 启动锁，后面 pub get/build 会死等
+          if pgrep -f flutter_tools.snapshot > /dev/null 2>&1; then
+            echo "⚠️ flutter doctor 仍有残留进程，强制清理"
+            pkill -f flutter_tools.snapshot > /dev/null 2>&1 || true
+          fi
           echo "=== 🌍 Flutter 相关环境变量 ==="
           echo "FLUTTER_STORAGE_BASE_URL=${FLUTTER_STORAGE_BASE_URL:-<未设置>}"
           echo "PUB_HOSTED_URL=${PUB_HOSTED_URL:-<未设置>}"
@@ -159,8 +168,18 @@ jobs:
           echo "https_proxy=${https_proxy:-<未设置>}"
           echo "=== 🦋 Flutter 版本 ==="
           flutter --version
-          echo "=== 🩺 Flutter doctor ==="
-          timeout 10 flutter doctor -v || true
+          echo "=== 🩺 Flutter doctor（输出写入 doctor.log，最多等 20s） ==="
+          # Windows 上 flutter 是 bash → flutter.bat(cmd.exe) → dart.exe 的进程链，
+          # timeout 只能覆盖 msys 侧的进程。doctor 的输出必须落文件，否则一旦 dart
+          # 残留，它会一直占着步骤的 stdout 管道，步骤永远走不到下一步（曾卡死 7 分钟）。
+          # stdin 接 /dev/null，避免子命令等交互输入。
+          timeout -k 5 20 flutter doctor -v > doctor.log 2>&1 </dev/null || true
+          cat doctor.log 2>/dev/null || true
+          # 残留的 dart 会占住 flutter 启动锁，后面 pub get / build 会一直等锁
+          if tasklist -FI 'IMAGENAME eq dart.exe' 2>/dev/null | grep -qi 'dart\.exe'; then
+            echo "⚠️ 检测到残留的 dart 进程，强制清理"
+            taskkill //F //T //IM dart.exe > /dev/null 2>&1 || true
+          fi
           echo "=== 🌍 Flutter 相关环境变量 ==="
           echo "FLUTTER_STORAGE_BASE_URL=${FLUTTER_STORAGE_BASE_URL:-<未设置>}"
           echo "PUB_HOSTED_URL=${PUB_HOSTED_URL:-<未设置>}"
